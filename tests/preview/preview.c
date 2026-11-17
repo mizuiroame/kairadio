@@ -88,6 +88,7 @@ typedef struct {
     SearchMode search_mode;
     bool category_open;
     size_t category_cursor[SEARCH_MODES];
+    size_t map_cursor;
 } Snapshot;
 
 static Snapshot snapshot(const App *app)
@@ -104,6 +105,7 @@ static Snapshot snapshot(const App *app)
     s.search_mode = app->search_mode;
     s.category_open = app->category_open;
     memcpy(s.category_cursor, app->category_cursor, sizeof(s.category_cursor));
+    s.map_cursor = app->map_cursor;
     return s;
 }
 
@@ -197,6 +199,42 @@ int main(int argc, char **argv)
     static App app;
     appInit(&app, CONFIG);
     app.sys = (SysInfo){true, 21, 47, true, 82, true};
+
+    // World: loading, then the countries lit (about as many stations as the directory has), then one picked.
+    appSetView(&app, VIEW_WORLD);
+    render(dir, "world_loading", &app);
+    static const struct {
+        const char *name, *code;
+        int count;
+    } WORLD[] = {
+        {"The United States Of America", "US", 7100}, {"Germany", "DE", 3300}, {"France", "FR", 1600},
+        {"The United Kingdom Of Great Britain And Northern Ireland", "GB", 1500}, {"Brazil", "BR", 1300},
+        {"Mexico", "MX", 1100}, {"Italy", "IT", 1000}, {"Spain", "ES", 900}, {"Canada", "CA", 900},
+        {"The Netherlands", "NL", 800}, {"Greece", "GR", 700}, {"Poland", "PL", 600}, {"Argentina", "AR", 600},
+        {"Australia", "AU", 600}, {"India", "IN", 500}, {"Turkey", "TR", 500}, {"Colombia", "CO", 400},
+        {"Indonesia", "ID", 400}, {"Ukraine", "UA", 400}, {"Chile", "CL", 350}, {"Philippines", "PH", 300},
+        {"Sweden", "SE", 300}, {"Portugal", "PT", 300}, {"Peru", "PE", 250}, {"Japan", "JP", 200},
+        {"South Africa", "ZA", 200}, {"Thailand", "TH", 200}, {"Venezuela", "VE", 200}, {"New Zealand", "NZ", 150},
+        {"Norway", "NO", 150}, {"Malaysia", "MY", 150}, {"Republic Of Korea", "KR", 150}, {"Morocco", "MA", 100},
+        {"Vietnam", "VN", 100}, {"Nigeria", "NG", 80}, {"Kenya", "KE", 60}, {"Egypt", "EG", 50},
+        {"Saudi Arabia", "SA", 40}, {"Singapore", "SG", 30}, {"Holy See", "VA", 2},
+    };
+    size_t world_count = sizeof(WORLD) / sizeof(WORLD[0]);
+    CategoryList *world = &app.categories[SEARCH_COUNTRY];
+    world->items = calloc(world_count, sizeof(Category));
+    for (size_t i = 0; i < world_count; i++) {
+        snprintf(world->items[i].name, sizeof(world->items[i].name), "%s", WORLD[i].name);
+        snprintf(world->items[i].code, sizeof(world->items[i].code), "%s", WORLD[i].code);
+        world->items[i].count = WORLD[i].count;
+    }
+    world->count = world_count;
+    app.waiting_active = false;
+    render(dir, "world", &app);
+    app.map_cursor = 5;  // Mexico.
+    render(dir, "world_picked", &app);
+    categoryListFree(world);
+    app.categories_asked[SEARCH_COUNTRY] = false;
+    app.map_cursor = 0;
 
     // Popular, loading and failed.
     appSetView(&app, VIEW_POPULAR);

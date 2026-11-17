@@ -15,6 +15,7 @@
 #include "touch.h"
 
 typedef enum {
+    VIEW_WORLD,  // The map: countries lit by their stations.
     VIEW_POPULAR,
     VIEW_SEARCH,
     VIEW_FAVORITES,
@@ -58,7 +59,11 @@ typedef struct {
     bool categories_asked[SEARCH_MODES];
     size_t category_cursor[SEARCH_MODES];
     bool category_open;                     // Showing the stations of open_category.
+    bool category_from_map;                 // Opened from the World view: Back goes there.
     Category open_category;
+
+    // The World view: the country chosen, in categories[SEARCH_COUNTRY].
+    size_t map_cursor;
     StationList category_results;
 
     // The directory request that the app waits for, and what it is for.
@@ -108,4 +113,7 @@ void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns);
 bool appTap(App *app, int x, int y, uint64_t now_ns);
 
 void appSetView(App *app, View view);
+// Opens the stations of the country at index of categories[SEARCH_COUNTRY]
+// (in Search), from the World view.
+void appOpenMapCountry(App *app, size_t index);
 void appSetSearchMode(App *app, SearchMode mode);

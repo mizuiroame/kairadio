@@ -33,6 +33,8 @@ enum {
 
 #define BUTTONS_UP (HidNpadButton_Up | HidNpadButton_StickLUp)
 #define BUTTONS_DOWN (HidNpadButton_Down | HidNpadButton_StickLDown)
+#define BUTTONS_LEFT (HidNpadButton_Left | HidNpadButton_StickLLeft)
+#define BUTTONS_RIGHT (HidNpadButton_Right | HidNpadButton_StickLRight)
 // Left and right, and the right stick up and down, move a list by a page.
 #define BUTTONS_PAGE_UP (HidNpadButton_Left | HidNpadButton_StickLLeft | HidNpadButton_StickRUp)
 #define BUTTONS_PAGE_DOWN (HidNpadButton_Right | HidNpadButton_StickLRight | HidNpadButton_StickRDown)

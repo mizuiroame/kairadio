@@ -22,6 +22,8 @@ typedef enum {
     HIT_SEARCH,       // The search box: types a search.
     HIT_RETRY,        // Asks the directory again.
     HIT_EXIT,         // The X in the corner: quits.
+    HIT_MAP,          // The World view's map: a tap picks the country nearest, or opens the one picked.
+    HIT_MAP_OPEN,     // The card of the country picked: opens its stations.
 } HitKind;
 
 typedef struct {

@@ -6,3 +6,4 @@ tests/preview/build/
 *.elf
 *.map
 __pycache__/
+tools/.cache/

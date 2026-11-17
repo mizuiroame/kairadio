@@ -19,6 +19,12 @@ upstream changes before you update: they parse untrusted data from the network.
 The fonts are renamed (`NotoSans-Regular.ttf` → `font_regular.ttf`) so that
 the build can embed them as `font_regular_ttf`. They are otherwise unchanged.
 
+## Made from third-party data
+
+| Files | Made from | By | License |
+|-------|-----------|----|---------|
+| `../data/world_map.png`, `../source/map_countries.c` | [Natural Earth](https://www.naturalearthdata.com/) 1:50m Admin 0 Countries, [nvkelso/natural-earth-vector](https://github.com/nvkelso/natural-earth-vector) v5.1.2 (`geojson/ne_50m_admin_0_countries.geojson`) | `tools/make_map.py` | Public domain |
+
 ## SHA-256
 
 ```

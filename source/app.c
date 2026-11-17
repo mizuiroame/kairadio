@@ -7,6 +7,7 @@
 #include "keyboard_system.h"
 #include "ui.h"
 #include "ui_hit.h"
+#include "worldmap.h"
 
 #define TOAST_NS 3000000000ull
 
@@ -44,7 +45,9 @@ static bool targetShown(const App *app, Target target, SearchMode mode)
     case TARGET_NAME_RESULTS: return app->view == VIEW_SEARCH && app->search_mode == SEARCH_NAME;
     case TARGET_CATEGORY_RESULTS:
         return app->view == VIEW_SEARCH && app->search_mode != SEARCH_NAME && app->category_open;
-    case TARGET_CATEGORIES: return appBrowsingCategories(app) && app->search_mode == mode;
+    case TARGET_CATEGORIES:
+        return (appBrowsingCategories(app) && app->search_mode == mode) ||
+               (app->view == VIEW_WORLD && mode == SEARCH_COUNTRY);
     }
     return false;
 }
@@ -64,8 +67,8 @@ void appInit(App *app, const char *config_folder)
 {
     memset(app, 0, sizeof(*app));
     libraryLoad(&app->library, config_folder);
-    // Start where the stations are: the favorites if there are some.
-    app->view = app->library.favorites.count > 0 ? VIEW_FAVORITES : VIEW_POPULAR;
+    // Start where the stations are: the favorites if there are some, else the world.
+    app->view = app->library.favorites.count > 0 ? VIEW_FAVORITES : VIEW_WORLD;
     app->list_view = app->view;
 }
 
@@ -104,11 +107,17 @@ static void askPopular(App *app)
     ask(app, TARGET_POPULAR, DIR_POPULAR, NULL);
 }
 
-static void askCategories(App *app)
+// The genres, countries or languages of mode (the World view asks for the countries).
+static void askCategoriesOf(App *app, SearchMode mode)
 {
-    SearchMode mode = app->search_mode;
     app->categories_asked[mode] = true;
     ask(app, TARGET_CATEGORIES, CATEGORY_LISTS[mode], NULL);
+    app->waiting_mode = mode;
+}
+
+static void askCategories(App *app)
+{
+    askCategoriesOf(app, app->search_mode);
 }
 
 static void openCategory(App *app, size_t index)
@@ -119,6 +128,7 @@ static void openCategory(App *app, size_t index)
     app->category_cursor[app->search_mode] = index;
     app->open_category = list->items[index];
     app->category_open = true;
+    app->category_from_map = false;
     app->cursor[VIEW_SEARCH] = 0;
     stationListFree(&app->category_results);
     const Category *c = &app->open_category;
@@ -133,6 +143,16 @@ static void closeCategory(App *app)
 {
     app->category_open = false;
     stationListFree(&app->category_results);
+}
+
+// Back from a category's stations: to the list of them, or to the map it was opened from.
+static void backFromCategory(App *app)
+{
+    bool to_map = app->category_from_map;
+    closeCategory(app);
+    app->category_from_map = false;
+    if (to_map)
+        appSetView(app, VIEW_WORLD);
 }
 
 void appSetSearchMode(App *app, SearchMode mode)
@@ -153,6 +173,19 @@ void appSetView(App *app, View view)
     app->view = view;
     if (view == VIEW_POPULAR && !app->popular_asked)
         askPopular(app);
+    if (view == VIEW_WORLD && !app->categories_asked[SEARCH_COUNTRY])
+        askCategoriesOf(app, SEARCH_COUNTRY);
+}
+
+void appOpenMapCountry(App *app, size_t index)
+{
+    if (index >= app->categories[SEARCH_COUNTRY].count)
+        return;
+    app->map_cursor = index;
+    appSetSearchMode(app, SEARCH_COUNTRY);
+    appSetView(app, VIEW_SEARCH);
+    openCategory(app, index);
+    app->category_from_map = true;
 }
 
 void appUpdate(App *app, uint64_t now_ns)
@@ -284,7 +317,9 @@ static void typeSearch(App *app, uint64_t now_ns)
 
 static void retry(App *app)
 {
-    if (app->view == VIEW_POPULAR) {
+    if (app->view == VIEW_WORLD) {
+        askCategoriesOf(app, SEARCH_COUNTRY);
+    } else if (app->view == VIEW_POPULAR) {
         askPopular(app);
     } else if (app->view == VIEW_SEARCH) {
         if (app->search_mode == SEARCH_NAME && app->query[0])
@@ -340,7 +375,22 @@ static void handleSearch(App *app, uint64_t pressed, uint64_t now_ns)
     if (pressed & HidNpadButton_A) playSelected(app);
     if (pressed & HidNpadButton_Y) favoriteSelected(app, now_ns);
     if ((pressed & HidNpadButton_X) && app->search_mode == SEARCH_NAME) typeSearch(app, now_ns);
-    if ((pressed & HidNpadButton_B) && app->category_open) closeCategory(app);
+    if ((pressed & HidNpadButton_B) && app->category_open) backFromCategory(app);
+}
+
+static void handleWorld(App *app, uint64_t pressed)
+{
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    int dx = (pressed & BUTTONS_RIGHT) ? 1 : (pressed & BUTTONS_LEFT) ? -1 : 0;
+    int dy = (pressed & BUTTONS_DOWN) ? 1 : (pressed & BUTTONS_UP) ? -1 : 0;
+    if (dx || dy) {
+        // One way at a time: a diagonal of the stick takes the up or down.
+        int next = mapStep(countries, app->map_cursor, dy ? 0 : dx, dy);
+        if (next >= 0)
+            app->map_cursor = (size_t)next;
+    }
+    if (pressed & HidNpadButton_A) appOpenMapCountry(app, app->map_cursor);
+    if (pressed & HidNpadButton_X) appSetView(app, VIEW_NOW_PLAYING);
 }
 
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
@@ -359,6 +409,10 @@ void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
         if (pressed & HidNpadButton_A) togglePlay(app);
         if (pressed & HidNpadButton_Y) favoritePlaying(app, now_ns);
         if (pressed & (HidNpadButton_B | HidNpadButton_X)) appSetView(app, app->list_view);
+        return;
+    }
+    if (app->view == VIEW_WORLD) {
+        handleWorld(app, pressed);
         return;
     }
     if (pressed & BUTTONS_UP) moveCursor(app, -1);
@@ -410,7 +464,7 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     case HIT_NEXT: playAdjacent(app, 1); break;
     case HIT_BACK:
         if (app->view == VIEW_SEARCH)
-            closeCategory(app);
+            backFromCategory(app);
         else
             appSetView(app, app->list_view);
         break;
@@ -418,6 +472,17 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     case HIT_RETRY: retry(app); break;
     case HIT_EXIT: app->quit = true; break;
     case HIT_LIST: break;  // Only for drags.
+    case HIT_MAP: {
+        int nearest = mapNearest(&app->categories[SEARCH_COUNTRY], (float)x, (float)y);
+        if (nearest < 0)
+            break;
+        if ((size_t)nearest == app->map_cursor)
+            appOpenMapCountry(app, app->map_cursor);  // A second tap on it opens it.
+        else
+            app->map_cursor = (size_t)nearest;
+        break;
+    }
+    case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
     }
     return true;
 }

@@ -8,8 +8,8 @@ CFLAGS  := -DKAIRADIO_VERSION=\"test\" -std=gnu11 -g -O1 -Wall -Wextra -fwrapv -
 LDFLAGS := $(SAN) -pthread -lm
 OBJDIR  := build
 
-TESTED  := util.c icy.c link.c stations.c ring.c hls.c directory.c logo.c library.c categories.c
-TESTS   := test_main.c test_stream.c test_logo.c fake_net.c
+TESTED  := util.c icy.c link.c stations.c ring.c hls.c directory.c logo.c library.c categories.c worldmap.c map_countries.c
+TESTS   := test_main.c test_stream.c test_logo.c test_map.c fake_net.c
 
 # GCC 12's ASan can hang on kernels with high mmap entropy, so ASLR is off.
 # In Docker this needs --security-opt seccomp=unconfined.

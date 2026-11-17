@@ -7,6 +7,7 @@
 #include "ui_buttons.h"
 #include "ui_common.h"
 #include "ui_hit.h"
+#include "ui_map.h"
 #include "ui_now.h"
 #include "util.h"
 
@@ -21,7 +22,7 @@
 #define BAR_PREV_X (GFX_WIDTH / 2 - BAR_GAP)
 #define BAR_CY (MINI_Y + 46)
 
-static const char *const VIEW_NAMES[VIEW_COUNT] = {"Popular", "Search", "Favorites", "Recent", "Now Playing"};
+static const char *const VIEW_NAMES[VIEW_COUNT] = {"World", "Popular", "Search", "Favorites", "Recent", "Now Playing"};
 
 size_t uiFirstVisible(size_t cursor, size_t count)
 {
@@ -355,6 +356,22 @@ static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
     drawScrollbar(first, list->count);
 }
 
+// --- World ---
+
+static void drawWorld(const App *app, uint64_t now_ns)
+{
+    fontDraw(FONT_REGULAR, 18, MARGIN, SUBTITLE_Y, "Stations around the world", COLOR_DIM);
+    fontDraw(FONT_REGULAR, 15, GFX_WIDTH - MARGIN - fontTextWidth(FONT_REGULAR, 15, "From radio-browser.info"),
+             SUBTITLE_Y + 2, "From radio-browser.info", COLOR_FAINT);
+    uiDrawMap(app, now_ns);
+    if (app->categories[SEARCH_COUNTRY].count > 0)
+        return;
+    if (appFailed(app))
+        drawMessage("The station directory can't be reached.", app->directory.error, true);
+    else
+        drawMessage("Lighting up the world\xE2\x80\xA6", "", false);
+}
+
 // --- The player bar ---
 
 static void drawMiniPlayer(const App *app, const RadioStatus *radio, uint64_t now_ns)
@@ -377,6 +394,7 @@ static void drawMiniPlayer(const App *app, const RadioStatus *radio, uint64_t no
                          : radio->state == RADIO_FAILED      ? radio->error
                          : radio->state == RADIO_PLAYING && radio->title[0] ? radio->title
                          : has                               ? radioStateLabel(radio->state)
+                         : app->view == VIEW_WORLD           ? "Open a country to see its stations."
                                                              : "Press A or tap one to play it.";
     Color second_color = toast || radio->state == RADIO_FAILED ? COLOR_ERROR : COLOR_DIM;
     fontDrawClipped(FONT_REGULAR, 19, text_x, MINI_Y + 50, text_w, second, second_color);
@@ -426,6 +444,7 @@ static void drawMiniPlayer(const App *app, const RadioStatus *radio, uint64_t no
 static const char *footerHelp(const App *app)
 {
     switch (app->view) {
+    case VIEW_WORLD: return "[<>^v] country  [A] open  [X] now playing  [L][R] station  [-] play/stop  [+] exit";
     case VIEW_NOW_PLAYING:
         return "[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit";
     case VIEW_SEARCH:
@@ -447,7 +466,10 @@ void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
     if (app->view == VIEW_NOW_PLAYING) {
         uiDrawNowPlaying(app, radio, now_ns);
     } else {
-        drawList(app, radio, now_ns);
+        if (app->view == VIEW_WORLD)
+            drawWorld(app, now_ns);
+        else
+            drawList(app, radio, now_ns);
         drawMiniPlayer(app, radio, now_ns);
     }
     gfxFillRect(0, FOOTER_Y, GFX_WIDTH, GFX_HEIGHT - FOOTER_Y, COLOR_BG);

@@ -5,13 +5,14 @@ An **open-source internet radio player** for **Switch 2** running
 [KaiPlayer](https://github.com/mizuiroame/kaiplayer). Browse tens of
 thousands of public stations from the community
 [Radio Browser](https://www.radio-browser.info/) directory: the most played
-ones, or by name, genre, country or language.
+ones, by country on a map of the world, or by name, genre, country or
+language.
 
-![Popular](docs/screenshots/popular_playing.png)
+![World](docs/screenshots/world.png)
 
-| Now Playing | Search by genre | Search by country |
-|-------------|-----------------|-------------------|
-| ![Now Playing](docs/screenshots/now_playing_logo.png) | ![Genres](docs/screenshots/search_genres.png) | ![Countries](docs/screenshots/search_countries.png) |
+| Popular | Now Playing | Search by genre |
+|---------|-------------|-----------------|
+| ![Popular](docs/screenshots/popular_playing.png) | ![Now Playing](docs/screenshots/now_playing_logo.png) | ![Genres](docs/screenshots/search_genres.png) |
 
 The screenshots show made-up stations.
 
@@ -23,6 +24,8 @@ The screenshots show made-up stations.
 
 ## What it does
 
+- **World**: a night map of the world, each country lit up by how many
+  stations it has. Move between countries and open one to see its stations.
 - **Popular**: the stations played most, worldwide.
 - **Search** by **name** (with the console's keyboard), or browse **genres**,
   **countries** and **languages**, each with how many stations it has.
@@ -62,19 +65,20 @@ card: OunceShell's FTP server with an FTP client such as
 
 | Button | What it does |
 |--------|--------------|
-| **A** | Play the selected station (in Now Playing: play or stop) |
+| **A** | Play the selected station (in World: open the country; in Now Playing: play or stop) |
 | **Y** | Add to favorites, or remove |
 | **X** | Now Playing; in Search by name, type a name |
 | **ZL** / **ZR** | Previous / next tab |
 | **L** / **R** | Previous / next station, in the list you played from |
-| **◀** / **▶** | In Search: by name, genre, country or language. Elsewhere: a page up or down |
-| **↑** / **↓** | Move in the list |
-| **B** | Back (out of Now Playing, or out of a genre, country or language) |
+| **◀** / **▶** | In World: the country that way. In Search: by name, genre, country or language. Elsewhere: a page up or down |
+| **↑** / **↓** | Move in the list; in World, the country that way |
+| **B** | Back (out of Now Playing, or out of a genre, country or language, to the map if opened from it) |
 | **−** | Play or stop |
 | **+** | Exit |
 
 On the touch screen, tap a station to play it, its heart to keep it, a tab,
-genre or country to open it, and the bar at the bottom for Now Playing. Drag
+genre or country to open it, a country on the map to pick it (tap it again,
+or its card, to open it), and the bar at the bottom for Now Playing. Drag
 a list to scroll it. The **×** at the top left exits.
 
 ## Building
@@ -127,4 +131,6 @@ This notice is not legal advice.
 
 KaiRadio is released under the [MIT License](LICENSE). FFmpeg is released
 under the LGPL 2.1; the other bundled libraries are listed in
-[third_party/VERSIONS.md](third_party/VERSIONS.md).
+[third_party/VERSIONS.md](third_party/VERSIONS.md). The world map is drawn
+from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
+`tools/make_map.py`.
