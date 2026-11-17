@@ -2,7 +2,9 @@
 naturalearthdata.com), for the World view:
 
   data/world_map.png      the land, as coverage (255 inside, lower on borders),
-                          at the framebuffer size it's drawn at
+                          at twice the framebuffer size it's drawn at, so it
+                          stays sharp on a 4K screen (the app shrinks it for
+                          smaller ones)
   source/map_countries.c  each country's place for its light, and points
                           spread over it for the smaller lights
 
@@ -28,7 +30,8 @@ CACHE = ROOT / "tools" / ".cache" / "ne_50m_admin_0_countries.geojson"
 
 MAP_NORTH, MAP_SOUTH = 83.0, -56.0
 FB_W, FB_H = 1786, 690   # Framebuffer pixels: the layout's 1191 x 460, times 1.5.
-SUPER = 3                # Drawn this much larger, then shrunk, for smooth coasts.
+IMAGE = 2                # The image is this many times the framebuffer size.
+SUPER = 2                # Drawn this much larger again, then shrunk, for smooth coasts.
 BORDER = 150             # Coverage on borders between countries: they show as faint lines.
 POINTS = 24              # Most points kept per country.
 SEED = 1983
@@ -54,7 +57,7 @@ def rings(geometry):
 
 
 def draw_land(features):
-    w, h = FB_W * SUPER, FB_H * SUPER
+    w, h = FB_W * IMAGE * SUPER, FB_H * IMAGE * SUPER
     land = Image.new("L", (w, h), 0)
     d = ImageDraw.Draw(land)
     for f in features:
@@ -62,8 +65,8 @@ def draw_land(features):
             d.polygon([project(lon, lat, w, h) for lon, lat in ring], fill=255)
     for f in features:
         for ring in rings(f["geometry"]):
-            d.line([project(lon, lat, w, h) for lon, lat in ring], fill=BORDER, width=SUPER)
-    return land.resize((FB_W, FB_H), Image.LANCZOS)
+            d.line([project(lon, lat, w, h) for lon, lat in ring], fill=BORDER, width=IMAGE * SUPER)
+    return land.resize((FB_W * IMAGE, FB_H * IMAGE), Image.LANCZOS)
 
 
 def country_points(features, rng):

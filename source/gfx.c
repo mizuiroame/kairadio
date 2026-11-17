@@ -432,6 +432,26 @@ void gfxDrawImageFb(int x, int y, int w, int h, const uint32_t *pixels)
     }
 }
 
+void gfxDrawImageScaledFb(float x, float y, float w, float h, int image_w, int image_h, const uint32_t *pixels)
+{
+    int ix = (int)lroundf(x), iy = (int)lroundf(y), iw = (int)lroundf(w), ih = (int)lroundf(h);
+    if (iw == image_w && ih == image_h) {
+        gfxDrawImageFb(ix, iy, iw, ih, pixels);
+        return;
+    }
+    int cx = ix, cy = iy, cw = iw, ch = ih;
+    if (iw <= 0 || ih <= 0 || !clip(&cx, &cy, &cw, &ch))
+        return;
+    for (int py = cy; py < cy + ch; py++) {
+        const uint32_t *src = pixels + (size_t)((long)(py - iy) * image_h / ih) * image_w;
+        uint32_t *row = g_pixels + (size_t)py * g_stride;
+        for (int px = cx; px < cx + cw; px++) {
+            uint32_t p = src[(long)(px - ix) * image_w / iw];
+            blendPixel(&row[px], p | 0xFF000000u, p >> 24);
+        }
+    }
+}
+
 // The pixel at (u, v) in 16.16 fixed point, blending its four neighbours.
 static uint32_t sampleBilinear(const uint32_t *pixels, int size, int32_t u, int32_t v)
 {

@@ -71,6 +71,10 @@ void gfxBlitRounded(int x, int y, int size, int image_size, const uint32_t *pixe
 void gfxBlitDisc(float cx, float cy, float radius, float hole, int image_size, const uint32_t *pixels, float angle);
 // Draws a w x h image with its own alpha (0xAABBGGRR) at framebuffer pixels x, y.
 void gfxDrawImageFb(int x, int y, int w, int h, const uint32_t *pixels);
+// The same for an image_w x image_h image drawn over w x h framebuffer pixels:
+// one made gfxDetail() times finer stays sharp on a bigger screen. The CPU
+// copies an image of w x h 1:1, and samples others.
+void gfxDrawImageScaledFb(float x, float y, float w, float h, int image_w, int image_h, const uint32_t *pixels);
 // Copies a whole GFX_FB_WIDTH x GFX_FB_HEIGHT image to the screen (a background),
 // or the screen into one.
 void gfxCopyFrame(const uint32_t *pixels);

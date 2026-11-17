@@ -524,6 +524,11 @@ void gfxDrawImageFb(int x, int y, int w, int h, const uint32_t *pixels)
     image((float)x, (float)y, (float)(x + w), (float)(y + h), pixels, w, h, 0.0f);
 }
 
+void gfxDrawImageScaledFb(float x, float y, float w, float h, int image_w, int image_h, const uint32_t *pixels)
+{
+    image(x, y, x + w, y + h, pixels, image_w, image_h, 0.0f);
+}
+
 void gfxCopyFrame(const uint32_t *pixels)
 {
     image(0, 0, GFX_FB_WIDTH, GFX_FB_HEIGHT, pixels, GFX_FB_WIDTH, GFX_FB_HEIGHT, 0.0f);

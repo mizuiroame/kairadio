@@ -8,14 +8,17 @@
 
 #include "categories.h"
 
-// Where the map is drawn, in the 1280x720 layout, and its image's size in
-// framebuffer pixels (data/world_map.png, made by tools/make_map.py).
+// Where the map is drawn, in the 1280x720 layout, and its size in
+// framebuffer pixels (data/world_map.png is made by tools/make_map.py).
 #define MAP_X 44
 #define MAP_Y 104
 #define MAP_W 1191
 #define MAP_H 460
 #define MAP_FB_W 1786
 #define MAP_FB_H 690
+// The image is twice that, for 4K; smaller screens get it shrunk.
+#define MAP_IMAGE_W (MAP_FB_W * 2)
+#define MAP_IMAGE_H (MAP_FB_H * 2)
 
 // A place on the map: 0-65535 across its width and height.
 typedef struct {
