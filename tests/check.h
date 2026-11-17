@@ -24,4 +24,5 @@ void testRing(void);
 void testHls(void);
 void testDirectory(void);
 void testLogos(void);
+void testCategories(void);
 void testLibrary(void);

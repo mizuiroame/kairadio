@@ -3,16 +3,10 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
 #include <switch.h>
 
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/channel_layout.h>
-#include <libavutil/opt.h>
-#include <libswresample/swresample.h>
-
+#include "audiodec.h"
 #include "ring.h"
 #include "stream.h"
 
@@ -20,18 +14,16 @@
 #define PREBUFFER_SECONDS 3
 #define PREBUFFER_MIN (16u * 1024)
 #define PREBUFFER_DEFAULT (48u * 1024)
-#define AVIO_BUFFER 16384
-#define PROBE_BYTES (64 * 1024)
-#define READ_WAIT_MS 100
-#define BUFFER_COUNT 4
-#define BUFFER_FRAMES 2048
+#define BUFFER_COUNT 3
+#define BUFFER_FRAMES 4096
 #define BUFFER_BYTES (BUFFER_FRAMES * 2 * sizeof(s16))
 #define BUFFER_ALIGN 0x1000
-#define PCM_FRAMES (BUFFER_FRAMES * 8)  // Decoded audio waiting for a buffer.
 #define WAIT_TIMEOUT_NS 20000000ull
 #define IDLE_SLEEP_NS 10000000ull
-#define THREAD_STACK_SIZE 0x20000
+#define THREAD_STACK_SIZE 0x40000
 #define THREAD_PRIORITY 0x2B
+#define LOG_PATH "sdmc:/config/kairadio/audio.log"
+#define LOG_EVERY_NS 2000000000ull
 
 // Shared with the UI thread: guarded by g_lock.
 static Mutex g_lock;
@@ -40,10 +32,7 @@ static Station g_station;
 static bool g_play_request;   // Start g_station.
 static bool g_stop_request;
 static bool g_playing;        // A station is meant to be playing.
-static bool g_buffering;
 static bool g_decoding;       // The decoder has produced audio.
-static char g_codec[16];
-static unsigned g_sample_rate;
 static char g_error[160];
 
 // Owned by the audio thread.
@@ -52,21 +41,19 @@ static volatile bool g_running;
 static volatile bool g_abort;  // Makes a blocked read give up (a new command came).
 static Ring g_ring;
 static size_t g_prebuffer;
-static bool g_started;         // The decoder has been opened for this station.
-static AVFormatContext *g_format;
-static AVIOContext *g_avio;
-static AVCodecContext *g_codec_ctx;
-static SwrContext *g_swr;
-static int g_stream_index = -1;
-static AVPacket *g_packet;
-static AVFrame *g_frame;
-static int g_swr_rate, g_swr_format;
-static AVChannelLayout g_swr_layout;
+static bool g_open;            // The decoder is open for this station.
 static u32 g_out_rate;
-static s16 g_pcm[PCM_FRAMES * 2];
-static size_t g_pcm_frames;
 static AudioOutBuffer g_buffers[BUFFER_COUNT];
 static bool g_queued[BUFFER_COUNT];
+
+// What the audio log reports, for the station playing.
+static struct {
+    FILE *file;
+    u64 started, last;
+    u64 frames;       // Decoded and queued.
+    u64 appended, released, short_buffers;
+    u64 played_start;
+} g_log;
 
 const char *radioStateLabel(RadioState state)
 {
@@ -80,6 +67,11 @@ const char *radioStateLabel(RadioState state)
     }
 }
 
+static u64 nowNs(void)
+{
+    return armTicksToNs(armGetSystemTick());
+}
+
 static void setError(const char *message)
 {
     mutexLock(&g_lock);
@@ -88,235 +80,77 @@ static void setError(const char *message)
     mutexUnlock(&g_lock);
 }
 
-// --- Reading the ring from FFmpeg ---
+// --- The audio log: how fast the output takes audio, to find stutters ---
 
-static void setBuffering(bool on)
+static void logStart(const char *url)
 {
-    mutexLock(&g_lock);
-    g_buffering = on;
-    mutexUnlock(&g_lock);
+    if (!g_log.file)
+        g_log.file = fopen(LOG_PATH, "w");
+    if (!g_log.file)
+        return;
+    g_log.started = g_log.last = nowNs();
+    g_log.frames = g_log.appended = g_log.released = g_log.short_buffers = 0;
+    audoutGetAudioOutPlayedSampleCount(&g_log.played_start);
+    fprintf(g_log.file, "start %s, output %u Hz, %u channels\n", url, g_out_rate, audoutGetChannelCount());
+    fflush(g_log.file);
 }
 
-static int readPacket(void *opaque, uint8_t *buf, int size)
+static void logTick(void)
 {
-    (void)opaque;
-    // An empty ring after playback started: wait to refill a few seconds
-    // rather than stutter on every packet.
-    if (g_started && ringFill(&g_ring) == 0 && !ringFinished(&g_ring)) {
-        setBuffering(true);
-        while (!g_abort && ringFill(&g_ring) < g_prebuffer && !ringFinished(&g_ring))
-            svcSleepThread(50000000ull);
-    }
-    while (!g_abort) {
-        size_t n = ringRead(&g_ring, buf, (size_t)size, READ_WAIT_MS);
-        if (n > 0) {
-            setBuffering(false);
-            return (int)n;
-        }
-        if (ringFinished(&g_ring))
-            return AVERROR_EOF;
-    }
-    return AVERROR_EXIT;
+    u64 now = nowNs();
+    if (!g_log.file || now - g_log.last < LOG_EVERY_NS)
+        return;
+    g_log.last = now;
+    DecoderInfo d;
+    decoderGetInfo(&d);
+    StreamInfo s;
+    streamGetInfo(&s);
+    u64 played = 0;
+    audoutGetAudioOutPlayedSampleCount(&played);
+    u32 queued = 0;
+    audoutGetAudioOutBufferCount(&queued);
+    double t = (double)(now - g_log.started) / 1e9;
+    fprintf(g_log.file,
+            "%6.1fs decoded %.1fs played %.1fs (%llu samples) | appended %llu released %llu queued %u short %llu | "
+            "%s %u Hz %u ch | ring %zu buffering %d | stream %d %d kbps '%s'\n",
+            t, (double)g_log.frames / g_out_rate, (double)(played - g_log.played_start) / g_out_rate,
+            (unsigned long long)(played - g_log.played_start), (unsigned long long)g_log.appended,
+            (unsigned long long)g_log.released, queued, (unsigned long long)g_log.short_buffers, d.codec,
+            d.sample_rate, d.channels, ringFill(&g_ring), decoderBuffering(), s.state, s.bitrate, s.content_type);
+    fflush(g_log.file);
 }
 
-static int interrupted(void *opaque)
+static void logLine(const char *message)
 {
-    (void)opaque;
-    return g_abort;
-}
-
-// --- The decoder ---
-
-static const char *formatFor(const char *content_type)
-{
-    static const struct {
-        const char *type;
-        const char *format;
-    } TYPES[] = {
-        {"audio/mpeg", "mp3"},       {"audio/mp3", "mp3"},        {"audio/aac", "aac"},
-        {"audio/aacp", "aac"},       {"audio/x-aac", "aac"},      {"audio/ogg", "ogg"},
-        {"application/ogg", "ogg"},  {"audio/opus", "ogg"},       {"audio/flac", "flac"},
-        {"video/mp2t", "mpegts"},    {"audio/mp2t", "mpegts"},
-    };
-    for (size_t i = 0; i < sizeof(TYPES) / sizeof(TYPES[0]); i++)
-        if (strncasecmp(content_type, TYPES[i].type, strlen(TYPES[i].type)) == 0)
-            return TYPES[i].format;
-    return NULL;
-}
-
-static void codecLabel(const AVCodecContext *c, char *out, size_t size)
-{
-    const char *name;
-    switch (c->codec_id) {
-    case AV_CODEC_ID_MP3: name = "MP3"; break;
-    case AV_CODEC_ID_AAC:
-    case AV_CODEC_ID_AAC_LATM:
-        name = c->profile == AV_PROFILE_AAC_HE || c->profile == AV_PROFILE_AAC_HE_V2 ? "HE-AAC" : "AAC";
-        break;
-    case AV_CODEC_ID_OPUS: name = "Opus"; break;
-    case AV_CODEC_ID_VORBIS: name = "Vorbis"; break;
-    case AV_CODEC_ID_FLAC: name = "FLAC"; break;
-    default: name = avcodec_get_name(c->codec_id); break;
-    }
-    snprintf(out, size, "%s", name);
-}
-
-static void closeDecoder(void)
-{
-    swr_free(&g_swr);
-    av_channel_layout_uninit(&g_swr_layout);
-    avcodec_free_context(&g_codec_ctx);
-    if (g_format)
-        avformat_close_input(&g_format);
-    if (g_avio) {
-        av_freep(&g_avio->buffer);
-        avio_context_free(&g_avio);
-    }
-    g_stream_index = -1;
-    g_started = false;
-    g_pcm_frames = 0;
-}
-
-static bool openDecoder(const char *content_type)
-{
-    uint8_t *buffer = av_malloc(AVIO_BUFFER);
-    g_avio = buffer ? avio_alloc_context(buffer, AVIO_BUFFER, 0, NULL, readPacket, NULL, NULL) : NULL;
-    g_format = avformat_alloc_context();
-    if (!g_avio || !g_format) {
-        if (!g_avio)
-            av_free(buffer);
-        return false;
-    }
-    g_format->pb = g_avio;
-    g_format->flags |= AVFMT_FLAG_CUSTOM_IO;
-    g_format->interrupt_callback = (AVIOInterruptCB){interrupted, NULL};
-    g_format->probesize = PROBE_BYTES;
-    g_format->max_analyze_duration = AV_TIME_BASE / 2;
-    const AVInputFormat *hint = formatFor(content_type) ? av_find_input_format(formatFor(content_type)) : NULL;
-    if (avformat_open_input(&g_format, NULL, hint, NULL) < 0)
-        return false;  // avformat_open_input freed the context.
-    if (avformat_find_stream_info(g_format, NULL) < 0)
-        return false;
-    const AVCodec *codec = NULL;
-    g_stream_index = av_find_best_stream(g_format, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
-    if (g_stream_index < 0 || !codec)
-        return false;
-    g_codec_ctx = avcodec_alloc_context3(codec);
-    if (!g_codec_ctx ||
-        avcodec_parameters_to_context(g_codec_ctx, g_format->streams[g_stream_index]->codecpar) < 0 ||
-        avcodec_open2(g_codec_ctx, codec, NULL) < 0)
-        return false;
-    mutexLock(&g_lock);
-    codecLabel(g_codec_ctx, g_codec, sizeof(g_codec));
-    mutexUnlock(&g_lock);
-    g_started = true;
-    return true;
-}
-
-// Makes the resampler match the frame (HE-AAC can change rate after the
-// first frames). False if it can't be set up.
-static bool prepareResampler(const AVFrame *f)
-{
-    if (g_swr && f->sample_rate == g_swr_rate && f->format == g_swr_format &&
-        av_channel_layout_compare(&f->ch_layout, &g_swr_layout) == 0)
-        return true;
-    swr_free(&g_swr);
-    av_channel_layout_uninit(&g_swr_layout);
-    AVChannelLayout stereo = AV_CHANNEL_LAYOUT_STEREO;
-    if (swr_alloc_set_opts2(&g_swr, &stereo, AV_SAMPLE_FMT_S16, (int)g_out_rate, &f->ch_layout, f->format,
-                            f->sample_rate, 0, NULL) < 0 ||
-        swr_init(g_swr) < 0) {
-        swr_free(&g_swr);
-        return false;
-    }
-    g_swr_rate = f->sample_rate;
-    g_swr_format = f->format;
-    av_channel_layout_copy(&g_swr_layout, &f->ch_layout);
-    mutexLock(&g_lock);
-    g_sample_rate = (unsigned)f->sample_rate;
-    mutexUnlock(&g_lock);
-    return true;
-}
-
-static bool convertFrame(const AVFrame *f)
-{
-    if (!prepareResampler(f))
-        return false;
-    int room = (int)(PCM_FRAMES - g_pcm_frames);
-    uint8_t *out = (uint8_t *)(g_pcm + g_pcm_frames * 2);
-    int n = swr_convert(g_swr, &out, room, (const uint8_t **)f->extended_data, f->nb_samples);
-    if (n > 0)
-        g_pcm_frames += (size_t)n;
-    return n >= 0;
-}
-
-// Decodes until there is a buffer's worth of audio. False at the end of the
-// stream or on an error that stops playback.
-static bool decodeMore(void)
-{
-    while (g_pcm_frames < BUFFER_FRAMES && !g_abort) {
-        int rc = avcodec_receive_frame(g_codec_ctx, g_frame);
-        if (rc == 0) {
-            bool ok = convertFrame(g_frame);
-            av_frame_unref(g_frame);
-            if (!ok)
-                return false;
-            mutexLock(&g_lock);
-            g_decoding = true;
-            mutexUnlock(&g_lock);
-            continue;
-        }
-        if (rc != AVERROR(EAGAIN))
-            return false;
-        rc = av_read_frame(g_format, g_packet);
-        if (rc < 0)
-            return false;
-        if (g_packet->stream_index == g_stream_index) {
-            // A damaged packet is skipped; the stream goes on.
-            avcodec_send_packet(g_codec_ctx, g_packet);
-        }
-        av_packet_unref(g_packet);
-    }
-    return g_pcm_frames > 0;
+    if (!g_log.file)
+        return;
+    fprintf(g_log.file, "%6.1fs %s\n", (double)(nowNs() - g_log.started) / 1e9, message);
+    fflush(g_log.file);
 }
 
 // --- Output ---
 
-static bool fillBuffer(AudioOutBuffer *buffer)
-{
-    if (g_pcm_frames < BUFFER_FRAMES && !decodeMore())
-        return false;
-    size_t frames = g_pcm_frames < BUFFER_FRAMES ? g_pcm_frames : BUFFER_FRAMES;
-    s16 *out = buffer->buffer;
-    memcpy(out, g_pcm, frames * 2 * sizeof(s16));
-    memset(out + frames * 2, 0, (BUFFER_FRAMES - frames) * 2 * sizeof(s16));
-    memmove(g_pcm, g_pcm + frames * 2, (g_pcm_frames - frames) * 2 * sizeof(s16));
-    g_pcm_frames -= frames;
-    buffer->data_size = BUFFER_BYTES;
-    return true;
-}
-
-static int queuedCount(void)
-{
-    int n = 0;
-    for (int i = 0; i < BUFFER_COUNT; i++)
-        n += g_queued[i];
-    return n;
-}
-
+// Marks the buffers the output has finished with. Asks about each one, so a
+// release is never missed.
 static void reapBuffers(void)
 {
-    if (queuedCount() == 0) {
+    bool any = false;
+    for (int i = 0; i < BUFFER_COUNT; i++)
+        any |= g_queued[i];
+    if (!any) {
         svcSleepThread(IDLE_SLEEP_NS);
         return;
     }
     AudioOutBuffer *released = NULL;
     u32 count = 0;
-    if (R_FAILED(audoutWaitPlayFinish(&released, &count, WAIT_TIMEOUT_NS)) || count == 0)
-        return;
-    for (int i = 0; i < BUFFER_COUNT; i++)
-        if (released == &g_buffers[i])
+    audoutWaitPlayFinish(&released, &count, WAIT_TIMEOUT_NS);
+    for (int i = 0; i < BUFFER_COUNT; i++) {
+        bool contains = true;
+        if (g_queued[i] && R_SUCCEEDED(audoutContainsAudioOutBuffer(&g_buffers[i], &contains)) && !contains) {
             g_queued[i] = false;
+            g_log.released++;
+        }
+    }
 }
 
 static void flushOutput(void)
@@ -331,11 +165,13 @@ static void flushOutput(void)
 
 static void stopPlayback(void)
 {
+    g_abort = true;
     streamStop();
-    closeDecoder();
+    decoderClose();
+    g_open = false;
     flushOutput();
+    g_abort = false;
     mutexLock(&g_lock);
-    g_buffering = false;
     g_decoding = false;
     mutexUnlock(&g_lock);
 }
@@ -347,8 +183,6 @@ static void startPlayback(void)
     char url[LINK_URL_MAX];
     snprintf(url, sizeof(url), "%s", g_station.url);
     int bitrate = g_station.bitrate;
-    g_codec[0] = '\0';
-    g_sample_rate = 0;
     g_error[0] = '\0';
     g_playing = true;
     mutexUnlock(&g_lock);
@@ -359,6 +193,7 @@ static void startPlayback(void)
     if (g_prebuffer > RING_BYTES / 2)
         g_prebuffer = RING_BYTES / 2;
     streamStart(&g_ring, url);
+    logStart(url);
 }
 
 static void handleCommands(void)
@@ -368,10 +203,11 @@ static void handleCommands(void)
     g_play_request = g_stop_request = false;
     mutexUnlock(&g_lock);
     g_abort = false;
-    if (play)
+    if (play) {
         startPlayback();
-    else if (stop) {
+    } else if (stop) {
         stopPlayback();
+        logLine("stopped");
         mutexLock(&g_lock);
         g_playing = false;
         mutexUnlock(&g_lock);
@@ -386,48 +222,82 @@ static bool isPlaying(void)
     return playing;
 }
 
+static void failWith(const char *fallback)
+{
+    StreamInfo info;
+    streamGetInfo(&info);
+    stopPlayback();
+    const char *message = info.state == STREAM_FAILED ? info.error : fallback;
+    logLine(message);
+    setError(message);
+}
+
+// Opens the decoder once the start of the stream is buffered.
+static bool openWhenBuffered(void)
+{
+    StreamInfo info;
+    streamGetInfo(&info);
+    if (info.state == STREAM_FAILED) {
+        failWith(info.error);
+        return false;
+    }
+    if (ringFill(&g_ring) < g_prebuffer && !ringFinished(&g_ring)) {
+        svcSleepThread(IDLE_SLEEP_NS * 5);
+        return false;
+    }
+    streamGetInfo(&info);
+    if (!decoderOpen(&g_ring, info.content_type, g_out_rate, &g_abort, g_prebuffer)) {
+        if (!g_abort)
+            failWith("This station's audio format isn't supported.");
+        return false;
+    }
+    g_open = true;
+    DecoderInfo d;
+    decoderGetInfo(&d);
+    char line[96];
+    snprintf(line, sizeof(line), "decoder %s, content type '%s'", d.codec, info.content_type);
+    logLine(line);
+    return true;
+}
+
 static void playStep(void)
 {
-    if (!g_started) {
-        StreamInfo info;
-        streamGetInfo(&info);
-        if (info.state == STREAM_FAILED) {
-            stopPlayback();
-            setError(info.error);
-            return;
-        }
-        if (ringFill(&g_ring) < g_prebuffer && !ringFinished(&g_ring)) {
-            svcSleepThread(IDLE_SLEEP_NS * 5);
-            return;
-        }
-        streamGetInfo(&info);
-        if (!openDecoder(info.content_type)) {
-            if (g_abort)
-                return;
-            streamGetInfo(&info);
-            stopPlayback();
-            setError(info.state == STREAM_FAILED ? info.error : "This station's audio format isn't supported.");
-            return;
-        }
-    }
+    if (!g_open && !openWhenBuffered())
+        return;
     for (int i = 0; i < BUFFER_COUNT && !g_abort; i++) {
         if (g_queued[i])
             continue;
-        if (!fillBuffer(&g_buffers[i])) {
-            if (g_abort || queuedCount() > 0)
+        AudioOutBuffer *b = &g_buffers[i];
+        s16 *pcm = b->buffer;
+        size_t n = decoderRead(pcm, BUFFER_FRAMES);
+        if (n == 0) {
+            bool waiting = false;
+            for (int k = 0; k < BUFFER_COUNT; k++)
+                waiting |= g_queued[k];
+            if (g_abort || waiting)
                 break;  // Let what's queued play out first.
             StreamInfo info;
             streamGetInfo(&info);
-            stopPlayback();
-            setError(info.state == STREAM_FAILED ? info.error :
-                     info.state == STREAM_ENDED  ? "The station ended the broadcast." :
-                                                   "The station's audio stopped.");
+            failWith(info.state == STREAM_ENDED ? "The station ended the broadcast." : "The station's audio stopped.");
             return;
         }
-        if (R_SUCCEEDED(audoutAppendAudioOutBuffer(&g_buffers[i])))
+        if (n < BUFFER_FRAMES) {
+            memset(pcm + n * 2, 0, (BUFFER_FRAMES - n) * 2 * sizeof(s16));
+            g_log.short_buffers++;
+        }
+        b->data_size = BUFFER_BYTES;
+        b->data_offset = 0;
+        if (R_SUCCEEDED(audoutAppendAudioOutBuffer(b))) {
             g_queued[i] = true;
+            g_log.appended++;
+            g_log.frames += BUFFER_FRAMES;
+        }
+        mutexLock(&g_lock);
+        g_decoding = true;
+        mutexUnlock(&g_lock);
     }
     reapBuffers();
+    logTick();
 }
 
 static void audioThreadMain(void *arg)
@@ -472,9 +342,7 @@ static void freeBuffers(void)
 bool radioInit(void)
 {
     mutexInit(&g_lock);
-    g_packet = av_packet_alloc();
-    g_frame = av_frame_alloc();
-    if (!g_packet || !g_frame || !ringInit(&g_ring, RING_BYTES))
+    if (!ringInit(&g_ring, RING_BYTES))
         return false;
     if (R_FAILED(audoutInitialize()))
         return false;
@@ -509,8 +377,9 @@ void radioExit(void)
     freeBuffers();
     audoutExit();
     ringFree(&g_ring);
-    av_packet_free(&g_packet);
-    av_frame_free(&g_frame);
+    if (g_log.file)
+        fclose(g_log.file);
+    g_log.file = NULL;
 }
 
 void radioPlay(const Station *station)
@@ -522,7 +391,6 @@ void radioPlay(const Station *station)
     g_stop_request = false;
     g_playing = true;
     g_error[0] = '\0';
-    g_codec[0] = '\0';
     g_decoding = false;
     mutexUnlock(&g_lock);
     g_abort = true;
@@ -544,22 +412,23 @@ void radioGetStatus(RadioStatus *out)
 {
     StreamInfo info;
     streamGetInfo(&info);
+    DecoderInfo d;
+    decoderGetInfo(&d);
     memset(out, 0, sizeof(*out));
     mutexLock(&g_lock);
     out->has_station = g_has_station;
     out->station = g_station;
-    snprintf(out->codec, sizeof(out->codec), "%s", g_codec);
-    out->sample_rate = g_sample_rate;
     snprintf(out->error, sizeof(out->error), "%s", g_error);
-    bool playing = g_playing, buffering = g_buffering, decoding = g_decoding;
+    bool playing = g_playing, decoding = g_decoding;
     mutexUnlock(&g_lock);
 
+    snprintf(out->codec, sizeof(out->codec), "%s", d.codec);
+    out->sample_rate = d.sample_rate;
     snprintf(out->title, sizeof(out->title), "%s", info.title);
     out->title_changes = info.title_changes;
     out->hls = info.hls;
     out->bitrate = info.bitrate > 0 ? info.bitrate : out->station.bitrate;
-    if (g_out_rate)
-        out->buffered_seconds = (float)ringFill(&g_ring) / (float)(out->bitrate > 0 ? out->bitrate * 125 : 16000);
+    out->buffered_seconds = (float)ringFill(&g_ring) / (float)(out->bitrate > 0 ? out->bitrate * 125 : 16000);
     if (out->error[0])
         out->state = RADIO_FAILED;
     else if (!playing)
@@ -569,5 +438,5 @@ void radioGetStatus(RadioStatus *out)
     else if (!decoding)
         out->state = info.state == STREAM_RECEIVING ? RADIO_BUFFERING : RADIO_CONNECTING;
     else
-        out->state = buffering ? RADIO_BUFFERING : RADIO_PLAYING;
+        out->state = decoderBuffering() ? RADIO_BUFFERING : RADIO_PLAYING;
 }

@@ -11,12 +11,14 @@ typedef enum {
     HIT_TAB,          // arg: View.
     HIT_LIST,         // The scrolling list area, for drags.
     HIT_ROW,          // arg: index in the current list. A tap plays it.
+    HIT_CATEGORY,     // arg: index of a genre, country or language. A tap opens it.
+    HIT_SEARCH_MODE,  // arg: SearchMode.
     HIT_FAVORITE,     // The heart: arg is a row index, or -1 for the station playing.
     HIT_MINI_PLAYER,  // Opens Now Playing.
     HIT_PLAY,         // Play or stop.
     HIT_PREV,         // The station before, in the list it was played from.
     HIT_NEXT,
-    HIT_BACK,         // Like B: out of Now Playing.
+    HIT_BACK,         // Like B: out of Now Playing, or out of a category.
     HIT_SEARCH,       // The search box: types a search.
     HIT_RETRY,        // Asks the directory again.
     HIT_EXIT,         // The X in the corner: quits.

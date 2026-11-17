@@ -163,22 +163,131 @@ static void drawMessage(const char *line1, const char *line2, bool retry)
     }
 }
 
-// The line under the tabs: what the list is, or the search box.
+// --- Search ---
+
+static const char *const MODE_NAMES[SEARCH_MODES] = {"Name", "Genre", "Country", "Language"};
+static const char *const MODE_PLURALS[SEARCH_MODES] = {"", "genres", "countries", "languages"};
+
+// The ways to search, as pills; returns where the space after them starts.
+static int drawSearchModes(const App *app)
+{
+    int x = MARGIN, y = SUBTITLE_Y - 6;
+    uiDrawButton(x, y + 17.0f, "<", COLOR_SURFACE_HI, COLOR_DIM);
+    x += uiButtonWidth("<") + 8;
+    for (int i = 0; i < SEARCH_MODES; i++) {
+        bool on = (int)app->search_mode == i;
+        int w = uiPillWidth(MODE_NAMES[i]);
+        uiDrawPill(x, y + 2, MODE_NAMES[i], on ? COLOR_ACCENT : COLOR_SURFACE_HI, on ? COLOR_BG : COLOR_DIM);
+        uiHitAdd(x - 4, y - 6, w + 8, 46, HIT_SEARCH_MODE, i);
+        x += w + 8;
+    }
+    uiDrawButton(x, y + 17.0f, ">", COLOR_SURFACE_HI, COLOR_DIM);
+    return x + uiButtonWidth(">") + 24;
+}
+
+static void drawSearchBox(const App *app, int x)
+{
+    int w = GFX_WIDTH - MARGIN - x, y = SUBTITLE_Y - 6;
+    gfxFillRoundRect(x, y, w, 34, 17, COLOR_SURFACE_HI);
+    float cx = x + 22.0f, cy = y + 16.0f;  // A magnifier.
+    gfxArc(cx - 2, cy - 2, 7, 2.5f, 0, 6.2832f, COLOR_DIM);
+    gfxLine(cx + 3, cy + 3, cx + 8, cy + 8, 3, COLOR_DIM);
+    const char *shown = app->query[0] ? app->query : "Search by station name";
+    fontDrawClipped(FONT_REGULAR, 18, x + 40, y + 6, w - 80, shown, app->query[0] ? COLOR_TEXT : COLOR_DIM);
+    uiDrawButton(x + w - 30, y + 17.0f, "X", COLOR_BG, COLOR_DIM);
+    uiHitAdd(x, y - 4, w, 42, HIT_SEARCH, 0);
+}
+
+// "< Back  Jazz · 1,234 stations" while a category is open.
+static void drawCategoryBack(const App *app, int x)
+{
+    int y = SUBTITLE_Y - 4;
+    gfxLine(x + 14, y + 6, x + 6, y + 15, 3, COLOR_TEXT);
+    gfxLine(x + 6, y + 15, x + 14, y + 24, 3, COLOR_TEXT);
+    int back_w = fontDraw(FONT_REGULAR, 18, x + 22, y + 4, "Back", COLOR_TEXT);
+    uiHitAdd(x - 8, y - 8, back_w + 40, 46, HIT_BACK, 0);
+    char label[CATEGORY_NAME_MAX], text[CATEGORY_NAME_MAX + 32];
+    categoryLabel(&app->open_category, label, sizeof(label));
+    snprintf(text, sizeof(text), "%s \xC2\xB7 %d stations", label, app->open_category.count);
+    int tx = x + 22 + back_w + 20;
+    fontDrawClipped(FONT_BOLD, 18, tx, y + 4, GFX_WIDTH - MARGIN - tx, text, COLOR_ACCENT);
+}
+
+static void drawSearchHeader(const App *app)
+{
+    int x = drawSearchModes(app);
+    if (app->search_mode == SEARCH_NAME)
+        drawSearchBox(app, x);
+    else if (app->category_open)
+        drawCategoryBack(app, x);
+    else
+        fontDraw(FONT_REGULAR, 18, x, SUBTITLE_Y, "Pick one to see its stations", COLOR_DIM);
+}
+
+// A tile with the country or language code, or a note for a genre.
+static void drawCategoryTile(int x, int y, int size, SearchMode mode, const Category *c)
+{
+    gfxFillRoundRect(x, y, size, size, size / 6, COLOR_SURFACE_HI);
+    if (mode == SEARCH_GENRE || !c->code[0]) {
+        float cx = x + size / 2.0f, cy = y + size / 2.0f;  // A note.
+        gfxFillCircle((int)(cx - 4), (int)(cy + 8), 7, COLOR_ACCENT);
+        gfxFillRect((int)(cx + 1), (int)(cy - 12), 3, 21, COLOR_ACCENT);
+        gfxLine(cx + 2, cy - 12, cx + 10, cy - 6, 3, COLOR_ACCENT);
+        return;
+    }
+    char code[8];
+    snprintf(code, sizeof(code), "%s", c->code);
+    for (char *p = code; *p; p++)
+        if (*p >= 'a' && *p <= 'z')
+            *p = (char)(*p - 'a' + 'A');
+    fontDrawCentered(FONT_BOLD, 18, x + size / 2.0f, y + size / 2.0f, code, COLOR_ACCENT);
+}
+
+static void drawCategories(const App *app)
+{
+    SearchMode mode = app->search_mode;
+    const CategoryList *list = &app->categories[mode];
+    if (list->count == 0) {
+        char line[64];
+        snprintf(line, sizeof(line), "Loading %s\xE2\x80\xA6", MODE_PLURALS[mode]);
+        if (appFailed(app))
+            drawMessage("The station directory can't be reached.", app->directory.error, true);
+        else
+            drawMessage(line, "", false);
+        return;
+    }
+    uiHitAdd(0, UI_LIST_Y, GFX_WIDTH, UI_LIST_ROWS * UI_ROW_H, HIT_LIST, 0);
+    size_t cursor = app->category_cursor[mode];
+    size_t first = uiFirstVisible(cursor, list->count);
+    for (size_t i = first; i < list->count && i < first + UI_LIST_ROWS; i++) {
+        const Category *c = &list->items[i];
+        int y = UI_LIST_Y + (int)(i - first) * UI_ROW_H;
+        if (i == cursor) {
+            gfxFillRoundRect(MARGIN - 12, y + 2, GFX_WIDTH - 2 * (MARGIN - 12), UI_ROW_H - 4, 10, COLOR_SURFACE_HI);
+            gfxFillRect(MARGIN - 12, y + 14, 3, UI_ROW_H - 28, COLOR_ACCENT);
+        }
+        uiHitAdd(MARGIN - 12, y, GFX_WIDTH - 2 * (MARGIN - 12), UI_ROW_H, HIT_CATEGORY, (int)i);
+        drawCategoryTile(MARGIN, y + (UI_ROW_H - ROW_LOGO) / 2, ROW_LOGO, mode, c);
+        char label[CATEGORY_NAME_MAX], count[32];
+        categoryLabel(c, label, sizeof(label));
+        snprintf(count, sizeof(count), "%d station%s", c->count, c->count == 1 ? "" : "s");
+        int text_x = MARGIN + ROW_LOGO + 16;
+        fontDrawClipped(FONT_BOLD, 22, text_x, y + 9, GFX_WIDTH - MARGIN - text_x - 160, label, COLOR_TEXT);
+        fontDraw(FONT_REGULAR, 17, text_x, y + 38, count, COLOR_DIM);
+        // A chevron: it opens.
+        float cx = GFX_WIDTH - MARGIN - 20.0f, cy = y + UI_ROW_H / 2.0f;
+        gfxLine(cx - 4, cy - 8, cx + 4, cy, 3, COLOR_FAINT);
+        gfxLine(cx + 4, cy, cx - 4, cy + 8, 3, COLOR_FAINT);
+    }
+    drawScrollbar(first, list->count);
+}
+
+// --- Lists ---
+
+// The line under the tabs: what the list is.
 static void drawSubtitle(const App *app, const StationList *list)
 {
     char text[160];
-    if (app->view == VIEW_SEARCH) {
-        int w = 520, x = MARGIN, y = SUBTITLE_Y - 6;
-        gfxFillRoundRect(x, y, w, 34, 17, COLOR_SURFACE_HI);
-        float cx = x + 22.0f, cy = y + 16.0f;  // A magnifier.
-        gfxArc(cx - 2, cy - 2, 7, 2.5f, 0, 6.2832f, COLOR_DIM);
-        gfxLine(cx + 3, cy + 3, cx + 8, cy + 8, 3, COLOR_DIM);
-        const char *shown = app->query[0] ? app->query : "Search by station name";
-        fontDrawClipped(FONT_REGULAR, 18, x + 40, y + 6, w - 80, shown, app->query[0] ? COLOR_TEXT : COLOR_DIM);
-        uiDrawButton(x + w - 30, y + 17.0f, "X", COLOR_BG, COLOR_DIM);
-        uiHitAdd(x, y - 4, w, 42, HIT_SEARCH, 0);
-        return;
-    }
     switch (app->view) {
     case VIEW_POPULAR: snprintf(text, sizeof(text), "The most played stations"); break;
     case VIEW_FAVORITES:
@@ -192,32 +301,42 @@ static void drawSubtitle(const App *app, const StationList *list)
                  SUBTITLE_Y + 2, "From radio-browser.info", COLOR_FAINT);
 }
 
-static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
+static void drawEmpty(const App *app)
 {
-    const StationList *list = appList(app, app->view);
-    drawSubtitle(app, list);
-    bool loading = app->waiting_active && app->waiting_view == app->view;
-    bool failed = !loading && app->directory.state == DIR_FAILED && app->waiting_view == app->view &&
-                  app->directory.generation == app->waiting;
-    if (loading && list->count == 0) {
-        drawMessage("Loading stations\xE2\x80\xA6", "", false);
-        return;
-    }
-    if (failed && list->count == 0) {
-        drawMessage("The station directory can't be reached.", app->directory.error, true);
-        return;
-    }
-    if (list->count == 0) {
-        switch (app->view) {
-        case VIEW_SEARCH:
+    switch (app->view) {
+    case VIEW_SEARCH:
+        if (app->search_mode != SEARCH_NAME)
+            drawMessage("No stations here right now.", "Go back and pick another one.", false);
+        else
             drawMessage(app->query[0] ? "No stations found." : "Find a station by its name.",
                         app->query[0] ? "Try another name." : "Press X or tap the box above.", false);
-            break;
-        case VIEW_FAVORITES:
-            drawMessage("No favorites yet.", "Press Y or tap the heart on a station to keep it here.", false);
-            break;
-        default: drawMessage("Nothing played yet.", "The stations you play show up here.", false); break;
+        break;
+    case VIEW_FAVORITES:
+        drawMessage("No favorites yet.", "Press Y or tap the heart on a station to keep it here.", false);
+        break;
+    default: drawMessage("Nothing played yet.", "The stations you play show up here.", false); break;
+    }
+}
+
+static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
+{
+    if (app->view == VIEW_SEARCH) {
+        drawSearchHeader(app);
+        if (appBrowsingCategories(app)) {
+            drawCategories(app);
+            return;
         }
+    }
+    const StationList *list = appList(app, app->view);
+    if (app->view != VIEW_SEARCH)
+        drawSubtitle(app, list);
+    if (list->count == 0) {
+        if (appLoading(app))
+            drawMessage("Loading stations\xE2\x80\xA6", "", false);
+        else if (appFailed(app))
+            drawMessage("The station directory can't be reached.", app->directory.error, true);
+        else
+            drawEmpty(app);
         return;
     }
     uiHitAdd(0, UI_LIST_Y, GFX_WIDTH, UI_LIST_ROWS * UI_ROW_H, HIT_LIST, 0);
@@ -302,7 +421,11 @@ static const char *footerHelp(const App *app)
     case VIEW_NOW_PLAYING:
         return "[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit";
     case VIEW_SEARCH:
-        return "[X] search  [A] play  [Y] favorite  [L][R] station  [-] play/stop  [+] exit";
+        if (appBrowsingCategories(app))
+            return "[A] open  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit";
+        if (app->category_open)
+            return "[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit";
+        return "[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit";
     default:
         return "[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit";
     }

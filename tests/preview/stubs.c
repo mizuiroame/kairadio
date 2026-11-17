@@ -65,6 +65,12 @@ bool directoryTake(unsigned generation, StationList *out)
     return false;
 }
 
+bool directoryTakeCategories(unsigned generation, CategoryList *out)
+{
+    (void)generation, (void)out;
+    return false;
+}
+
 void directoryCountClick(const char *uuid)
 {
     (void)uuid;

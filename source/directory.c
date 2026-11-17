@@ -37,15 +37,22 @@ static char g_text[TEXT_MAX];
 static char g_click[STATION_UUID_MAX];
 static DirectoryStatus g_status;
 static StationList g_result;
+static CategoryList g_categories;
 
 // The worker's own.
 static char g_server[SERVER_MAX];
 
+bool directoryListsCategories(DirectoryQuery query)
+{
+    return query == DIR_GENRES || query == DIR_COUNTRIES || query == DIR_LANGUAGES;
+}
+
 bool directoryPath(DirectoryQuery query, const char *text, char *out, size_t size)
 {
     static const char ORDER[] = "&hidebroken=true&order=clickcount&reverse=true";
+    static const char BY_COUNT[] = "order=stationcount&reverse=true&hidebroken=true";
     char escaped[ESCAPED_MAX];
-    if (query != DIR_POPULAR && (!text || !text[0] || !utilUrlEscape(text, escaped, sizeof(escaped))))
+    if (query != DIR_POPULAR && !directoryListsCategories(query) && (!text || !text[0] || !utilUrlEscape(text, escaped, sizeof(escaped))))
         return false;
     int n;
     switch (query) {
@@ -61,6 +68,19 @@ bool directoryPath(DirectoryQuery query, const char *text, char *out, size_t siz
     case DIR_TAG:
         n = snprintf(out, size, "/json/stations/search?tag=%s&tagExact=true&limit=%d%s", escaped, DIRECTORY_LIMIT,
                      ORDER);
+        break;
+    case DIR_LANGUAGE:
+        n = snprintf(out, size, "/json/stations/search?language=%s&languageExact=true&limit=%d%s", escaped,
+                     DIRECTORY_LIMIT, ORDER);
+        break;
+    case DIR_GENRES:
+        n = snprintf(out, size, "/json/tags?%s&limit=%d", BY_COUNT, CATEGORY_LIMIT);
+        break;
+    case DIR_COUNTRIES:
+        n = snprintf(out, size, "/json/countries?%s", BY_COUNT);
+        break;
+    case DIR_LANGUAGES:
+        n = snprintf(out, size, "/json/languages?%s&limit=%d", BY_COUNT, CATEGORY_LIMIT);
         break;
     default:
         return false;
@@ -113,6 +133,7 @@ static void runQuery(DirectoryQuery query, const char *text, unsigned generation
 {
     char path[512];
     StationList list = {0};
+    CategoryList categories = {0};
     char error[128] = "";
     NetResponse r;
     if (!directoryPath(query, text, path, sizeof(path))) {
@@ -120,7 +141,8 @@ static void runQuery(DirectoryQuery query, const char *text, unsigned generation
     } else if (!fetch(path, &r)) {
         snprintf(error, sizeof(error), "%s", r.error[0] ? r.error : "The directory can't be reached.");
     } else {
-        if (!stationsParse(r.data, &list))
+        bool read = directoryListsCategories(query) ? categoriesParse(r.data, &categories) : stationsParse(r.data, &list);
+        if (!read)
             snprintf(error, sizeof(error), "The directory sent an answer KaiRadio can't read.");
         netResponseFree(&r);
     }
@@ -128,13 +150,17 @@ static void runQuery(DirectoryQuery query, const char *text, unsigned generation
     pthread_mutex_lock(&g_lock);
     if (g_status.generation == generation && !g_cancel) {
         stationListFree(&g_result);
+        categoryListFree(&g_categories);
         g_result = list;
+        g_categories = categories;
         list = (StationList){0};
+        categories = (CategoryList){0};
         g_status.state = error[0] ? DIR_FAILED : DIR_READY;
         snprintf(g_status.error, sizeof(g_status.error), "%s", error);
     }
     pthread_mutex_unlock(&g_lock);
     stationListFree(&list);
+    categoryListFree(&categories);
 }
 
 static void sendClick(const char *uuid)
@@ -195,6 +221,7 @@ void directoryExit(void)
     pthread_join(g_thread, NULL);
     g_started = false;
     stationListFree(&g_result);
+    categoryListFree(&g_categories);
 }
 
 void directoryRequest(DirectoryQuery query, const char *text)
@@ -208,6 +235,7 @@ void directoryRequest(DirectoryQuery query, const char *text)
     g_status.state = DIR_LOADING;
     g_status.error[0] = '\0';
     stationListFree(&g_result);
+    categoryListFree(&g_categories);
     pthread_cond_signal(&g_wake);
     pthread_mutex_unlock(&g_lock);
 }
@@ -226,6 +254,18 @@ bool directoryTake(unsigned generation, StationList *out)
     if (ok) {
         *out = g_result;
         g_result = (StationList){0};
+    }
+    pthread_mutex_unlock(&g_lock);
+    return ok;
+}
+
+bool directoryTakeCategories(unsigned generation, CategoryList *out)
+{
+    pthread_mutex_lock(&g_lock);
+    bool ok = g_status.generation == generation && g_status.state == DIR_READY;
+    if (ok) {
+        *out = g_categories;
+        g_categories = (CategoryList){0};
     }
     pthread_mutex_unlock(&g_lock);
     return ok;

@@ -112,6 +112,13 @@ void testDirectory(void)
           strcmp(path, "/json/stations/search?name=jazz%20%26%20blues&limit=150&hidebroken=true&order=clickcount&reverse=true") == 0);
     CHECK(directoryPath(DIR_COUNTRY, "MX", path, sizeof(path)) && strstr(path, "countrycode=MX&") != NULL);
     CHECK(directoryPath(DIR_TAG, "caf\xC3\xA9", path, sizeof(path)) && strstr(path, "tag=caf%C3%A9&tagExact=true") != NULL);
+    CHECK(directoryPath(DIR_LANGUAGE, "spanish", path, sizeof(path)) &&
+          strstr(path, "language=spanish&languageExact=true") != NULL);
+    CHECK(directoryPath(DIR_GENRES, NULL, path, sizeof(path)) &&
+          strcmp(path, "/json/tags?order=stationcount&reverse=true&hidebroken=true&limit=300") == 0);
+    CHECK(directoryPath(DIR_COUNTRIES, NULL, path, sizeof(path)) && strncmp(path, "/json/countries?", 16) == 0);
+    CHECK(directoryPath(DIR_LANGUAGES, NULL, path, sizeof(path)) && strncmp(path, "/json/languages?", 16) == 0);
+    CHECK(directoryListsCategories(DIR_GENRES) && !directoryListsCategories(DIR_TAG));
     CHECK(!directoryPath(DIR_SEARCH, "", path, sizeof(path)));
     CHECK(!directoryPath(DIR_SEARCH, "x", path, 10));
 
@@ -143,9 +150,41 @@ void testDirectory(void)
     } while (status.state == DIR_LOADING);
     CHECK(status.state == DIR_FAILED && strstr(status.error, "503") != NULL);
     CHECK(!directoryTake(status.generation, &list));
+
+    // Categories come back as categories.
+    fakeNetAnswer("/json/countries", "[{\"name\":\"Mexico\",\"iso_3166_1\":\"MX\",\"stationcount\":812}]", 200);
+    directoryRequest(DIR_COUNTRIES, NULL);
+    do {
+        usleep(2000);
+        directoryGetStatus(&status);
+    } while (status.state == DIR_LOADING);
+    CategoryList countries;
+    CHECK(status.state == DIR_READY);
+    CHECK(directoryTakeCategories(status.generation, &countries) && countries.count == 1);
+    if (countries.count == 1)
+        CHECK(strcmp(countries.items[0].code, "MX") == 0 && countries.items[0].count == 812);
+    categoryListFree(&countries);
     directoryCountClick("1c33");
     directoryExit();
     fakeNetReset();
+}
+
+void testCategories(void)
+{
+    CategoryList list;
+    CHECK(categoriesParse("[{\"name\":\"hip hop\",\"stationcount\":120},{\"name\":\"\",\"stationcount\":5},"
+                          "{\"name\":\"empty\",\"stationcount\":0},{\"name\":\"spanish\",\"iso_639\":\"es\","
+                          "\"stationcount\":\"7\"},{\"name\":\"Mexico\",\"iso_3166_1\":\"MX\",\"stationcount\":3}]",
+                          &list));
+    CHECK(list.count == 2);
+    char label[CATEGORY_NAME_MAX];
+    if (list.count == 2) {
+        categoryLabel(&list.items[0], label, sizeof(label));
+        CHECK(strcmp(label, "Hip Hop") == 0 && list.items[0].code[0] == '\0');
+        CHECK(strcmp(list.items[1].name, "Mexico") == 0 && strcmp(list.items[1].code, "MX") == 0);
+    }
+    categoryListFree(&list);
+    CHECK(!categoriesParse("{}", &list) && list.count == 0);
 }
 
 int main(void)
@@ -158,6 +197,7 @@ int main(void)
     testHls();
     testDirectory();
     testLogos();
+    testCategories();
     testLibrary();
     printf("%d checks, %d failures\n", g_checks, g_failures);
     return g_failures ? 1 : 0;

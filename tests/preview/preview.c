@@ -85,6 +85,9 @@ typedef struct {
     int calls;
     size_t favorites;
     char query[SEARCH_MAX];
+    SearchMode search_mode;
+    bool category_open;
+    size_t category_cursor[SEARCH_MODES];
 } Snapshot;
 
 static Snapshot snapshot(const App *app)
@@ -98,6 +101,9 @@ static Snapshot snapshot(const App *app)
     s.calls = g_stub_calls;
     s.favorites = app->library.favorites.count;
     snprintf(s.query, sizeof(s.query), "%s", app->query);
+    s.search_mode = app->search_mode;
+    s.category_open = app->category_open;
+    memcpy(s.category_cursor, app->category_cursor, sizeof(s.category_cursor));
     return s;
 }
 
@@ -127,6 +133,8 @@ static void checkTouch(const char *name, App *app)
             continue;  // For drags only.
         if (r->kind == HIT_TAB && r->arg == (int)app->view)
             continue;  // The tab shown: a tap keeps it.
+        if (r->kind == HIT_SEARCH_MODE && r->arg == (int)app->search_mode)
+            continue;  // The same for the way of searching.
         int x, y;
         if (!reachablePoint(i, &x, &y)) {
             printf("TOUCH: %s: target kind %d at %d,%d is covered by others\n", name, r->kind, r->x, r->y);
@@ -212,8 +220,43 @@ int main(int argc, char **argv)
     appSetView(&app, VIEW_SEARCH);
     render(dir, "search_empty", &app);
     snprintf(app.query, sizeof(app.query), "%s", "jazz");
-    fillList(&app.results, 3);
+    fillList(&app.name_results, 3);
     render(dir, "search_results", &app);
+
+    // Search by genre: loading, the list, then one open.
+    appSetSearchMode(&app, SEARCH_GENRE);
+    render(dir, "search_genres_loading", &app);
+    static const char *GENRES[] = {"pop", "rock", "news", "jazz", "classical", "hip hop", "electronic", "80s", "talk"};
+    CategoryList *genres = &app.categories[SEARCH_GENRE];
+    genres->items = calloc(9, sizeof(Category));
+    for (int i = 0; i < 9; i++) {
+        snprintf(genres->items[i].name, sizeof(genres->items[i].name), "%s", GENRES[i]);
+        genres->items[i].count = 5000 / (i + 1);
+    }
+    genres->count = 9;
+    g_stub_directory.state = DIR_READY;
+    app.waiting_active = false;
+    app.category_cursor[SEARCH_GENRE] = 3;
+    render(dir, "search_genres", &app);
+    app.category_open = true;
+    app.open_category = genres->items[3];
+    fillList(&app.category_results, 6);
+    render(dir, "search_genre_open", &app);
+
+    // Countries, with their codes.
+    appSetSearchMode(&app, SEARCH_COUNTRY);
+    CategoryList *countries = &app.categories[SEARCH_COUNTRY];
+    static const char *COUNTRIES[][2] = {{"Germany", "DE"}, {"Mexico", "MX"}, {"Japan", "JP"}, {"Brazil", "BR"}};
+    countries->items = calloc(4, sizeof(Category));
+    for (int i = 0; i < 4; i++) {
+        snprintf(countries->items[i].name, sizeof(countries->items[i].name), "%s", COUNTRIES[i][0]);
+        snprintf(countries->items[i].code, sizeof(countries->items[i].code), "%s", COUNTRIES[i][1]);
+        countries->items[i].count = 900 - i * 100;
+    }
+    countries->count = 4;
+    app.waiting_active = false;
+    render(dir, "search_countries", &app);
+    appSetSearchMode(&app, SEARCH_NAME);
 
     // Favorites and Recent.
     appSetView(&app, VIEW_FAVORITES);

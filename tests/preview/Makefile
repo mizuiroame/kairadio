@@ -5,7 +5,7 @@ CC      ?= gcc
 SRC     := ../../source
 OUT     := build
 CFLAGS  := -std=gnu11 -O1 -g -Wall -Wextra -DKAIRADIO_VERSION=\"preview\" -I$(SRC) -I../../third_party -I$(OUT)
-UI_SRC  := gfx.c font.c ui.c ui_now.c ui_common.c ui_buttons.c ui_hit.c util.c stations.c link.c app.c library.c \
+UI_SRC  := categories.c gfx.c font.c ui.c ui_now.c ui_common.c ui_buttons.c ui_hit.c util.c stations.c link.c app.c library.c \
            touch.c image_impl.c
 
 .PHONY: run clean

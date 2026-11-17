@@ -1,0 +1,6 @@
+# The host tools that need the network and FFmpeg (streamdump).
+#   docker build -t kairadio-host -f tests/Dockerfile.host tests
+FROM debian:12
+RUN apt-get update && apt-get install -y --no-install-recommends gcc make libc6-dev ca-certificates \
+      libcurl4-openssl-dev libavformat-dev libavcodec-dev libswresample-dev libavutil-dev \
+ && rm -rf /var/lib/apt/lists/*
