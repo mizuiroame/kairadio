@@ -62,8 +62,9 @@ card: OunceShell's FTP server with an FTP client such as
    **[Releases](../../releases)** page.
 2. In hbmenu, open **OunceShell** and start its FTP server. It shows the
    console's address and port.
-3. Connect to it from your PC and copy `KaiRadio.nro` into the `switch`
-   folder, so it is `sdmc:/switch/KaiRadio.nro`.
+3. Connect to it from your PC, make a `kairadio` folder inside the `switch`
+   folder and copy `KaiRadio.nro` into it, so it is
+   `sdmc:/switch/kairadio/KaiRadio.nro`. (Straight in `switch` works too.)
 4. Open hbmenu and select **KaiRadio**.
 
 > **Don't take the microSD card out while kaiHEN is running.** Removing it
