@@ -110,8 +110,11 @@ void uiDrawPlayButton(float cx, float cy, float r, bool playing, Color bg, Color
 {
     gfxFillCircle((int)cx, (int)cy, (int)r, bg);
     if (playing) {
-        float s = r * 0.62f;
-        gfxFillRoundRect((int)(cx - s / 2), (int)(cy - s / 2), (int)s, (int)s, (int)(r * 0.1f), fg);
+        // An even side, so the square's whole-pixel corners sit exactly
+        // around the circle's center (cutting each one on its own shifted it).
+        int s = 2 * (int)lroundf(r * 0.31f);
+        int x = (int)lroundf(cx) - s / 2, y = (int)lroundf(cy) - s / 2;
+        gfxFillRoundRect(x, y, s, s, (int)(r * 0.1f), fg);
     } else {
         float h = r * 0.9f;
         gfxTriangle(cx - h * 0.35f, cy - h / 2, cx - h * 0.35f, cy + h / 2, cx + h * 0.55f, cy, fg);
