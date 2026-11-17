@@ -120,4 +120,4 @@ void appOpenMapCountry(App *app, size_t index);
 void appSetSearchMode(App *app, SearchMode mode);
 // The next way to sort the genres, countries or languages shown, keeping the
 // one selected selected.
-void appCycleSort(App *app);
+void appCycleSort(App *app, uint64_t now_ns);

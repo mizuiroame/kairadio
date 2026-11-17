@@ -284,11 +284,11 @@ int main(int argc, char **argv)
     app.waiting_active = false;
     app.category_cursor[SEARCH_GENRE] = 3;
     render(dir, "search_genres", &app);
-    appCycleSort(&app);
-    appCycleSort(&app);  // A to Z, the jazz row still selected.
+    appCycleSort(&app, 0);
+    appCycleSort(&app, 0);  // A to Z, the jazz row still selected.
     render(dir, "search_genres_az", &app);
-    appCycleSort(&app);
-    appCycleSort(&app);  // Back to most stations first, for the shots below.
+    appCycleSort(&app, 0);
+    appCycleSort(&app, 0);  // Back to most stations first, for the shots below.
     app.category_open = true;
     app.open_category = genres->items[3];
     fillList(&app.category_results, 6);

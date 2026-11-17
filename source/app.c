@@ -175,13 +175,22 @@ static size_t findCategory(const CategoryList *list, const Category *c, size_t f
     return fallback;
 }
 
-void appCycleSort(App *app)
+void appCycleSort(App *app, uint64_t now_ns)
 {
+    static const char *const LISTS[SEARCH_MODES] = {"", "Genres", "Countries", "Languages"};
     SearchMode mode = app->search_mode;
     CategoryList *list = &app->categories[mode];
     if (mode == SEARCH_NAME)
         return;
     app->category_sort[mode] = (CategorySort)((app->category_sort[mode] + 1) % SORT_COUNT);
+    // Say what changed, as the pill alone is easy to miss: "Genres sorted A to Z".
+    char message[64];
+    const char *how = app->category_sort[mode] == SORT_MOST     ? "with the most stations first"
+                      : app->category_sort[mode] == SORT_FEWEST ? "with the fewest stations first"
+                      : app->category_sort[mode] == SORT_AZ     ? "A to Z"
+                                                                : "Z to A";
+    snprintf(message, sizeof(message), "%s sorted %s", LISTS[mode], how);
+    appToast(app, message, now_ns);
     if (list->count == 0)
         return;  // The list comes sorted this way when it arrives.
     size_t *cursor = &app->category_cursor[mode];
@@ -399,7 +408,7 @@ static void handleSearch(App *app, uint64_t pressed, uint64_t now_ns)
         if (pressed & HidNpadButton_A)
             openCategory(app, app->category_cursor[app->search_mode]);
         if (pressed & HidNpadButton_Y)
-            appCycleSort(app);
+            appCycleSort(app, now_ns);
         return;
     }
     if (pressed & HidNpadButton_A) playSelected(app);
@@ -513,7 +522,7 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         break;
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
-    case HIT_SORT: appCycleSort(app); break;
+    case HIT_SORT: appCycleSort(app, now_ns); break;
     }
     return true;
 }

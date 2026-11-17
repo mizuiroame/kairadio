@@ -229,7 +229,8 @@ static void drawCategoryBack(const App *app, int x)
 // "Pick one…", and at the right how the list is sorted: Y or a tap changes it.
 static void drawSortControl(const App *app, int x)
 {
-    const char *label = categorySortLabel(app->category_sort[app->search_mode]);
+    char label[48];
+    snprintf(label, sizeof(label), "Sort: %s", categorySortLabel(app->category_sort[app->search_mode]));
     int w = uiPillWidth(label);
     int pill_x = GFX_WIDTH - MARGIN - w, y = SUBTITLE_Y - 4;
     int button_x = pill_x - 8 - uiButtonWidth("Y");
