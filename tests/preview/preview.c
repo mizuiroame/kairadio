@@ -358,6 +358,7 @@ int main(int argc, char **argv)
 
     // The + menu, Settings (pink, with the sleep timer on) and About, over World.
     appSetView(&app, VIEW_POPULAR);
+    app.toast[0] = '\0';  // The sort's message from earlier: not part of these shots.
     appOpenMenu(&app);
     render(dir, "menu", &app);
     appOpenSettings(&app);

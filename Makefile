@@ -45,7 +45,7 @@ DATA		:=	data
 INCLUDES	:=	include third_party
 APP_TITLE	:=	KaiRadio
 APP_AUTHOR	:=	Mizuiro
-APP_VERSION	:=	0.2.0-beta
+APP_VERSION	:=	1.0.0-rc1
 #ROMFS	:=	romfs
 
 #---------------------------------------------------------------------------------

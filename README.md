@@ -14,10 +14,12 @@ language.
 |---------|-------------|-----------------|
 | ![Popular](docs/screenshots/popular_playing.png) | ![Now Playing](docs/screenshots/now_playing_logo.png) | ![Genres](docs/screenshots/search_genres.png) |
 
+| Search by country | Settings |
+|-------------------|----------|
+| ![Countries](docs/screenshots/search_countries.png) | ![Settings](docs/screenshots/settings.png) |
+
 The screenshots show made-up stations.
 
-> **Beta.** KaiRadio works, but it's young: tell us what doesn't.
->
 > KaiRadio is an independent project. It is not affiliated with, endorsed by
 > or sponsored by Nintendo, Radio Browser or any station. See the
 > [Legal notice](#legal-notice).
