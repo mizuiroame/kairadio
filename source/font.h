@@ -19,6 +19,8 @@ void fontExit(void);
 
 // How many console fallback fonts loaded (0 if none: CJK shows as '?').
 int fontFallbackCount(void);
+// True if every character of the text is in the face or a fallback (none would show as '?').
+bool fontCanDraw(FontFace face, const char *utf8);
 
 int fontTextWidth(FontFace face, int px, const char *utf8);
 // Draws text with its line box starting at y. Returns the width drawn.

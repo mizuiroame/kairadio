@@ -28,3 +28,4 @@ void testCategories(void);
 void testLibrary(void);
 void testWorldMap(void);
 void testFlags(void);
+void testIcons(void);

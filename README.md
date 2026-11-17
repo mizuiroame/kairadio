@@ -27,9 +27,9 @@ The screenshots show made-up stations.
 - **World**: a night map of the world, each country lit up by how many
   stations it has. Move between countries and open one to see its stations.
 - **Popular**: the stations played most, worldwide.
-- **Search** by **name** (with the console's keyboard), or browse **genres**,
-  **countries** (with their flags) and **languages**, each with how many
-  stations it has.
+- **Search** by **name** (with the console's keyboard), or browse **genres**
+  (each with an icon), **countries** (with their flags) and **languages**
+  (with letters in their own script), each with how many stations it has.
 - **Favorites** and **Recent**: kept on your card in
   `sdmc:/config/kairadio/`.
 - **Now Playing**: the station's logo, the song playing when the station sends
@@ -135,4 +135,5 @@ under the LGPL 2.1; the other bundled libraries are listed in
 [third_party/VERSIONS.md](third_party/VERSIONS.md). The world map is drawn
 from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
 `tools/make_map.py`; the flags come from
-[flag-icons](https://github.com/lipis/flag-icons) (MIT).
+[flag-icons](https://github.com/lipis/flag-icons) (MIT) and the genre icons
+from [Lucide](https://lucide.dev/) (ISC).

@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "categoryicons.h"
+#include "icons.h"
+#include "icons_bin.h"
 #include "logos.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
@@ -234,14 +237,39 @@ static void drawSearchHeader(const App *app)
         fontDraw(FONT_REGULAR, 18, x, SUBTITLE_Y, "Pick one to see its stations", COLOR_DIM);
 }
 
-// A tile with the country's flag, the language's code, or a note for a genre.
+// A genre's icon centered on (cx, cy), the mask made for the screen's detail.
+static bool drawGenreIcon(float cx, float cy, const char *tag)
+{
+    const IconEntry *icon = iconFind(genreIcon(tag));
+    if (!icon)
+        return false;
+    bool large = gfxDetail() >= 1.2f;
+    int n = large ? ICON_LARGE : ICON_SMALL;
+    const uint8_t *mask = icons_bin + icon->offset + (large ? ICON_SMALL * ICON_SMALL : 0);
+    float fb = ICON_LAYOUT * GFX_SCALE;
+    gfxBlendMaskScaled(cx * GFX_SCALE - fb / 2.0f, cy * GFX_SCALE - fb / 2.0f, fb, fb, mask, n, n, n, COLOR_ACCENT);
+    return true;
+}
+
+// A tile with the country's flag, a genre's icon, letters of the language, or
+// its code; a note when there's none of those.
 static void drawCategoryTile(int x, int y, int size, SearchMode mode, const Category *c)
 {
     gfxFillRoundRect(x, y, size, size, size / 6, COLOR_SURFACE_HI);
+    float cx = x + size / 2.0f, cy = y + size / 2.0f;
     if (mode == SEARCH_COUNTRY && uiDrawFlag(x + (size - 40) / 2, y + (size - 30) / 2, 40, 30, c->code))
         return;
+    if (mode == SEARCH_GENRE && drawGenreIcon(cx, cy, c->name))
+        return;
+    if (mode == SEARCH_LANGUAGE) {
+        const char *sample = languageSample(c->code, c->name);
+        if (sample && fontCanDraw(FONT_BOLD, sample)) {
+            fontDrawCentered(FONT_BOLD, 24, cx, cy, sample, COLOR_ACCENT);
+            return;
+        }
+    }
     if (mode == SEARCH_GENRE || !c->code[0]) {
-        float cx = x + size / 2.0f, cy = y + size / 2.0f;  // A note.
+        // A note.
         gfxFillCircle((int)(cx - 4), (int)(cy + 8), 7, COLOR_ACCENT);
         gfxFillRect((int)(cx + 1), (int)(cy - 12), 3, 21, COLOR_ACCENT);
         gfxLine(cx + 2, cy - 12, cx + 10, cy - 6, 3, COLOR_ACCENT);

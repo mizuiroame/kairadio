@@ -300,6 +300,22 @@ int main(int argc, char **argv)
     countries->count = 4;
     app.waiting_active = false;
     render(dir, "search_countries", &app);
+
+    // Languages, with letters in their own script (or their code, where no font has them).
+    appSetSearchMode(&app, SEARCH_LANGUAGE);
+    CategoryList *languages = &app.categories[SEARCH_LANGUAGE];
+    static const char *LANGUAGES[][2] = {{"english", "en"}, {"spanish", "es"}, {"german", "de"},
+                                         {"russian", "ru"}, {"greek", "el"},   {"japanese", "ja"},
+                                         {"arabic", "ar"}};
+    languages->items = calloc(7, sizeof(Category));
+    for (int i = 0; i < 7; i++) {
+        snprintf(languages->items[i].name, sizeof(languages->items[i].name), "%s", LANGUAGES[i][0]);
+        snprintf(languages->items[i].code, sizeof(languages->items[i].code), "%s", LANGUAGES[i][1]);
+        languages->items[i].count = 9000 / (i + 1);
+    }
+    languages->count = 7;
+    app.waiting_active = false;
+    render(dir, "search_languages", &app);
     appSetSearchMode(&app, SEARCH_NAME);
 
     // Favorites and Recent.

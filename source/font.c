@@ -139,6 +139,21 @@ static void findGlyph(Glyph *g, FontFace face, uint32_t cp)
     }
 }
 
+bool fontCanDraw(FontFace face, const char *utf8)
+{
+    if (!g_faces[face].ok)
+        return false;
+    while (*utf8) {
+        uint32_t cp = utilNextCodePoint(&utf8);
+        bool found = stbtt_FindGlyphIndex(&g_faces[face].info, (int)cp) != 0;
+        for (int i = FONT_FACE_COUNT; !found && i < g_face_count; i++)
+            found = stbtt_FindGlyphIndex(&g_faces[i].info, (int)cp) != 0;
+        if (!found)
+            return false;
+    }
+    return true;
+}
+
 static void renderGlyph(Glyph *g, FontFace face, int px, uint32_t cp)
 {
     findGlyph(g, face, cp);
