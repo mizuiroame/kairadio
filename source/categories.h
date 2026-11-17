@@ -24,6 +24,18 @@ typedef struct {
 bool categoriesParse(const char *json, CategoryList *out);
 void categoryListFree(CategoryList *list);
 
+typedef enum {
+    SORT_MOST,    // Most stations first: how the directory lists them.
+    SORT_FEWEST,
+    SORT_AZ,      // By name, a leading "The " left out ("The Netherlands" under N).
+    SORT_ZA,
+    SORT_COUNT,
+} CategorySort;
+
+void categorySort(CategoryList *list, CategorySort sort);
+// "Most stations", "A to Z"...
+const char *categorySortLabel(CategorySort sort);
+
 // The name to show: the first letter of each word in capitals for the
 // lowercase tags and languages ("hip hop" -> "Hip Hop"). Countries are kept.
 void categoryLabel(const Category *c, char *out, size_t size);

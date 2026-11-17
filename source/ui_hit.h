@@ -24,6 +24,7 @@ typedef enum {
     HIT_EXIT,         // The X in the corner: quits.
     HIT_MAP,          // The World view's map: a tap picks the country nearest, or opens the one picked.
     HIT_MAP_OPEN,     // The card of the country picked: opens its stations.
+    HIT_SORT,         // How genres, countries or languages are sorted: a tap changes it.
 } HitKind;
 
 typedef struct {

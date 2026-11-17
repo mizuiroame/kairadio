@@ -166,6 +166,33 @@ void appSetSearchMode(App *app, SearchMode mode)
         askCategories(app);
 }
 
+// Where the category named like c is in list now, or fallback if it isn't.
+static size_t findCategory(const CategoryList *list, const Category *c, size_t fallback)
+{
+    for (size_t i = 0; i < list->count; i++)
+        if (strcmp(list->items[i].name, c->name) == 0 && strcmp(list->items[i].code, c->code) == 0)
+            return i;
+    return fallback;
+}
+
+void appCycleSort(App *app)
+{
+    SearchMode mode = app->search_mode;
+    CategoryList *list = &app->categories[mode];
+    if (mode == SEARCH_NAME)
+        return;
+    app->category_sort[mode] = (CategorySort)((app->category_sort[mode] + 1) % SORT_COUNT);
+    if (list->count == 0)
+        return;  // The list comes sorted this way when it arrives.
+    size_t *cursor = &app->category_cursor[mode];
+    Category selected = list->items[*cursor < list->count ? *cursor : 0];
+    Category on_map = list->items[app->map_cursor < list->count ? app->map_cursor : 0];
+    categorySort(list, app->category_sort[mode]);
+    *cursor = findCategory(list, &selected, 0);
+    if (mode == SEARCH_COUNTRY)  // The World view's pick is in the same list.
+        app->map_cursor = findCategory(list, &on_map, 0);
+}
+
 void appSetView(App *app, View view)
 {
     if (view != VIEW_NOW_PLAYING)
@@ -199,6 +226,7 @@ void appUpdate(App *app, uint64_t now_ns)
             CategoryList list;
             if (directoryTakeCategories(app->waiting, &list)) {
                 categoryListFree(&app->categories[app->waiting_mode]);
+                categorySort(&list, app->category_sort[app->waiting_mode]);
                 app->categories[app->waiting_mode] = list;
             }
         } else {
@@ -370,6 +398,8 @@ static void handleSearch(App *app, uint64_t pressed, uint64_t now_ns)
     if (appBrowsingCategories(app)) {
         if (pressed & HidNpadButton_A)
             openCategory(app, app->category_cursor[app->search_mode]);
+        if (pressed & HidNpadButton_Y)
+            appCycleSort(app);
         return;
     }
     if (pressed & HidNpadButton_A) playSelected(app);
@@ -483,6 +513,7 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         break;
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
+    case HIT_SORT: appCycleSort(app); break;
     }
     return true;
 }

@@ -226,6 +226,19 @@ static void drawCategoryBack(const App *app, int x)
     fontDrawClipped(FONT_BOLD, 18, tx, y + 4, GFX_WIDTH - MARGIN - tx, text, COLOR_ACCENT);
 }
 
+// "Pick one…", and at the right how the list is sorted: Y or a tap changes it.
+static void drawSortControl(const App *app, int x)
+{
+    const char *label = categorySortLabel(app->category_sort[app->search_mode]);
+    int w = uiPillWidth(label);
+    int pill_x = GFX_WIDTH - MARGIN - w, y = SUBTITLE_Y - 4;
+    int button_x = pill_x - 8 - uiButtonWidth("Y");
+    uiDrawButton(button_x, y + 15.0f, "Y", COLOR_SURFACE_HI, COLOR_DIM);
+    uiDrawPill(pill_x, y, label, COLOR_SURFACE_HI, COLOR_TEXT);
+    uiHitAdd(button_x - 8, y - 8, GFX_WIDTH - button_x + 8, 46, HIT_SORT, 0);
+    fontDrawClipped(FONT_REGULAR, 18, x, SUBTITLE_Y, button_x - 24 - x, "Pick one to see its stations", COLOR_DIM);
+}
+
 static void drawSearchHeader(const App *app)
 {
     int x = drawSearchModes(app);
@@ -234,7 +247,7 @@ static void drawSearchHeader(const App *app)
     else if (app->category_open)
         drawCategoryBack(app, x);
     else
-        fontDraw(FONT_REGULAR, 18, x, SUBTITLE_Y, "Pick one to see its stations", COLOR_DIM);
+        drawSortControl(app, x);
 }
 
 // A genre's icon centered on (cx, cy), the mask made for the screen's detail.
@@ -480,7 +493,7 @@ static const char *footerHelp(const App *app)
         return "[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit";
     case VIEW_SEARCH:
         if (appBrowsingCategories(app))
-            return "[A] open  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit";
+            return "[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit";
         if (app->category_open)
             return "[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit";
         return "[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit";

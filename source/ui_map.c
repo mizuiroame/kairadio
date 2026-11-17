@@ -193,11 +193,21 @@ void uiDrawMap(const App *app, uint64_t now_ns)
     if (countries->count == 0)
         return;
     uiHitAdd(MAP_X, MAP_Y, MAP_W, MAP_H, HIT_MAP, 0);
-    // The ones with fewest stations first, so the bright ones draw over them.
-    for (size_t i = countries->count; i-- > 0;) {
-        const MapCountry *c = mapFindCountry(countries->items[i].code);
+    // The ones with fewest stations first, so the bright ones draw over them,
+    // however Search > Country sorts the list.
+    static size_t order[CATEGORY_LIMIT];
+    size_t n = countries->count < CATEGORY_LIMIT ? countries->count : CATEGORY_LIMIT;
+    for (size_t i = 0; i < n; i++) {
+        size_t j = i;
+        for (; j > 0 && countries->items[order[j - 1]].count > countries->items[i].count; j--)
+            order[j] = order[j - 1];
+        order[j] = i;
+    }
+    for (size_t k = 0; k < n; k++) {
+        const Category *item = &countries->items[order[k]];
+        const MapCountry *c = mapFindCountry(item->code);
         if (c)
-            drawCountry(c, countries->items[i].count, now_ns, (unsigned)i);
+            drawCountry(c, item->count, now_ns, (unsigned)k);
     }
     if (app->map_cursor < countries->count)
         drawPicked(&countries->items[app->map_cursor], now_ns);

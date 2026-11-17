@@ -67,7 +67,7 @@ card: OunceShell's FTP server with an FTP client such as
 | Button | What it does |
 |--------|--------------|
 | **A** | Play the selected station (in World: open the country; in Now Playing: play or stop) |
-| **Y** | Add to favorites, or remove |
+| **Y** | Add to favorites, or remove; on a list of genres, countries or languages, sort it (most or fewest stations, A to Z, Z to A) |
 | **X** | Now Playing; in Search by name, type a name |
 | **ZL** / **ZR** | Previous / next tab |
 | **L** / **R** | Previous / next station, in the list you played from |
@@ -79,7 +79,8 @@ card: OunceShell's FTP server with an FTP client such as
 
 On the touch screen, tap a station to play it, its heart to keep it, a tab,
 genre or country to open it, a country on the map to pick it (tap it again,
-or its card, to open it), and the bar at the bottom for Now Playing. Drag
+or its card, to open it), the sort at the top right of a list of genres,
+countries or languages to change it, and the bar at the bottom for Now Playing. Drag
 a list to scroll it. The **×** at the top left exits.
 
 ## Building

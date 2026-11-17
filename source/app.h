@@ -58,6 +58,7 @@ typedef struct {
     CategoryList categories[SEARCH_MODES];  // Genres, countries, languages (not SEARCH_NAME).
     bool categories_asked[SEARCH_MODES];
     size_t category_cursor[SEARCH_MODES];
+    CategorySort category_sort[SEARCH_MODES];  // How each list of them is sorted (Y changes it).
     bool category_open;                     // Showing the stations of open_category.
     bool category_from_map;                 // Opened from the World view: Back goes there.
     Category open_category;
@@ -117,3 +118,6 @@ void appSetView(App *app, View view);
 // (in Search), from the World view.
 void appOpenMapCountry(App *app, size_t index);
 void appSetSearchMode(App *app, SearchMode mode);
+// The next way to sort the genres, countries or languages shown, keeping the
+// one selected selected.
+void appCycleSort(App *app);

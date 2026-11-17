@@ -95,6 +95,7 @@ typedef struct {
     bool category_open;
     size_t category_cursor[SEARCH_MODES];
     size_t map_cursor;
+    CategorySort category_sort[SEARCH_MODES];
 } Snapshot;
 
 static Snapshot snapshot(const App *app)
@@ -112,6 +113,7 @@ static Snapshot snapshot(const App *app)
     s.category_open = app->category_open;
     memcpy(s.category_cursor, app->category_cursor, sizeof(s.category_cursor));
     s.map_cursor = app->map_cursor;
+    memcpy(s.category_sort, app->category_sort, sizeof(s.category_sort));
     return s;
 }
 
@@ -282,6 +284,11 @@ int main(int argc, char **argv)
     app.waiting_active = false;
     app.category_cursor[SEARCH_GENRE] = 3;
     render(dir, "search_genres", &app);
+    appCycleSort(&app);
+    appCycleSort(&app);  // A to Z, the jazz row still selected.
+    render(dir, "search_genres_az", &app);
+    appCycleSort(&app);
+    appCycleSort(&app);  // Back to most stations first, for the shots below.
     app.category_open = true;
     app.open_category = genres->items[3];
     fillList(&app.category_results, 6);

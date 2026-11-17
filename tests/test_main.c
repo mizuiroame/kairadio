@@ -185,6 +185,23 @@ void testCategories(void)
     }
     categoryListFree(&list);
     CHECK(!categoriesParse("{}", &list) && list.count == 0);
+
+    // Sorting: by stations either way (ties by name), or by name without a leading "The".
+    Category items[] = {{"Mexico", "MX", 800}, {"The Netherlands", "NL", 300}, {"brazil", "BR", 800},
+                        {"Japan", "JP", 700}};
+    CategoryList sorted = {items, 4};
+    categorySort(&sorted, SORT_MOST);
+    CHECK(strcmp(items[0].code, "BR") == 0 && strcmp(items[1].code, "MX") == 0 && strcmp(items[3].code, "NL") == 0);
+    categorySort(&sorted, SORT_FEWEST);
+    CHECK(strcmp(items[0].code, "NL") == 0 && strcmp(items[1].code, "JP") == 0 && strcmp(items[2].code, "BR") == 0);
+    categorySort(&sorted, SORT_AZ);
+    CHECK(strcmp(items[0].code, "BR") == 0 && strcmp(items[1].code, "JP") == 0 && strcmp(items[2].code, "MX") == 0 &&
+          strcmp(items[3].code, "NL") == 0);
+    categorySort(&sorted, SORT_ZA);
+    CHECK(strcmp(items[0].code, "NL") == 0 && strcmp(items[3].code, "BR") == 0);
+    CHECK(strcmp(categorySortLabel(SORT_AZ), "A to Z") == 0 && strcmp(categorySortLabel(SORT_COUNT), "") == 0);
+    CategoryList empty = {NULL, 0};
+    categorySort(&empty, SORT_AZ);  // Nothing to do, and no crash.
 }
 
 int main(void)

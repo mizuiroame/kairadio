@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include "cJSON.h"
 
@@ -51,6 +52,47 @@ void categoryListFree(CategoryList *list)
     free(list->items);
     list->items = NULL;
     list->count = 0;
+}
+
+// The name as sorted: without a leading "The ".
+static const char *sortName(const Category *c)
+{
+    return strncasecmp(c->name, "the ", 4) == 0 ? c->name + 4 : c->name;
+}
+
+static int byName(const void *a, const void *b)
+{
+    return strcasecmp(sortName(a), sortName(b));
+}
+
+static int byMost(const void *a, const void *b)
+{
+    int ca = ((const Category *)a)->count, cb = ((const Category *)b)->count;
+    return ca != cb ? (ca < cb ? 1 : -1) : byName(a, b);
+}
+
+static int byFewest(const void *a, const void *b)
+{
+    int ca = ((const Category *)a)->count, cb = ((const Category *)b)->count;
+    return ca != cb ? (ca < cb ? -1 : 1) : byName(a, b);
+}
+
+static int byNameReversed(const void *a, const void *b)
+{
+    return byName(b, a);
+}
+
+void categorySort(CategoryList *list, CategorySort sort)
+{
+    static int (*const COMPARE[SORT_COUNT])(const void *, const void *) = {byMost, byFewest, byName, byNameReversed};
+    if (list->count > 1 && sort < SORT_COUNT)
+        qsort(list->items, list->count, sizeof(Category), COMPARE[sort]);
+}
+
+const char *categorySortLabel(CategorySort sort)
+{
+    static const char *const LABELS[SORT_COUNT] = {"Most stations", "Fewest stations", "A to Z", "Z to A"};
+    return sort < SORT_COUNT ? LABELS[sort] : "";
 }
 
 void categoryLabel(const Category *c, char *out, size_t size)
