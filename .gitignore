@@ -1,5 +1,6 @@
 build/
 tests/build/
+tests/preview/build/
 *.nro
 *.nacp
 *.elf
