@@ -32,8 +32,8 @@ The screenshots show made-up stations.
 - **Search** by **name** (with the console's keyboard), or browse **genres**
   (each with an icon), **countries** (with their flags) and **languages**
   (with letters in their own script), each with how many stations it has.
-- **Favorites** and **Recent**: kept on your card in
-  `sdmc:/config/kairadio/`.
+- **Favorites** and **Recent**: kept on your card, in KaiRadio's folder (see
+  [Where KaiRadio keeps its files](#where-kairadio-keeps-its-files)).
 - **Now Playing**: the station's logo, the song playing when the station sends
   it, and the format: codec, bitrate and sample rate.
 - Plays **MP3**, **AAC** and **HE-AAC**, **Ogg Vorbis**, **Opus** and **FLAC**
@@ -45,8 +45,8 @@ The screenshots show made-up stations.
   station's logo), a background image of your own with as much blur as you
   like, a 12- or 24-hour clock, a sleep timer, turning the screen off while
   a station plays, the tab to start in, and playing the last station again
-  when KaiRadio opens. Backgrounds are the JPEG or PNG images you put in
-  `sdmc:/config/kairadio/Backgrounds`.
+  when KaiRadio opens. Backgrounds are the JPEG or PNG images you put in the
+  `Backgrounds` folder of KaiRadio's folder.
 - Drawn on the GPU, sharp in handheld and docked. Every control works with the
   buttons and the touch screen.
 
@@ -69,6 +69,21 @@ card: OunceShell's FTP server with an FTP client such as
 > **Don't take the microSD card out while kaiHEN is running.** Removing it
 > means restarting the console, and kaiHEN has to be started again after
 > that.
+
+### Where KaiRadio keeps its files
+
+Favorites, recent stations, settings, backgrounds and the audio log are kept
+in a `config` folder next to `KaiRadio.nro`, in its own folder:
+
+| Where `KaiRadio.nro` is | Its files |
+|-------------------------|-----------|
+| `sdmc:/switch/KaiRadio.nro` | `sdmc:/switch/kairadio/config/` |
+| `sdmc:/switch/kairadio/KaiRadio.nro` | `sdmc:/switch/kairadio/config/` |
+| `sdmc:/brewstore/apps/kairadio/KaiRadio.nro` | `sdmc:/brewstore/apps/kairadio/config/` |
+
+Before 1.0.0-rc2 they were in `sdmc:/config/kairadio`. The first time a newer
+KaiRadio opens, it copies them over (and leaves that folder as it is, so you
+can delete it once everything is there).
 
 ## Controls
 
@@ -109,7 +124,7 @@ SHA-256) with only the demuxers, parsers and audio decoders radio needs, and
 fails if the build would include GPL or non-free parts.
 
 While a station plays, KaiRadio writes how the audio output keeps up to
-`sdmc:/config/kairadio/audio.log`. It helps when a station stutters.
+`audio.log` in its folder. It helps when a station stutters.
 
 ## Legal notice
 

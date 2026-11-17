@@ -9,6 +9,7 @@
 #include <switch.h>
 
 #include "app.h"
+#include "approot.h"
 #include "background.h"
 #include "buttons.h"
 #include "directory.h"
@@ -22,7 +23,7 @@
 #include "sysinfo.h"
 #include "ui.h"
 
-#define CONFIG_FOLDER "sdmc:/config/kairadio"
+#define OLD_CONFIG_FOLDER "sdmc:/config/kairadio"  // Before files went next to the NRO.
 #define SCREEN_W 1280
 #define SCREEN_H 720
 #define PANEL_W 1920  // In case the touch panel reports its own resolution.
@@ -145,10 +146,15 @@ static void runLoop(App *app)
 }
 
 // Shows why KaiRadio can't start, on libnx's text console, until + is
-// pressed, and writes it to sdmc:/config/kairadio/error.txt.
+// pressed, and writes it to error.txt in KaiRadio's folder.
+// KaiRadio's own files, next to its NRO (approot.h).
+static char g_folder[APPROOT_PATH_MAX];
+
 static void startupError(const char *message)
 {
-    FILE *f = fopen(CONFIG_FOLDER "/error.txt", "w");
+    char path[APPROOT_PATH_MAX + 16];
+    snprintf(path, sizeof(path), "%s/error.txt", g_folder);
+    FILE *f = fopen(path, "w");
     if (f) {
         fprintf(f, "%s\n", message);
         fclose(f);
@@ -168,8 +174,12 @@ static void startupError(const char *message)
 
 int main(int argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
+    // Files next to the NRO; the first time, what the old folder had
+    // (favorites, recent, settings, backgrounds) is copied there.
+    bool next_to_nro = appRootFolder(argc > 0 ? argv[0] : NULL, "kairadio", g_folder, sizeof(g_folder));
+    appRootMakeFolder(g_folder);
+    if (next_to_nro)
+        appRootMigrate(OLD_CONFIG_FOLDER, g_folder);
     srand((unsigned)time(NULL));
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 
@@ -188,7 +198,7 @@ int main(int argc, char **argv)
         startupError("KaiRadio could not start the network.");
         return 1;
     }
-    if (!radioInit()) {
+    if (!radioInit(g_folder)) {
         netExit();
         fontExit();
         gfxExit();
@@ -201,10 +211,10 @@ int main(int argc, char **argv)
 
     screenInit();
     static App app;
-    appInit(&app, CONFIG_FOLDER);
+    appInit(&app, g_folder);
     appSetView(&app, app.view);
     if (app.config.background[0] &&
-        !backgroundLoad(CONFIG_FOLDER, app.config.background, app.config.background_blur))
+        !backgroundLoad(g_folder, app.config.background, app.config.background_blur))
         appToast(&app, "The background image couldn't be opened.", nowNs());
     // Settings > Resume: the last station played, with Recent for previous and next.
     if (app.config.resume && app.library.recent.count > 0)

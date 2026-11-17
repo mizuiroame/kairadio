@@ -30,3 +30,4 @@ void testWorldMap(void);
 void testFlags(void);
 void testIcons(void);
 void testSettings(void);
+void testAppRoot(void);

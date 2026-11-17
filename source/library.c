@@ -36,7 +36,7 @@ static void loadList(const Library *lib, const char *name, StationList *out)
     free(text);
 }
 
-// Creates each missing folder of path ("sdmc:/config/kairadio").
+// Creates each missing folder of path ("sdmc:/switch/kairadio/config").
 static void makeFolders(const char *path)
 {
     char partial[256];

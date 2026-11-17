@@ -31,7 +31,8 @@ typedef struct {
 } RadioStatus;
 
 // False if the audio output can't start.
-bool radioInit(void);
+// folder: where the audio log goes.
+bool radioInit(const char *folder);
 void radioExit(void);
 
 void radioPlay(const Station *station);

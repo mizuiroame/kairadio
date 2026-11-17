@@ -49,7 +49,9 @@ static void changeBackground(App *app, int delta, uint64_t now_ns)
 {
     int choices = (int)app->background_count + 1;
     if (choices == 1) {
-        appToast(app, "Put JPEG or PNG images in sdmc:/config/kairadio/Backgrounds first.", now_ns);
+        char message[sizeof(app->toast)];
+        snprintf(message, sizeof(message), "Put JPEG or PNG images in %s/Backgrounds first.", app->config_folder);
+        appToast(app, message, now_ns);
         return;
     }
     int index = wrap((int)backgroundIndex(app), delta, choices);

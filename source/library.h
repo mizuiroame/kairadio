@@ -1,5 +1,5 @@
 // The stations kept on the card: favorites, and the ones played lately.
-// Both are JSON files in sdmc:/config/kairadio/, in the directory's format.
+// Both are JSON files in KaiRadio's folder, in the directory's format.
 #pragma once
 
 #include <stdbool.h>

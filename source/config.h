@@ -1,4 +1,4 @@
-// Settings kept on the card, in sdmc:/config/kairadio/settings.txt: one
+// Settings kept on the card, in settings.txt in KaiRadio's folder: one
 // "key=value" per line, as KaiPlayer keeps its own.
 #pragma once
 

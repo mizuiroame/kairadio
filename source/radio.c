@@ -22,7 +22,6 @@
 #define IDLE_SLEEP_NS 10000000ull
 #define THREAD_STACK_SIZE 0x40000
 #define THREAD_PRIORITY 0x2B
-#define LOG_PATH "sdmc:/config/kairadio/audio.log"
 #define LOG_EVERY_NS 2000000000ull
 
 // Shared with the UI thread: guarded by g_lock.
@@ -47,6 +46,8 @@ static AudioOutBuffer g_buffers[BUFFER_COUNT];
 static bool g_queued[BUFFER_COUNT];
 
 // What the audio log reports, for the station playing.
+static char g_log_path[256];  // audio.log in KaiRadio's folder, from radioInit.
+
 static struct {
     FILE *file;
     u64 started, last;
@@ -85,7 +86,7 @@ static void setError(const char *message)
 static void logStart(const char *url)
 {
     if (!g_log.file)
-        g_log.file = fopen(LOG_PATH, "w");
+        g_log.file = fopen(g_log_path, "w");
     if (!g_log.file)
         return;
     g_log.started = g_log.last = nowNs();
@@ -339,8 +340,9 @@ static void freeBuffers(void)
     }
 }
 
-bool radioInit(void)
+bool radioInit(const char *folder)
 {
+    snprintf(g_log_path, sizeof(g_log_path), "%s/audio.log", folder);
     mutexInit(&g_lock);
     if (!ringInit(&g_ring, RING_BYTES))
         return false;

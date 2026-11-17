@@ -18,7 +18,7 @@ const char *settingsRowHelp(SettingRow row)
 {
     static const char *const HELP[SETTING_COUNT] = {
         "Highlights, buttons and the map's pick. From station logo follows the station playing.",
-        "JPEG or PNG images in sdmc:/config/kairadio/Backgrounds, darkened so text stays readable.",
+        "JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.",
         "How soft the background image is.",
         "The clock at the top right.",
         "Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.",

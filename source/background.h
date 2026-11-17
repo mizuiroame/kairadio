@@ -1,5 +1,5 @@
 // An image of the user's behind every view instead of the plain dark color:
-// JPEG or PNG files in sdmc:/config/kairadio/Backgrounds. The image is
+// JPEG or PNG files in the Backgrounds folder of KaiRadio's. The image is
 // cropped to fill the screen, blurred (as much as chosen) and darkened once,
 // when it is chosen, so text stays readable over it. (From KaiPlayer.)
 #pragma once
