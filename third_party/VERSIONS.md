@@ -23,6 +23,7 @@ the build can embed them as `font_regular_ttf`. They are otherwise unchanged.
 
 | Files | Made from | By | License |
 |-------|-----------|----|---------|
+| `../data/flags.bin`, `../source/flags_index.c` | [lipis/flag-icons](https://github.com/lipis/flag-icons) v7.6.0, commit `0d8909b00aa8418802a5abf2afa82356b129a7ef` (`flags/4x3/*.svg`, rasterized with rsvg-convert) | `tools/make_flags.py` | MIT (`flag-icons-LICENSE.txt`) |
 | `../data/world_map.png`, `../source/map_countries.c` | [Natural Earth](https://www.naturalearthdata.com/) 1:50m Admin 0 Countries, [nvkelso/natural-earth-vector](https://github.com/nvkelso/natural-earth-vector) v5.1.2 (`geojson/ne_50m_admin_0_countries.geojson`) | `tools/make_map.py` | Public domain |
 
 ## SHA-256
@@ -35,6 +36,7 @@ cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a  NotoSans-OFL.t
 1df075a380fc7cb898acf64c1f7b3b4dd780de3caa860178bf929de35817a913  ../data/font_bold.ttf
 75c51de8fa40ac9d7a99319c6330719bd692eb81c0a869265f3d4c682533f9b9  cJSON.c
 0578cc29132912edbc88f83207a8fc76e5db3db0605497e909a9384ef3cc474b  cJSON.h
+8f1195d55a2fd315a07d812328470ca9ba2abb78c8d317ff19619d5125e00cea  flag-icons-LICENSE.txt
 ```
 
 ## Libraries linked into the .nro

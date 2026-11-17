@@ -46,6 +46,12 @@ static Station makeStation(size_t i)
     snprintf(s.url, sizeof(s.url), "https://stream%zu.example/live", i);
     snprintf(s.favicon, sizeof(s.favicon), "%s", STATIONS[i].favicon);
     snprintf(s.country, sizeof(s.country), "%s", STATIONS[i].country);
+    static const char *const CODES[][2] = {{"Norway", "NO"}, {"Mexico", "MX"},          {"Germany", "DE"},
+                                           {"Colombia", "CO"}, {"Japan", "JP"},         {"United Kingdom", "GB"},
+                                           {"France", "FR"},   {"United States", "US"}};
+    for (size_t c = 0; c < sizeof(CODES) / sizeof(CODES[0]); c++)
+        if (strcmp(CODES[c][0], s.country) == 0)
+            snprintf(s.countrycode, sizeof(s.countrycode), "%s", CODES[c][1]);
     snprintf(s.tags, sizeof(s.tags), "%s", STATIONS[i].tags);
     snprintf(s.codec, sizeof(s.codec), "%s", STATIONS[i].codec);
     s.bitrate = STATIONS[i].bitrate;

@@ -5,6 +5,7 @@
 
 #include "ui_buttons.h"
 #include "ui_common.h"
+#include "ui_flag.h"
 #include "ui_hit.h"
 
 #define LOGO_X 96
@@ -86,7 +87,9 @@ void uiDrawNowPlaying(const App *app, const RadioStatus *radio, uint64_t now_ns)
     y += 96;
     char details[200];
     stationDetails(s, details, sizeof(details));
-    fontDrawClipped(FONT_REGULAR, 18, INFO_X, y, INFO_W, details, COLOR_DIM);
+    // The country's flag before them (they start with its name).
+    int dx = uiDrawFlag(INFO_X, y + 2, 28, 21, s->countrycode) ? 28 + 10 : 0;
+    fontDrawClipped(FONT_REGULAR, 18, INFO_X + dx, y, INFO_W - dx, details, COLOR_DIM);
     y += 36;
     char format[64];
     uiFormatLine(radio, format, sizeof(format));

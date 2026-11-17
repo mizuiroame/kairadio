@@ -35,10 +35,11 @@ int uiButtonWidth(const char *key)
     return BADGE_SIZE;
 }
 
-// A small triangle pointing in a direction (dx, dy), centered on (cx, cy).
-static void drawArrow(float cx, float cy, float dx, float dy, Color color)
+// A small triangle pointing in a direction (dx, dy), centered on (cx, cy),
+// scale times the usual size.
+static void drawArrow(float cx, float cy, float dx, float dy, float scale, Color color)
 {
-    const float length = 4.5f, half = 4.0f;
+    const float length = 4.5f * scale, half = 4.0f * scale;
     float tip_x = cx + dx * length / 2.0f, tip_y = cy + dy * length / 2.0f;
     float base_x = cx - dx * length / 2.0f, base_y = cy - dy * length / 2.0f;
     gfxTriangle(tip_x, tip_y, base_x - dy * half, base_y + dx * half, base_x + dy * half, base_y - dx * half, color);
@@ -46,16 +47,18 @@ static void drawArrow(float cx, float cy, float dx, float dy, Color color)
 
 static void drawDirections(float cx, float cy, const char *key, Color fg)
 {
-    const float offset = 4.5f;
     bool pair = key[1] != '\0';
+    // All four: smaller and further out, so they read as a cross, not a diamond.
+    bool four = strlen(key) >= 4;
+    float offset = !pair ? 0.0f : four ? 6.0f : 4.5f, scale = four ? 0.75f : 1.0f;
     if (strchr(key, '<'))
-        drawArrow(cx - (pair ? offset : 0.0f), cy, -1, 0, fg);
+        drawArrow(cx - offset, cy, -1, 0, scale, fg);
     if (strchr(key, '>'))
-        drawArrow(cx + (pair ? offset : 0.0f), cy, 1, 0, fg);
+        drawArrow(cx + offset, cy, 1, 0, scale, fg);
     if (strchr(key, '^'))
-        drawArrow(cx, cy - (pair ? offset : 0.0f), 0, -1, fg);
+        drawArrow(cx, cy - offset, 0, -1, scale, fg);
     if (strchr(key, 'v'))
-        drawArrow(cx, cy + (pair ? offset : 0.0f), 0, 1, fg);
+        drawArrow(cx, cy + offset, 0, 1, scale, fg);
 }
 
 void uiDrawButton(int x, float cy, const char *key, Color bg, Color fg)

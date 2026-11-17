@@ -28,7 +28,8 @@ The screenshots show made-up stations.
   stations it has. Move between countries and open one to see its stations.
 - **Popular**: the stations played most, worldwide.
 - **Search** by **name** (with the console's keyboard), or browse **genres**,
-  **countries** and **languages**, each with how many stations it has.
+  **countries** (with their flags) and **languages**, each with how many
+  stations it has.
 - **Favorites** and **Recent**: kept on your card in
   `sdmc:/config/kairadio/`.
 - **Now Playing**: the station's logo, the song playing when the station sends
@@ -133,4 +134,5 @@ KaiRadio is released under the [MIT License](LICENSE). FFmpeg is released
 under the LGPL 2.1; the other bundled libraries are listed in
 [third_party/VERSIONS.md](third_party/VERSIONS.md). The world map is drawn
 from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
-`tools/make_map.py`.
+`tools/make_map.py`; the flags come from
+[flag-icons](https://github.com/lipis/flag-icons) (MIT).

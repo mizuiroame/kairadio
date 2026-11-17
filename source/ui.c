@@ -6,6 +6,7 @@
 #include "logos.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
+#include "ui_flag.h"
 #include "ui_hit.h"
 #include "ui_map.h"
 #include "ui_now.h"
@@ -233,10 +234,12 @@ static void drawSearchHeader(const App *app)
         fontDraw(FONT_REGULAR, 18, x, SUBTITLE_Y, "Pick one to see its stations", COLOR_DIM);
 }
 
-// A tile with the country or language code, or a note for a genre.
+// A tile with the country's flag, the language's code, or a note for a genre.
 static void drawCategoryTile(int x, int y, int size, SearchMode mode, const Category *c)
 {
     gfxFillRoundRect(x, y, size, size, size / 6, COLOR_SURFACE_HI);
+    if (mode == SEARCH_COUNTRY && uiDrawFlag(x + (size - 40) / 2, y + (size - 30) / 2, 40, 30, c->code))
+        return;
     if (mode == SEARCH_GENRE || !c->code[0]) {
         float cx = x + size / 2.0f, cy = y + size / 2.0f;  // A note.
         gfxFillCircle((int)(cx - 4), (int)(cy + 8), 7, COLOR_ACCENT);

@@ -10,6 +10,7 @@
 #include "stb_image.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
+#include "ui_flag.h"
 #include "ui_hit.h"
 #include "world_map_png.h"
 #include "worldmap.h"
@@ -173,8 +174,11 @@ static void drawPicked(const Category *c, uint64_t now_ns)
     snprintf(count, sizeof(count), "%d station%s", c->count, c->count == 1 ? "" : "s");
     const char *open = "Open";
     int w = uiPillWidth(open);
-    fontDrawClipped(FONT_BOLD, 22, cx + 20, cy + 12, CARD_W - w - 52, label, COLOR_TEXT);
-    fontDraw(FONT_REGULAR, 17, cx + 20, cy + 44, count, COLOR_DIM);
+    int tx = cx + 20;
+    if (uiDrawFlag(tx, cy + (CARD_H - 30) / 2, 40, 30, c->code))
+        tx += 40 + 14;
+    fontDrawClipped(FONT_BOLD, 22, tx, cy + 12, cx + CARD_W - w - 32 - tx, label, COLOR_TEXT);
+    fontDraw(FONT_REGULAR, 17, tx, cy + 44, count, COLOR_DIM);
     uiDrawPill(cx + CARD_W - w - 16, cy + (CARD_H - 30) / 2, open, COLOR_ACCENT, COLOR_BG);
     uiHitAdd(cx, cy, CARD_W, CARD_H, HIT_MAP_OPEN, 0);
 }
