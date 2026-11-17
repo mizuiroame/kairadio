@@ -62,6 +62,14 @@ static void drawBattery(int x, int y, int percent, bool charging)
     int inner = 22 * (percent < 0 ? 0 : percent > 100 ? 100 : percent) / 100;
     if (inner > 0)
         gfxFillRoundRect(x + 4, y + 4, inner, 8, 2, fill);
+    if (charging) {  // A lightning bolt over the battery.
+        float cx = (float)x + 15.0f, cy = (float)y + 8.0f;
+        // Two halves that overlap in the middle, so no seam shows between them.
+        gfxTriangle(cx + 2.0f, cy - 8.0f, cx - 5.0f, cy + 1.5f, cx + 1.5f, cy + 1.5f, COLOR_BG);
+        gfxTriangle(cx - 2.0f, cy + 8.0f, cx + 5.0f, cy - 1.5f, cx - 1.5f, cy - 1.5f, COLOR_BG);
+        gfxTriangle(cx + 1.5f, cy - 6.0f, cx - 3.5f, cy + 1.0f, cx + 1.0f, cy + 1.0f, COLOR_TEXT);
+        gfxTriangle(cx - 1.5f, cy + 6.0f, cx + 3.5f, cy - 1.0f, cx - 1.0f, cy - 1.0f, COLOR_TEXT);
+    }
 }
 
 static void drawStatus(const App *app)

@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     system("rm -rf " CONFIG);
     static App app;
     appInit(&app, CONFIG);
-    app.sys = (SysInfo){true, 21, 47, true, 82, false};
+    app.sys = (SysInfo){true, 21, 47, true, 82, true};
 
     // Popular, loading and failed.
     appSetView(&app, VIEW_POPULAR);

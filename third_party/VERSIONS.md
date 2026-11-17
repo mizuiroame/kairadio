@@ -30,3 +30,17 @@ cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a  NotoSans-OFL.t
 75c51de8fa40ac9d7a99319c6330719bd692eb81c0a869265f3d4c682533f9b9  cJSON.c
 0578cc29132912edbc88f83207a8fc76e5db3db0605497e909a9384ef3cc474b  cJSON.h
 ```
+
+## Libraries linked into the .nro
+
+These come from outside this folder and are linked statically:
+
+| Library | Version | Where from | License |
+|---------|---------|------------|---------|
+| FFmpeg (libavformat, libavcodec, libswresample, libavutil) | 7.1 | Built by `ffmpeg/Dockerfile` from ffmpeg.org's release tarball, only the parts radio needs | LGPL 2.1 (`FFmpeg-LGPL-2.1.txt`) |
+| libcurl | 7.69.1 | devkitPro's `switch-curl` package | curl license (`curl-LICENSE.txt`) |
+| zlib | 1.3.1 | devkitPro's `switch-zlib` package | zlib license |
+| libounce (libnx fork) | - | ounce-devkit | ISC |
+
+Under the LGPL, you may change FFmpeg and relink KaiRadio with your version:
+the whole source and the scripts that build it are in this repository.
