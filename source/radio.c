@@ -254,7 +254,7 @@ static bool openWhenBuffered(void)
     g_open = true;
     DecoderInfo d;
     decoderGetInfo(&d);
-    char line[96];
+    char line[160];
     snprintf(line, sizeof(line), "decoder %s, content type '%s'", d.codec, info.content_type);
     logLine(line);
     return true;
