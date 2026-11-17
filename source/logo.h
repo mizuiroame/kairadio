@@ -9,6 +9,7 @@
 
 #define LOGO_SIZE 192  // Pixels per side.
 #define LOGO_FILE_MAX (1u << 20)
+#define LOGO_MAX_DIMENSION 4096  // Pixels per side; larger logos are refused.
 
 // Decodes data into a LOGO_SIZE x LOGO_SIZE image (0xAABBGGRR). False if
 // it isn't an image KaiRadio reads, or it is empty.

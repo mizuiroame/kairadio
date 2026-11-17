@@ -119,6 +119,11 @@ bool logoDecode(const uint8_t *data, size_t size, uint32_t *out)
         size = png_size;
     }
     int w, h, comp;
+    // Logos come from anywhere on the web: one claiming to be huge is refused
+    // before its pixels are allocated (stb's own limit is set for backgrounds).
+    if (!stbi_info_from_memory(data, (int)size, &w, &h, &comp) || w > LOGO_MAX_DIMENSION ||
+        h > LOGO_MAX_DIMENSION)
+        return false;
     uint32_t *src = (uint32_t *)stbi_load_from_memory(data, (int)size, &w, &h, &comp, 4);
     if (!src)
         return false;

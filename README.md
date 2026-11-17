@@ -39,6 +39,12 @@ The screenshots show made-up stations.
   stream, and plays **HLS** stations (MPEG-TS or AAC segments; fMP4 isn't
   supported yet).
 - Reconnects on its own when the connection drops.
+- **Settings** (**+** > Settings): the accent color (or one taken from the
+  station's logo), a background image of your own with as much blur as you
+  like, a 12- or 24-hour clock, a sleep timer, turning the screen off while
+  a station plays, the tab to start in, and playing the last station again
+  when KaiRadio opens. Backgrounds are the JPEG or PNG images you put in
+  `sdmc:/config/kairadio/Backgrounds`.
 - Drawn on the GPU, sharp in handheld and docked. Every control works with the
   buttons and the touch screen.
 
@@ -75,13 +81,14 @@ card: OunceShell's FTP server with an FTP client such as
 | **↑** / **↓** | Move in the list; in World, the country that way |
 | **B** | Back (out of Now Playing, or out of a genre, country or language, to the map if opened from it) |
 | **−** | Play or stop |
-| **+** | Exit |
+| **+** | Menu: Settings, or exit (press **+** again to exit) |
 
 On the touch screen, tap a station to play it, its heart to keep it, a tab,
 genre or country to open it, a country on the map to pick it (tap it again,
 or its card, to open it), the sort at the top right of a list of genres,
 countries or languages to change it, and the bar at the bottom for Now Playing. Drag
-a list to scroll it. The **×** at the top left exits.
+a list to scroll it. The title at the top left opens the menu, and the **×**
+before it exits.
 
 ## Building
 

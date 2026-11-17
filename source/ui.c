@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "background.h"
 #include "categoryicons.h"
 #include "icons.h"
 #include "icons_bin.h"
@@ -13,6 +14,8 @@
 #include "ui_hit.h"
 #include "ui_map.h"
 #include "ui_now.h"
+#include "ui_settings.h"
+#include "theme.h"
 #include "util.h"
 
 #define TAB_GAP 28
@@ -92,7 +95,7 @@ static void drawStatus(const App *app)
     }
     if (sys->has_time) {
         char clock[16];
-        utilFormatClock(clock, sizeof(clock), sys->hour, sys->minute, true);
+        utilFormatClock(clock, sizeof(clock), sys->hour, sys->minute, app->config.clock_24h);
         x -= fontTextWidth(FONT_BOLD, 18, clock);
         fontDraw(FONT_BOLD, 18, x, 18, clock, COLOR_TEXT);
     }
@@ -105,7 +108,8 @@ static void drawHeader(const App *app)
     gfxLine(cx - 8, cy - 8, cx + 8, cy + 8, 3.0f, COLOR_DIM);
     gfxLine(cx - 8, cy + 8, cx + 8, cy - 8, 3.0f, COLOR_DIM);
     uiHitAdd(0, 0, MARGIN + 34, HEADER_H, HIT_EXIT, 0);
-    fontDraw(FONT_BOLD, 26, MARGIN + 34, 16, "KaiRadio", COLOR_ACCENT);
+    int title_w = fontDraw(FONT_BOLD, 26, MARGIN + 34, 16, "KaiRadio", COLOR_ACCENT);
+    uiHitAdd(MARGIN + 34, 0, title_w + 12, HEADER_H, HIT_MENU_BUTTON, 0);  // As + does: the menu.
     drawTabs(app);
     drawStatus(app);
 }
@@ -488,6 +492,12 @@ static void drawMiniPlayer(const App *app, const RadioStatus *radio, uint64_t no
 
 static const char *footerHelp(const App *app)
 {
+    switch (app->overlay) {
+    case OVERLAY_MENU: return "[A] choose  [B] close  [+] exit";
+    case OVERLAY_SETTINGS: return "[<>] change  [A] change or open  [B] close";
+    case OVERLAY_ABOUT: return "[B] back";
+    default: break;
+    }
     switch (app->view) {
     case VIEW_WORLD: return "[<>^v] country  [A] open  [X] now playing  [L][R] station  [-] play/stop  [+] exit";
     case VIEW_NOW_PLAYING:
@@ -503,10 +513,32 @@ static const char *footerHelp(const App *app)
     }
 }
 
+// The accent chosen in Settings; "From station logo" takes the playing
+// station's logo color, worked out once per logo.
+static void applyAccent(const App *app, const RadioStatus *radio)
+{
+    static const uint32_t *last_logo;
+    static uint32_t logo_color;
+    static bool has_logo_color;
+    const uint32_t *logo = NULL;
+    if (app->config.accent == THEME_ACCENT_FROM_LOGO && radio->has_station && radio->station.favicon[0])
+        logo = logosGet(radio->station.favicon);
+    if (logo != last_logo) {
+        last_logo = logo;
+        has_logo_color = logo && themeLogoColor(logo, LOGO_SIZE * LOGO_SIZE, &logo_color);
+    }
+    g_accent = themeAccentColor(app->config.accent, logo_color, has_logo_color);
+}
+
 void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
 {
     uiHitReset();
-    gfxClear(COLOR_BG);
+    applyAccent(app, radio);
+    const uint32_t *background = backgroundPixels();
+    if (background)
+        gfxCopyFrame(background);
+    else
+        gfxClear(COLOR_BG);
     drawHeader(app);
     if (app->view == VIEW_NOW_PLAYING) {
         uiDrawNowPlaying(app, radio, now_ns);
@@ -517,7 +549,9 @@ void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
             drawList(app, radio, now_ns);
         drawMiniPlayer(app, radio, now_ns);
     }
-    gfxFillRect(0, FOOTER_Y, GFX_WIDTH, GFX_HEIGHT - FOOTER_Y, COLOR_BG);
+    if (!background)
+        gfxFillRect(0, FOOTER_Y, GFX_WIDTH, GFX_HEIGHT - FOOTER_Y, COLOR_BG);
+    uiDrawOverlay(app, now_ns);
     uiDrawHelp(MARGIN, FOOTER_Y + 28.0f, GFX_WIDTH - 2 * MARGIN, footerHelp(app));
     logosEndFrame();
 }

@@ -96,6 +96,10 @@ typedef struct {
     size_t category_cursor[SEARCH_MODES];
     size_t map_cursor;
     CategorySort category_sort[SEARCH_MODES];
+    Overlay overlay;
+    int menu_cursor, settings_cursor, sleep_minutes;
+    Config config;
+    char toast[224];
 } Snapshot;
 
 static Snapshot snapshot(const App *app)
@@ -114,6 +118,12 @@ static Snapshot snapshot(const App *app)
     memcpy(s.category_cursor, app->category_cursor, sizeof(s.category_cursor));
     s.map_cursor = app->map_cursor;
     memcpy(s.category_sort, app->category_sort, sizeof(s.category_sort));
+    s.overlay = app->overlay;
+    s.menu_cursor = app->menu_cursor;
+    s.settings_cursor = app->settings_cursor;
+    s.sleep_minutes = app->sleep_minutes;
+    s.config = app->config;
+    snprintf(s.toast, sizeof(s.toast), "%s", app->toast);
     return s;
 }
 
@@ -345,6 +355,23 @@ int main(int argc, char **argv)
     render(dir, "now_playing_failed", &app);
     g_stub_radio = (RadioStatus){0};
     render(dir, "now_playing_empty", &app);
+
+    // The + menu, Settings (pink, with the sleep timer on) and About, over World.
+    appSetView(&app, VIEW_POPULAR);
+    appOpenMenu(&app);
+    render(dir, "menu", &app);
+    appOpenSettings(&app);
+    app.config.accent = 1;
+    app.sleep_minutes = 45;
+    app.sleep_until_ns = 1234567890ull + 45ull * 60000000000ull;
+    app.settings_cursor = 4;
+    render(dir, "settings", &app);
+    app.overlay = OVERLAY_ABOUT;
+    render(dir, "about", &app);
+    app.overlay = OVERLAY_NONE;
+    app.config.accent = 0;
+    app.sleep_minutes = 0;
+    app.sleep_until_ns = 0;
 
     appFree(&app);
     fontExit();

@@ -6,7 +6,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "background.h"
 #include "categories.h"
+#include "config.h"
 #include "directory.h"
 #include "library.h"
 #include "radio.h"
@@ -42,6 +44,22 @@ typedef enum {
 } Target;
 
 #define SEARCH_MAX 64
+#define CONFIG_FOLDER_MAX 128
+
+// A panel over the view: the + menu, Settings, or About. Only it takes input.
+typedef enum {
+    OVERLAY_NONE,
+    OVERLAY_MENU,
+    OVERLAY_SETTINGS,
+    OVERLAY_ABOUT,
+} Overlay;
+
+// The + menu's items.
+typedef enum {
+    MENU_SETTINGS,
+    MENU_EXIT,
+    MENU_COUNT,
+} MenuItem;
 
 typedef struct {
     View view;
@@ -79,6 +97,19 @@ typedef struct {
     StationList play_list;
     size_t play_index;
 
+    // Settings, the + menu and the timers.
+    Config config;
+    char config_folder[CONFIG_FOLDER_MAX];
+    Overlay overlay;
+    int menu_cursor;             // MenuItem.
+    int settings_cursor;         // SettingRow.
+    char backgrounds[BACKGROUND_MAX_IMAGES][BACKGROUND_NAME_MAX];  // The images there were when Settings opened.
+    size_t background_count;
+    int sleep_minutes;           // The sleep timer as set; 0 is off.
+    uint64_t sleep_until_ns;     // When it stops the radio; 0 for never.
+    bool screen_off;             // Turned off after a while idle; any input turns it on.
+    uint64_t last_input_ns;
+
     SysInfo sys;
     TouchTracker touch;
     int drag_rows;  // Pixels dragged on a list, not yet a whole row.
@@ -114,6 +145,22 @@ void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns);
 bool appTap(App *app, int x, int y, uint64_t now_ns);
 
 void appSetView(App *app, View view);
+
+// Plays a station of a list, keeping the list for previous and next.
+void appPlayFrom(App *app, const StationList *list, size_t index);
+
+// app_settings.c: the + menu, Settings and About.
+void appOpenMenu(App *app);
+void appOpenSettings(App *app);
+void appHandleOverlay(App *app, uint64_t pressed, uint64_t now_ns);
+// Steps a setting's value by delta (left -1, right +1) and saves the settings.
+void appChangeSetting(App *app, int row, int delta, uint64_t now_ns);
+// A on a row: About opens, the others step forward.
+void appActivateSetting(App *app, int row, uint64_t now_ns);
+// The value a row shows ("Sky blue", "Off", "in 42 min").
+void appSettingValue(const App *app, int row, uint64_t now_ns, char *out, size_t size);
+// Checks the sleep timer: stops the radio when it runs out.
+void appCheckSleep(App *app, uint64_t now_ns);
 // Opens the stations of the country at index of categories[SEARCH_COUNTRY]
 // (in Search), from the World view.
 void appOpenMapCountry(App *app, size_t index);

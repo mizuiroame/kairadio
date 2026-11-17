@@ -10,6 +10,8 @@
 #define PILL_TEXT 15
 #define PILL_PAD 14
 
+Color g_accent = GFX_RGB(0x4F, 0xC3, 0xF7);
+
 // Colors for logos that can't be had, picked by the station's name.
 static const Color INITIAL_COLORS[] = {
     GFX_RGB(0x3D, 0x5A, 0xFE), GFX_RGB(0x00, 0x96, 0x88), GFX_RGB(0xE9, 0x1E, 0x63),

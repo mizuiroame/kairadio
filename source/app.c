@@ -66,9 +66,15 @@ bool appFailed(const App *app)
 void appInit(App *app, const char *config_folder)
 {
     memset(app, 0, sizeof(*app));
+    snprintf(app->config_folder, sizeof(app->config_folder), "%s", config_folder);
+    configLoad(&app->config, config_folder);
     libraryLoad(&app->library, config_folder);
-    // Start where the stations are: the favorites if there are some, else the world.
-    app->view = app->library.favorites.count > 0 ? VIEW_FAVORITES : VIEW_WORLD;
+    // Start where Settings say; by default where the stations are: the
+    // favorites if there are some, else the world.
+    static const View START_VIEWS[START_COUNT] = {VIEW_WORLD, VIEW_WORLD, VIEW_POPULAR, VIEW_FAVORITES, VIEW_RECENT};
+    app->view = START_VIEWS[app->config.start_view];
+    if (app->config.start_view == START_AUTO && app->library.favorites.count > 0)
+        app->view = VIEW_FAVORITES;
     app->list_view = app->view;
 }
 
@@ -279,6 +285,11 @@ static void playFrom(App *app, const StationList *list, size_t index)
     libraryPlayed(&app->library, &station);
 }
 
+void appPlayFrom(App *app, const StationList *list, size_t index)
+{
+    playFrom(app, list, index);
+}
+
 static void playSelected(App *app)
 {
     const StationList *list = listOf(app, app->view);
@@ -434,8 +445,12 @@ static void handleWorld(App *app, uint64_t pressed)
 
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
 {
+    if (app->overlay != OVERLAY_NONE) {
+        appHandleOverlay(app, pressed, now_ns);
+        return;
+    }
     if (pressed & HidNpadButton_Plus) {
-        app->quit = true;
+        appOpenMenu(app);
         return;
     }
     if (pressed & HidNpadButton_ZL) switchView(app, -1);
@@ -523,6 +538,24 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
     case HIT_SORT: appCycleSort(app, now_ns); break;
+    case HIT_MENU_BUTTON: appOpenMenu(app); break;
+    case HIT_MENU_ITEM:
+        if (hit->arg == MENU_EXIT)
+            app->quit = true;
+        else
+            appOpenSettings(app);
+        break;
+    case HIT_SETTING:
+        if (app->settings_cursor == hit->arg)
+            appActivateSetting(app, hit->arg, now_ns);
+        else
+            app->settings_cursor = hit->arg;
+        break;
+    case HIT_SETTING_STEP:
+        app->settings_cursor = hit->arg / 2;
+        appChangeSetting(app, hit->arg / 2, hit->arg % 2 ? 1 : -1, now_ns);
+        break;
+    case HIT_OVERLAY_OUT: app->overlay = app->overlay == OVERLAY_ABOUT ? OVERLAY_SETTINGS : OVERLAY_NONE; break;
     }
     return true;
 }

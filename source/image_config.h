@@ -9,5 +9,6 @@
 #define STBI_ONLY_BMP
 // Images come from memory.
 #define STBI_NO_STDIO
-// Logos are small; anything larger is refused before it is allocated.
-#define STBI_MAX_DIMENSIONS 4096
+// Backgrounds can be a camera's photo (background.h); logos have their own,
+// smaller limit, checked before they are decoded (logo.h).
+#define STBI_MAX_DIMENSIONS 12000
