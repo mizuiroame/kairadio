@@ -75,7 +75,8 @@ static const char *formatFor(const char *content_type)
         {"audio/mpeg", "mp3"},      {"audio/mp3", "mp3"},       {"audio/aac", "aac"},  {"audio/aacp", "aac"},
         {"audio/x-aac", "aac"},     {"audio/ogg", "ogg"},       {"application/ogg", "ogg"},
         {"audio/opus", "ogg"},      {"audio/flac", "flac"},     {"video/mp2t", "mpegts"},
-        {"audio/mp2t", "mpegts"},
+        {"audio/mp2t", "mpegts"},   {"audio/mp4", "mp4"},       {"video/mp4", "mp4"},  {"audio/x-m4a", "mp4"},
+        {"application/mp4", "mp4"}, {"audio/iso.segment", "mp4"}, {"video/iso.segment", "mp4"},
     };
     for (size_t i = 0; content_type && i < sizeof(TYPES) / sizeof(TYPES[0]); i++)
         if (strncasecmp(content_type, TYPES[i].type, strlen(TYPES[i].type)) == 0)

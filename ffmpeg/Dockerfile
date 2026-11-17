@@ -30,7 +30,7 @@ RUN . /opt/devkitpro/switch2vars.sh \
       --enable-neon \
       --enable-decoder=mp3float,mp3,aac,aac_latm,vorbis,opus,flac \
       --enable-parser=mpegaudio,aac,aac_latm,vorbis,opus,flac \
-      --enable-demuxer=mp3,aac,ogg,mpegts,flac,latm \
+      --enable-demuxer=mp3,aac,ogg,mpegts,flac,latm,mov \
  && make -j"$(nproc)" \
  && make install \
  && grep -q 'define CONFIG_GPL 0' config.h \

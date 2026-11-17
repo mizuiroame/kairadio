@@ -262,11 +262,27 @@ static void playHls(const char *url, char *body)
 
     long last = -1;
     int failures = 0;
+    bool map_sent = false;  // fMP4: the init segment went first, once.
     while (!g_stop) {
-        if (p.fragmented_mp4 || p.encrypted) {
+        if (p.encrypted || (p.fragmented_mp4 && !p.map[0])) {
             setState(STREAM_FAILED, p.encrypted ? "This station's stream is encrypted." :
-                                                  "This station's HLS format (fMP4) isn't supported yet.");
+                                                  "This station's HLS format (fMP4 by byte range) isn't supported.");
             break;
+        }
+        if (p.fragmented_mp4 && !map_sent && hlsFirstSegment(&p, last) < p.count) {
+            // The init segment describes the audio; the segments after it hold
+            // it. Together they read as one fragmented MP4.
+            Request init;
+            memset(&init, 0, sizeof(init));
+            init.audio_only = true;
+            CURLcode rc = perform(p.map, &init, error, sizeof(error));
+            freeRequest(&init);
+            if (rc != CURLE_OK) {
+                if (!g_stop)
+                    setState(STREAM_FAILED, error[0] ? error : "The station's stream couldn't be read.");
+                break;
+            }
+            map_sent = true;
         }
         for (size_t i = hlsFirstSegment(&p, last); i < p.count && !g_stop; i++) {
             Request seg;

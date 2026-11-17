@@ -220,9 +220,25 @@ void testHls(void)
     }
     hlsFree(&p);
 
-    CHECK(hlsParse("#EXTM3U\n#EXT-X-MAP:URI=\"init.mp4\"\n#EXTINF:2,\na.m4s\n#EXT-X-ENDLIST\n", "http://h/x", 1, &p));
-    CHECK(p.fragmented_mp4 && p.ended && p.count == 1);
+    // fMP4: the init segment, resolved like the segments, comes first.
+    CHECK(hlsParse("#EXTM3U\n#EXT-X-MAP:URI=\"init.mp4\"\n#EXTINF:2,\na.m4s\n#EXT-X-ENDLIST\n", "http://h/live/x", 1,
+                   &p));
+    CHECK(p.fragmented_mp4 && p.ended && p.count == 1 && strcmp(p.map, "http://h/live/init.mp4") == 0);
     hlsFree(&p);
+    CHECK(hlsParse("#EXTM3U\n#EXT-X-MAP:URI=\"/dyseg/map/init.mp4\"\n#EXTINF:2,\na.m4s\n", "https://h/live/x", 1, &p));
+    CHECK(strcmp(p.map, "https://h/dyseg/map/init.mp4") == 0);
+    hlsFree(&p);
+    // A byte range of a file isn't fetched; nor is a URI too long to keep whole.
+    CHECK(hlsParse("#EXTM3U\n#EXT-X-MAP:URI=\"all.mp4\",BYTERANGE=\"720@0\"\n#EXTINF:2,\na.m4s\n", "http://h/x", 1, &p));
+    CHECK(p.fragmented_mp4 && p.map[0] == '\0');
+    hlsFree(&p);
+    char *long_map = malloc(LINK_URL_MAX + 64);
+    if (long_map) {
+        snprintf(long_map, LINK_URL_MAX + 64, "#EXTM3U\n#EXT-X-MAP:URI=\"%0*d\"\n#EXTINF:2,\na.m4s\n", LINK_URL_MAX, 0);
+        CHECK(hlsParse(long_map, "http://h/x", 1, &p) && p.fragmented_mp4 && p.map[0] == '\0');
+        hlsFree(&p);
+        free(long_map);
+    }
     CHECK(hlsParse("#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI=\"k\"\n#EXTINF:2,\na.ts\n", "http://h/x", 1, &p) && p.encrypted);
     hlsFree(&p);
     CHECK(hlsParse("#EXTM3U\n#EXT-X-KEY:METHOD=NONE\n#EXTINF:2,\na.ts\n", "http://h/x", 1, &p) && !p.encrypted);

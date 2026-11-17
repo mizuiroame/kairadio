@@ -19,7 +19,8 @@ typedef struct {
     long variant_bandwidth;      // bits/s; 0 if not given.
     double target_duration;      // Seconds.
     bool ended;                  // #EXT-X-ENDLIST: no more segments will come.
-    bool fragmented_mp4;         // #EXT-X-MAP: fMP4 segments, which KaiRadio can't read.
+    bool fragmented_mp4;         // #EXT-X-MAP: fMP4 segments, which follow its init segment.
+    char map[LINK_URL_MAX];      // That init segment, resolved; empty if it can't be fetched (a byte range).
     bool encrypted;              // #EXT-X-KEY with a method other than NONE.
     HlsSegment *segments;
     size_t count;

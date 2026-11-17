@@ -16,6 +16,7 @@ static bool startsWith(const char *s, size_t len, const char *prefix)
 }
 
 // The value of an attribute in an attribute list ("BANDWIDTH=128000,...").
+// False if it isn't there, or doesn't fit (a cut URI would be another one).
 static bool attribute(const char *list, size_t len, const char *name, char *out, size_t size)
 {
     size_t n = strlen(name);
@@ -36,7 +37,7 @@ static bool attribute(const char *list, size_t len, const char *name, char *out,
             vlen = c ? (size_t)(c - v) : left;
         }
         if (vlen >= size)
-            vlen = size - 1;
+            return false;
         memcpy(out, v, vlen);
         out[vlen] = '\0';
         return true;
@@ -116,8 +117,16 @@ bool hlsParse(const char *body, const char *base, long max_bandwidth, HlsPlaylis
                 out->target_duration = atof(line + 22);
             } else if (startsWith(line, len, "#EXT-X-ENDLIST")) {
                 out->ended = true;
-            } else if (startsWith(line, len, "#EXT-X-MAP")) {
+            } else if (startsWith(line, len, "#EXT-X-MAP:")) {
+                // The init segment that goes before the fMP4 segments. A byte
+                // range of a file isn't fetched, so a map with one is left out.
                 out->fragmented_mp4 = true;
+                char uri[LINK_URL_MAX];
+                out->map[0] = '\0';
+                if (attribute(line + 11, len - 11, "URI", uri, sizeof(uri)) &&
+                    !attribute(line + 11, len - 11, "BYTERANGE", value, sizeof(value)) &&
+                    !linkResolve(base, uri, out->map, sizeof(out->map)))
+                    out->map[0] = '\0';
             } else if (startsWith(line, len, "#EXT-X-KEY:")) {
                 out->encrypted = !(attribute(line + 11, len - 11, "METHOD", value, sizeof(value)) &&
                                    strcasecmp(value, "NONE") == 0);

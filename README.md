@@ -36,8 +36,8 @@ The screenshots show made-up stations.
   it, and the format: codec, bitrate and sample rate.
 - Plays **MP3**, **AAC** and **HE-AAC**, **Ogg Vorbis**, **Opus** and **FLAC**
   streams over HTTP and HTTPS. It follows `.pls` and `.m3u` playlists to the
-  stream, and plays **HLS** stations (MPEG-TS or AAC segments; fMP4 isn't
-  supported yet).
+  stream, and plays **HLS** stations, with MPEG-TS, AAC or fMP4 segments
+  (encrypted ones aren't supported).
 - Reconnects on its own when the connection drops.
 - **Settings** (**+** > Settings): the accent color (or one taken from the
   station's logo), a background image of your own with as much blur as you

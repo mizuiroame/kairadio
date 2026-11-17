@@ -351,7 +351,7 @@ int main(int argc, char **argv)
     playing(&app, 1, RADIO_BUFFERING, "");
     render(dir, "now_playing_buffering", &app);
     playing(&app, 6, RADIO_FAILED, "");
-    snprintf(g_stub_radio.error, sizeof(g_stub_radio.error), "%s", "This station's HLS format (fMP4) isn't supported yet.");
+    snprintf(g_stub_radio.error, sizeof(g_stub_radio.error), "%s", "This station's stream is encrypted.");
     render(dir, "now_playing_failed", &app);
     g_stub_radio = (RadioStatus){0};
     render(dir, "now_playing_empty", &app);
