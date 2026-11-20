@@ -16,6 +16,10 @@
 #define MAP_H 460
 #define MAP_FB_W 1786
 #define MAP_FB_H 690
+// It's equirectangular, from 180W to 180E and from MAP_NORTH to MAP_SOUTH
+// degrees (no Antarctica).
+#define MAP_NORTH 83.0f
+#define MAP_SOUTH -56.0f
 // The image is twice that, for 4K; smaller screens get it shrunk.
 #define MAP_IMAGE_W (MAP_FB_W * 2)
 #define MAP_IMAGE_H (MAP_FB_H * 2)

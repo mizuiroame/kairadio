@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "app.h"
+#include "globe.h"
 #include "font.h"
 #include "gfx.h"
 #include "stubs.h"
@@ -143,6 +144,23 @@ static bool reachablePoint(int index, int *px, int *py)
     return false;
 }
 
+// A country's light on the globe, not the one picked: where a tap picks it.
+static bool globeLight(const App *app, int *x, int *y)
+{
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    for (size_t i = 0; i < countries->count; i++) {
+        const MapCountry *c = mapFindCountry(countries->items[i].code);
+        float px, py, depth;
+        if (i != app->map_cursor && c && globeProject(app->globe_view, globeMapPlace(c->label), &px, &py, &depth) &&
+            depth > 0.5f) {
+            *x = (int)px;
+            *y = (int)py;
+            return true;
+        }
+    }
+    return false;
+}
+
 // Taps each target in a child process (so the app state stays as it is) and
 // checks that the tap changed something.
 static void checkTouch(const char *name, App *app)
@@ -156,7 +174,9 @@ static void checkTouch(const char *name, App *app)
         if (r->kind == HIT_SEARCH_MODE && r->arg == (int)app->search_mode)
             continue;  // The same for the way of searching.
         int x, y;
-        if (!reachablePoint(i, &x, &y)) {
+        if (r->kind == HIT_MAP && app->config.world_globe && globeLight(app, &x, &y)) {
+            // On the globe: a tap on another country's light picks it.
+        } else if (!reachablePoint(i, &x, &y)) {
             printf("TOUCH: %s: target kind %d at %d,%d is covered by others\n", name, r->kind, r->x, r->y);
             g_problems++;
             continue;

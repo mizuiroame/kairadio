@@ -24,6 +24,7 @@ typedef struct {
     int screen_off_minutes;     // Turn the screen off after this long idle while playing; 0 never.
     int start_view;             // StartView.
     bool resume;                // Play the last station again when KaiRadio opens.
+    bool world_globe;           // The World view as a globe (Y turns it into the flat map and back).
 } Config;
 
 void configDefaults(Config *c);

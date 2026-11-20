@@ -23,6 +23,7 @@ void configDefaults(Config *c)
     c->background_blur = BLUR_MEDIUM;
     c->clock_24h = true;
     c->start_view = START_AUTO;
+    c->world_globe = true;
 }
 
 static void applyLine(Config *c, char *line)
@@ -47,6 +48,8 @@ static void applyLine(Config *c, char *line)
         c->start_view = clampInt(atoi(value), 0, START_COUNT - 1);
     else if (strcmp(key, "resume") == 0)
         c->resume = strcmp(value, "1") == 0;
+    else if (strcmp(key, "world_globe") == 0)
+        c->world_globe = strcmp(value, "0") != 0;
 }
 
 void configLoad(Config *c, const char *folder)
@@ -87,6 +90,7 @@ bool configSave(const Config *c, const char *folder)
         return false;
     fprintf(f, "accent=%d\nbackground_blur=%d\nclock24=%d\nscreen_off=%d\nstart_view=%d\nresume=%d\n", c->accent,
             c->background_blur, c->clock_24h ? 1 : 0, c->screen_off_minutes, c->start_view, c->resume ? 1 : 0);
+    fprintf(f, "world_globe=%d\n", c->world_globe ? 1 : 0);
     // A line break or a slash in the name would make another setting, or leave the folder.
     if (c->background[0] && !strpbrk(c->background, "\r\n/"))
         fprintf(f, "background=%s\n", c->background);

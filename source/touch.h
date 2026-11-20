@@ -21,6 +21,7 @@ typedef struct {
     int x, y;
     int start_x, start_y;
     int dy;
+    int dx;  // A drag: across since the last frame.
 } TouchEvent;
 
 typedef struct {

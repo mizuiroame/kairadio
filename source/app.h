@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "background.h"
+#include "globe.h"
 #include "kinetic.h"
 #include "categories.h"
 #include "config.h"
@@ -84,6 +85,13 @@ typedef struct {
 
     // The World view: the country chosen, in categories[SEARCH_COUNTRY].
     size_t map_cursor;
+    // As a globe: which way it faces, where it's turning to, and its spin after a flick.
+    GlobeView globe_view, globe_target;
+    bool globe_turning;          // Turning to globe_target (a country chosen).
+    Kinetic globe_spin;
+    bool globe_dragging;
+    uint64_t globe_touched_ns;   // The last time it was touched or turned: it turns by itself after a while.
+    uint64_t globe_frame_ns;
     StationList category_results;
 
     // The directory request that the app waits for, and what it is for.
@@ -142,6 +150,8 @@ void appUpdate(App *app, uint64_t now_ns);
 // Buttons pressed this frame (with auto-repeat), and touch input.
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns);
 void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns);
+// The World view's globe, each frame: turning to a country, gliding, or turning slowly by itself.
+void appGlobeTick(App *app, uint64_t now_ns);
 // What a tap at (x, y) does, against the last frame's targets. For the
 // preview's checks too. Returns false if nothing is there.
 bool appTap(App *app, int x, int y, uint64_t now_ns);

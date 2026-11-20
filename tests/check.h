@@ -32,3 +32,4 @@ void testIcons(void);
 void testSettings(void);
 void testAppRoot(void);
 void testKinetic(void);
+void testGlobe(void);

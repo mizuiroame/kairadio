@@ -15,12 +15,6 @@
 
 #define RGB(r, g, b) (0xFF000000u | (uint32_t)(b) << 16 | (uint32_t)(g) << 8 | (uint32_t)(r))
 
-// background.c tells the GPU when a picture changes; the tests have none.
-void gfxImageChanged(const uint32_t *pixels)
-{
-    (void)pixels;
-}
-
 static void testConfig(void)
 {
     const char *folder = TMP_ROOT "/settings";

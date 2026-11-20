@@ -52,6 +52,7 @@ static bool readTouch(App *app, uint64_t now)
         }
     }
     appHandleTouch(app, touching, x, y, now);
+    appGlobeTick(app, now);
     return touching;
 }
 

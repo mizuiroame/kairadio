@@ -1,0 +1,194 @@
+#include "globe.h"
+
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define PI_F 3.14159265f
+#define RAD (PI_F / 180.0f)
+#define AIR_WIDTH 0.075f       // The glow's width, a share of the globe's radius.
+#define AIR_ALPHA 150.0f       // How bright it starts at the globe's edge.
+#define SHADE_MIN 0.28f        // The far side of the light still shows this much.
+#define LIGHT_X -0.42f         // The light comes from the upper left, toward the viewer.
+#define LIGHT_Y 0.52f
+#define LIGHT_Z 0.74f
+
+GeoPoint globeMapPlace(MapPoint p)
+{
+    GeoPoint g = {p.x / 65535.0f * 360.0f - 180.0f, MAP_NORTH - p.y / 65535.0f * (MAP_NORTH - MAP_SOUTH)};
+    return g;
+}
+
+float globeWrapLon(float lon)
+{
+    lon = fmodf(lon + 180.0f, 360.0f);
+    if (lon < 0)
+        lon += 360.0f;
+    return lon - 180.0f;
+}
+
+bool globeProject(GlobeView view, GeoPoint place, float *x, float *y, float *depth)
+{
+    float lat = place.lat * RAD, dlon = (place.lon - view.lon) * RAD, tilt = view.lat * RAD;
+    float gx = cosf(lat) * sinf(dlon), gy = sinf(lat), gz = cosf(lat) * cosf(dlon);
+    float vy = gy * cosf(tilt) - gz * sinf(tilt), vz = gy * sinf(tilt) + gz * cosf(tilt);
+    *x = GLOBE_CX + gx * GLOBE_R;
+    *y = GLOBE_CY - vy * GLOBE_R;
+    *depth = vz;
+    return vz > 0.0f;
+}
+
+bool globeUnproject(GlobeView view, float x, float y, GeoPoint *out)
+{
+    float nx = (x - GLOBE_CX) / GLOBE_R, ny = (GLOBE_CY - y) / GLOBE_R, r2 = nx * nx + ny * ny;
+    if (r2 > 1.0f)
+        return false;
+    float nz = sqrtf(1.0f - r2), tilt = view.lat * RAD;
+    float gy = ny * cosf(tilt) + nz * sinf(tilt), gz = -ny * sinf(tilt) + nz * cosf(tilt);
+    out->lat = asinf(gy > 1.0f ? 1.0f : gy < -1.0f ? -1.0f : gy) / RAD;
+    out->lon = globeWrapLon(view.lon + atan2f(nx, gz) / RAD);
+    return true;
+}
+
+float globeDegreesPerPixel(void)
+{
+    return 1.0f / (GLOBE_R * RAD);
+}
+
+GlobeView globeDrag(GlobeView view, float dx, float dy)
+{
+    float step = globeDegreesPerPixel();
+    view.lon = globeWrapLon(view.lon - dx * step);
+    view.lat += dy * step;
+    view.lat = view.lat > GLOBE_TILT_MAX ? GLOBE_TILT_MAX : view.lat < -GLOBE_TILT_MAX ? -GLOBE_TILT_MAX : view.lat;
+    return view;
+}
+
+GlobeView globeToward(GlobeView view, GlobeView target, float t)
+{
+    float dlon = globeWrapLon(target.lon - view.lon);  // The short way round.
+    view.lon = globeWrapLon(view.lon + dlon * t);
+    view.lat += (target.lat - view.lat) * t;
+    return view;
+}
+
+int globeNearest(const CategoryList *countries, GlobeView view, float x, float y, float reach)
+{
+    int best = -1;
+    float best_d = reach * reach;
+    for (size_t i = 0; i < countries->count; i++) {
+        const MapCountry *c = mapFindCountry(countries->items[i].code);
+        float px, py, depth;
+        if (!c || !globeProject(view, globeMapPlace(c->label), &px, &py, &depth) || depth < 0.15f)
+            continue;  // Behind, or too near the edge to aim at.
+        float d = (px - x) * (px - x) + (py - y) * (py - y);
+        if (d < best_d) {
+            best_d = d;
+            best = (int)i;
+        }
+    }
+    return best;
+}
+
+void globeTableFree(GlobeTable *t)
+{
+    free(t->row);
+    free(t->lon);
+    free(t->shade);
+    free(t->alpha);
+    free(t->air);
+    memset(t, 0, sizeof(*t));
+}
+
+static float clamp01(float v)
+{
+    return v < 0.0f ? 0.0f : v > 1.0f ? 1.0f : v;
+}
+
+// One pixel of the table: (nx, ny) in units of the globe's radius.
+static void tablePixel(GlobeTable *t, size_t i, float nx, float ny, float pixel, float tilt, int land_h)
+{
+    float d = sqrtf(nx * nx + ny * ny);
+    t->air[i] = d > 1.0f;
+    if (d > 1.0f) {  // The air: a glow fading out from the edge.
+        float f = 1.0f - (d - 1.0f) / AIR_WIDTH;
+        t->alpha[i] = f > 0.0f ? (uint8_t)(AIR_ALPHA * f * f) : 0;
+        return;
+    }
+    t->alpha[i] = (uint8_t)(255.0f * clamp01((1.0f - d) / pixel + 0.5f));  // A smooth edge.
+    float nz = sqrtf(1.0f - (d < 1.0f ? d * d : 1.0f));
+    float gy = ny * cosf(tilt) + nz * sinf(tilt), gz = -ny * sinf(tilt) + nz * cosf(tilt);
+    float lat = asinf(gy > 1.0f ? 1.0f : gy < -1.0f ? -1.0f : gy) / RAD;
+    t->lon[i] = atan2f(nx, gz) / RAD;
+    if (lat > MAP_NORTH)
+        t->row[i] = -1;
+    else if (lat < MAP_SOUTH)
+        t->row[i] = -2;
+    else {
+        int row = (int)((MAP_NORTH - lat) / (MAP_NORTH - MAP_SOUTH) * land_h);
+        t->row[i] = (int16_t)(row >= land_h ? land_h - 1 : row);
+    }
+    float lit = nx * LIGHT_X + ny * LIGHT_Y + nz * LIGHT_Z;
+    float rim = 0.12f * (1.0f - nz);  // A little light along the edge, as the air scatters it.
+    t->shade[i] = (uint8_t)(255.0f * clamp01(SHADE_MIN + (1.0f - SHADE_MIN) * clamp01(lit) + rim));
+}
+
+bool globeTableBuild(GlobeTable *t, int size, float tilt, int land_h)
+{
+    if (t->size != size) {
+        globeTableFree(t);
+        size_t n = (size_t)size * size;
+        t->row = malloc(n * sizeof(*t->row));
+        t->lon = malloc(n * sizeof(*t->lon));
+        t->shade = malloc(n);
+        t->alpha = malloc(n);
+        t->air = malloc(n * sizeof(*t->air));
+        if (!t->row || !t->lon || !t->shade || !t->alpha || !t->air) {
+            globeTableFree(t);
+            return false;
+        }
+        t->size = size;
+    }
+    t->tilt = tilt;
+    float half = size / 2.0f, radius = half * GLOBE_DISC, pixel = 1.0f / radius, rt = tilt * RAD;
+    for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+            tablePixel(t, (size_t)y * size + x, (x + 0.5f - half) / radius, (half - y - 0.5f) / radius, pixel, rt,
+                       land_h);
+    return true;
+}
+
+static uint32_t scaled(Color c, unsigned shade, unsigned alpha)
+{
+    unsigned r = (c & 0xFF) * shade / 255, g = ((c >> 8) & 0xFF) * shade / 255, b = ((c >> 16) & 0xFF) * shade / 255;
+    return r | g << 8 | b << 16 | (uint32_t)alpha << 24;
+}
+
+void globeRender(const GlobeTable *t, float lon, const uint8_t *land, int land_w, int land_h, const GlobeColors *c,
+                 uint32_t *out)
+{
+    float cols = land_w / 360.0f;
+    (void)land_h;
+    for (int i = 0, n = t->size * t->size; i < n; i++) {
+        unsigned alpha = t->alpha[i];
+        if (!alpha) {
+            out[i] = 0;
+            continue;
+        }
+        if (t->air[i]) {
+            out[i] = (c->air & 0x00FFFFFFu) | (uint32_t)alpha << 24;
+            continue;
+        }
+        Color here;
+        if (t->row[i] == -1) {
+            here = c->ocean;
+        } else if (t->row[i] == -2) {
+            here = c->ice;
+        } else {
+            int col = (int)((globeWrapLon(lon + t->lon[i]) + 180.0f) * cols);
+            col = col < 0 ? 0 : col >= land_w ? land_w - 1 : col;
+            here = gfxMix(c->ocean, c->land, land[(size_t)t->row[i] * land_w + col]);
+        }
+        out[i] = scaled(here, t->shade[i], alpha);
+    }
+}

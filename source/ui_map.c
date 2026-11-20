@@ -6,6 +6,7 @@
 
 #include "font.h"
 #include "gfx.h"
+#include "globe.h"
 #include "image_config.h"
 #include "stb_image.h"
 #include "ui_buttons.h"
@@ -23,6 +24,13 @@
 #define CORE_R 2.6f
 #define CARD_W 330  // Over the Pacific, clear of South America.
 #define CARD_H 78
+#define GLOBE_LAND_W 1024      // The land wrapped on the globe: about its own pixels across.
+#define GLOBE_LAND_H 395       // (MAP_NORTH - MAP_SOUTH) / 360 of that.
+#define GLOBE_TILT_STEP 0.25f  // The globe's table is made again when its tilt moves this much.
+#define COLOR_OCEAN GFX_RGB(0x14, 0x22, 0x38)
+#define COLOR_GLOBE_LAND GFX_RGB(0x46, 0x52, 0x66)
+#define COLOR_ICE GFX_RGB(0x8C, 0x98, 0xA8)
+#define COLOR_AIR GFX_RGB(0x5C, 0x9C, 0xE8)
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
 static bool g_land_failed;
@@ -133,35 +141,80 @@ static void drawDot(float x, float y, float r, Color color)
     gfxArc(x, y, r / 2.0f, r, 0.0f, 6.2832f, color);
 }
 
+// Where a map point shows: on the flat map, or on the globe facing view
+// (fade: 1 in its middle, toward 0 at its edge). False behind the globe.
+static bool placeOf(const App *app, MapPoint p, float *x, float *y, float *fade)
+{
+    *fade = 1.0f;
+    if (!app->config.world_globe) {
+        mapToLayout(p, x, y);
+        return true;
+    }
+    float depth;
+    if (!globeProject(app->globe_view, globeMapPlace(p), x, y, &depth))
+        return false;
+    *fade = depth < 0.35f ? depth / 0.35f : 1.0f;  // Lights dim toward the edge, as they turn away.
+    return true;
+}
+
 // A country's lights: faint ones spread over its land, twinkling, and at its
 // middle a halo with a sharp core, the light to pick.
-static void drawCountry(const MapCountry *c, int stations, uint64_t now_ns, unsigned seed)
+static void drawCountry(const App *app, const MapCountry *c, int stations, uint64_t now_ns, unsigned seed)
 {
-    float t = (float)(now_ns % 60000000000ull) / 1e9f;
+    float t = (float)(now_ns % 60000000000ull) / 1e9f, x, y, fade;
     int n = mapLightCount(stations);
     if (n > c->count)
         n = c->count;
     for (int i = 0; i < n; i++) {
-        float x, y;
-        mapToLayout(MAP_POINTS[c->first + i], &x, &y);
+        if (!placeOf(app, MAP_POINTS[c->first + i], &x, &y, &fade))
+            continue;
         float phase = (float)((seed * 7u + (unsigned)i * 13u) % 100u) * 0.0628f;
-        float bright = 0.52f + 0.2f * sinf(t * 1.3f + phase);
+        float bright = (0.52f + 0.2f * sinf(t * 1.3f + phase)) * fade;
         drawLight(x, y, SPARK_R, gfxMix(COLOR_BG, COLOR_LIGHT, (unsigned)(bright * 255.0f)));
     }
-    float x, y;
-    mapToLayout(c->label, &x, &y);
-    drawLight(x, y, mapGlowRadius(stations), COLOR_LIGHT);
+    if (!placeOf(app, c->label, &x, &y, &fade))
+        return;
+    drawLight(x, y, mapGlowRadius(stations) * (0.5f + 0.5f * fade), gfxMix(COLOR_BG, COLOR_LIGHT, (unsigned)(fade * 255)));
     drawDot(x, y, CORE_R + 1.4f, COLOR_BG);  // A dark edge, so the core reads apart from the halo.
-    drawDot(x, y, CORE_R, COLOR_CORE);
+    drawDot(x, y, CORE_R, gfxMix(COLOR_BG, COLOR_CORE, (unsigned)(fade * 255)));
+}
+
+// The globe: the land on a sphere facing app->globe_view, lit from the upper
+// left, with its air glowing around it.
+static void drawGlobe(const App *app)
+{
+    static GlobeTable table;
+    static uint32_t *land_rgba, *picture;
+    static uint8_t *land;
+    if (!mapImage(&(int){0}, &(int){0}))
+        return;  // The land's PNG can't be read.
+    if (!land) {
+        land_rgba = landAt(GLOBE_LAND_W, GLOBE_LAND_H);
+        land = land_rgba ? malloc(GLOBE_LAND_W * GLOBE_LAND_H) : NULL;
+        for (int i = 0; land && i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
+            land[i] = (uint8_t)(land_rgba[i] >> 24);
+        free(land_rgba);
+        picture = land ? malloc((size_t)GLOBE_IMAGE * GLOBE_IMAGE * sizeof(uint32_t)) : NULL;
+        if (!picture)
+            return;
+    }
+    float tilt = roundf(app->globe_view.lat / GLOBE_TILT_STEP) * GLOBE_TILT_STEP;
+    if ((table.size != GLOBE_IMAGE || table.tilt != tilt) && !globeTableBuild(&table, GLOBE_IMAGE, tilt, GLOBE_LAND_H))
+        return;
+    static const GlobeColors COLORS = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR};
+    globeRender(&table, app->globe_view.lon, land, GLOBE_LAND_W, GLOBE_LAND_H, &COLORS, picture);
+    gfxImageChanged(picture);
+    float half = GLOBE_R / GLOBE_DISC;  // The picture's half-width, glow included, in layout pixels.
+    gfxDrawImageScaledFb((GLOBE_CX - half) * GFX_SCALE, (GLOBE_CY - half) * GFX_SCALE, 2 * half * GFX_SCALE,
+                         2 * half * GFX_SCALE, GLOBE_IMAGE, GLOBE_IMAGE, picture);
 }
 
 // The picked country: a ring around its light, and a card that opens it.
-static void drawPicked(const Category *c, uint64_t now_ns)
+static void drawPicked(const App *app, const Category *c, uint64_t now_ns)
 {
     const MapCountry *place = mapFindCountry(c->code);
-    if (place) {
-        float x, y;
-        mapToLayout(place->label, &x, &y);
+    float x, y, fade;
+    if (place && placeOf(app, place->label, &x, &y, &fade)) {
         float pulse = (float)(now_ns % 1600000000ull) / 1.6e9f;
         gfxArc(x, y, 13.0f + 3.0f * sinf(pulse * 6.2832f), 3.0f, 0.0f, 6.2832f, COLOR_ACCENT);
         drawDot(x, y, CORE_R + 1.0f, COLOR_ACCENT);
@@ -186,13 +239,20 @@ static void drawPicked(const Category *c, uint64_t now_ns)
 void uiDrawMap(const App *app, uint64_t now_ns)
 {
     int w, h;
-    const uint32_t *map = mapImage(&w, &h);
-    if (map)
-        gfxDrawImageScaledFb((float)gfxToFb(MAP_X), (float)gfxToFb(MAP_Y), MAP_FB_W, MAP_FB_H, w, h, map);
+    if (app->config.world_globe) {
+        drawGlobe(app);
+    } else {
+        const uint32_t *map = mapImage(&w, &h);
+        if (map)
+            gfxDrawImageScaledFb((float)gfxToFb(MAP_X), (float)gfxToFb(MAP_Y), MAP_FB_W, MAP_FB_H, w, h, map);
+    }
     const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
     if (countries->count == 0)
         return;
-    uiHitAdd(MAP_X, MAP_Y, MAP_W, MAP_H, HIT_MAP, 0);
+    if (app->config.world_globe)
+        uiHitAdd(GLOBE_CX - GLOBE_R, GLOBE_CY - GLOBE_R, 2 * GLOBE_R, 2 * GLOBE_R, HIT_MAP, 0);
+    else
+        uiHitAdd(MAP_X, MAP_Y, MAP_W, MAP_H, HIT_MAP, 0);
     // The ones with fewest stations first, so the bright ones draw over them,
     // however Search > Country sorts the list.
     static size_t order[CATEGORY_LIMIT];
@@ -207,8 +267,8 @@ void uiDrawMap(const App *app, uint64_t now_ns)
         const Category *item = &countries->items[order[k]];
         const MapCountry *c = mapFindCountry(item->code);
         if (c)
-            drawCountry(c, item->count, now_ns, (unsigned)k);
+            drawCountry(app, c, item->count, now_ns, (unsigned)k);
     }
     if (app->map_cursor < countries->count)
-        drawPicked(&countries->items[app->map_cursor], now_ns);
+        drawPicked(app, &countries->items[app->map_cursor], now_ns);
 }

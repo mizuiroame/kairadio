@@ -1,5 +1,6 @@
 #include "app.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -8,6 +9,11 @@
 #include "ui.h"
 #include "ui_hit.h"
 #include "worldmap.h"
+
+#define GLOBE_TURN_RATE 6.0f        // Turning to a country: this share of the way left, each second.
+#define GLOBE_IDLE_NS 8000000000ull // Untouched this long, the globe turns by itself,
+#define GLOBE_IDLE_DEG_S 2.5f       // this many degrees a second.
+#define GLOBE_TILT_HOME 18.0f       // Turning by itself, it leans back to show the north a little.
 
 #define TOAST_NS 3000000000ull
 
@@ -69,6 +75,7 @@ void appInit(App *app, const char *config_folder)
     snprintf(app->config_folder, sizeof(app->config_folder), "%s", config_folder);
     configLoad(&app->config, config_folder);
     libraryLoad(&app->library, config_folder);
+    app->globe_view = (GlobeView){-30.0f, GLOBE_TILT_HOME};  // The Atlantic, the Americas and Europe in view.
     // Start where Settings say; by default where the stations are: the
     // favorites if there are some, else the world.
     static const View START_VIEWS[START_COUNT] = {VIEW_WORLD, VIEW_WORLD, VIEW_POPULAR, VIEW_FAVORITES, VIEW_RECENT};
@@ -428,7 +435,23 @@ static void handleSearch(App *app, uint64_t pressed, uint64_t now_ns)
     if ((pressed & HidNpadButton_B) && app->category_open) backFromCategory(app);
 }
 
-static void handleWorld(App *app, uint64_t pressed)
+// The globe turns to show the chosen country in its middle.
+static void turnGlobeToPick(App *app, uint64_t now_ns)
+{
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    if (app->map_cursor >= countries->count)
+        return;
+    const MapCountry *c = mapFindCountry(countries->items[app->map_cursor].code);
+    if (!c)
+        return;
+    GeoPoint place = globeMapPlace(c->label);
+    app->globe_target = (GlobeView){place.lon, place.lat > GLOBE_TILT_MAX ? GLOBE_TILT_MAX : place.lat};
+    app->globe_turning = true;
+    kineticStop(&app->globe_spin);
+    app->globe_touched_ns = now_ns;
+}
+
+static void handleWorld(App *app, uint64_t pressed, uint64_t now_ns)
 {
     const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
     int dx = (pressed & BUTTONS_RIGHT) ? 1 : (pressed & BUTTONS_LEFT) ? -1 : 0;
@@ -436,11 +459,43 @@ static void handleWorld(App *app, uint64_t pressed)
     if (dx || dy) {
         // One way at a time: a diagonal of the stick takes the up or down.
         int next = mapStep(countries, app->map_cursor, dy ? 0 : dx, dy);
-        if (next >= 0)
+        if (next >= 0) {
             app->map_cursor = (size_t)next;
+            turnGlobeToPick(app, now_ns);
+        }
     }
     if (pressed & HidNpadButton_A) appOpenMapCountry(app, app->map_cursor);
     if (pressed & HidNpadButton_X) appSetView(app, VIEW_NOW_PLAYING);
+    if (pressed & HidNpadButton_Y) {  // The globe, or the flat map.
+        app->config.world_globe = !app->config.world_globe;
+        configSave(&app->config, app->config_folder);
+        turnGlobeToPick(app, now_ns);
+    }
+}
+
+void appGlobeTick(App *app, uint64_t now_ns)
+{
+    float seconds = app->globe_frame_ns && now_ns > app->globe_frame_ns ? (now_ns - app->globe_frame_ns) / 1e9f : 0.0f;
+    app->globe_frame_ns = now_ns;
+    if (seconds > 0.1f)
+        seconds = 0.1f;
+    if (app->view != VIEW_WORLD || !app->config.world_globe || app->globe_dragging)
+        return;
+    int px = kineticStep(&app->globe_spin, now_ns);
+    if (px) {  // Gliding on after a flick.
+        app->globe_view = globeDrag(app->globe_view, (float)px, 0.0f);
+        app->globe_touched_ns = now_ns;
+    } else if (app->globe_turning) {
+        float t = 1.0f - expf(-GLOBE_TURN_RATE * seconds);
+        app->globe_view = globeToward(app->globe_view, app->globe_target, t);
+        float off = fabsf(globeWrapLon(app->globe_target.lon - app->globe_view.lon)) +
+                    fabsf(app->globe_target.lat - app->globe_view.lat);
+        app->globe_turning = off > 0.05f;
+        app->globe_touched_ns = now_ns;
+    } else if (now_ns - app->globe_touched_ns > GLOBE_IDLE_NS) {  // Left alone: it turns slowly by itself.
+        app->globe_view.lon = globeWrapLon(app->globe_view.lon + GLOBE_IDLE_DEG_S * seconds);
+        app->globe_view.lat += (GLOBE_TILT_HOME - app->globe_view.lat) * (1.0f - expf(-0.5f * seconds));
+    }
 }
 
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
@@ -466,7 +521,7 @@ void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
         return;
     }
     if (app->view == VIEW_WORLD) {
-        handleWorld(app, pressed);
+        handleWorld(app, pressed, now_ns);
         return;
     }
     if (pressed & (BUTTONS_UP | BUTTONS_DOWN | BUTTONS_PAGE_UP | BUTTONS_PAGE_DOWN | HidNpadButton_StickRUp |
@@ -532,13 +587,17 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     case HIT_EXIT: app->quit = true; break;
     case HIT_LIST: break;  // Only for drags.
     case HIT_MAP: {
-        int nearest = mapNearest(&app->categories[SEARCH_COUNTRY], (float)x, (float)y);
+        const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+        int nearest = app->config.world_globe ? globeNearest(countries, app->globe_view, (float)x, (float)y, 48.0f)
+                                              : mapNearest(countries, (float)x, (float)y);
         if (nearest < 0)
             break;
-        if ((size_t)nearest == app->map_cursor)
+        if ((size_t)nearest == app->map_cursor) {
             appOpenMapCountry(app, app->map_cursor);  // A second tap on it opens it.
-        else
+        } else {
             app->map_cursor = (size_t)nearest;
+            turnGlobeToPick(app, now_ns);
+        }
         break;
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
@@ -598,10 +657,42 @@ static void glide(App *app, TouchEvent *e, uint64_t now_ns)
         kineticStop(&app->kinetic);  // An end.
 }
 
+// A finger on the globe turns it, the land following it; let go moving, it spins on.
+static bool globeTouch(App *app, const TouchEvent *e, uint64_t now_ns)
+{
+    if (app->view != VIEW_WORLD || !app->config.world_globe || app->overlay != OVERLAY_NONE)
+        return false;
+    if (e->type == TOUCH_PRESS) {  // Touching it stops it.
+        app->globe_turning = false;
+        kineticStop(&app->globe_spin);
+        app->globe_touched_ns = now_ns;
+        return false;
+    }
+    if (e->type == TOUCH_DRAG_END && app->globe_dragging) {
+        app->globe_dragging = false;
+        kineticRelease(&app->globe_spin, now_ns);
+        return true;
+    }
+    if (e->type != TOUCH_DRAG)
+        return false;
+    const HitRegion *start = uiHitFind(e->start_x, e->start_y);
+    if (!app->globe_dragging && !(start && start->kind == HIT_MAP))
+        return false;
+    bool starting = !app->globe_dragging;
+    app->globe_dragging = true;
+    app->globe_turning = false;
+    kineticDrag(&app->globe_spin, starting ? 0 : e->dx, now_ns);
+    app->globe_view = globeDrag(app->globe_view, (float)e->dx, (float)e->dy);
+    app->globe_touched_ns = now_ns;
+    return true;
+}
+
 void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns)
 {
     // Touch coordinates are in the 1280x720 layout.
     TouchEvent e = touchUpdate(&app->touch, touching, x, y, now_ns);
+    if (globeTouch(app, &e, now_ns))
+        return;
     glide(app, &e, now_ns);
     if (e.type == TOUCH_TAP) {
         appTap(app, e.x, e.y, now_ns);
