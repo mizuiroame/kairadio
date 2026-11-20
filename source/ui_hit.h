@@ -40,6 +40,8 @@ typedef struct {
 
 void uiHitReset(void);
 void uiHitAdd(int x, int y, int w, int h, HitKind kind, int arg);
+// Targets added from now on are cut to between top and bottom (a list's place).
+void uiHitClip(int top, int bottom);
 // The topmost region at (x, y), or NULL.
 const HitRegion *uiHitFind(int x, int y);
 // The regions of the last frame, bottom first: for checks.

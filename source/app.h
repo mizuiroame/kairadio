@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "background.h"
+#include "kinetic.h"
 #include "categories.h"
 #include "config.h"
 #include "directory.h"
@@ -112,7 +113,8 @@ typedef struct {
 
     SysInfo sys;
     TouchTracker touch;
-    int drag_rows;  // Pixels dragged on a list, not yet a whole row.
+    Kinetic kinetic;   // A list following a finger, or gliding on after it.
+    bool swallow_tap;  // A press stopped a glide: its tap doesn't open anything.
     char toast[224];
     uint64_t toast_until_ns;
     bool quit;

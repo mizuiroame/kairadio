@@ -469,6 +469,11 @@ void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
         handleWorld(app, pressed);
         return;
     }
+    if (pressed & (BUTTONS_UP | BUTTONS_DOWN | BUTTONS_PAGE_UP | BUTTONS_PAGE_DOWN | HidNpadButton_StickRUp |
+                   HidNpadButton_StickRDown)) {
+        uiListRelease();  // The buttons take over from the finger.
+        kineticStop(&app->kinetic);
+    }
     if (pressed & BUTTONS_UP) moveCursor(app, -1);
     if (pressed & BUTTONS_DOWN) moveCursor(app, 1);
     if (app->view == VIEW_SEARCH) {
@@ -560,10 +565,44 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     return true;
 }
 
+// Moves the list in view by px as a finger does, and its cursor to stay in
+// view. False at an end.
+static bool scrollList(App *app, int px)
+{
+    bool moved = uiListScrollPx(px);
+    long delta = (long)g_list_scroll.want_cursor - (long)g_list_scroll.cursor;
+    if (delta) {
+        moveCursor(app, delta);
+        g_list_scroll.cursor = g_list_scroll.want_cursor;
+    }
+    return moved;
+}
+
+// A finger came down, let go, or nothing: a list glides on, or stops.
+static void glide(App *app, TouchEvent *e, uint64_t now_ns)
+{
+    if (e->type == TOUCH_PRESS) {  // A press stops a glide, and isn't a tap on what it stopped over.
+        app->swallow_tap = kineticGliding(&app->kinetic);
+        kineticStop(&app->kinetic);
+    } else if (e->type == TOUCH_TAP && app->swallow_tap) {
+        e->type = TOUCH_NONE;
+    }
+    if (e->type != TOUCH_PRESS && e->type != TOUCH_DRAG)
+        app->swallow_tap = false;
+    if (e->type == TOUCH_DRAG_END && app->kinetic.dragging)
+        kineticRelease(&app->kinetic, now_ns);
+    if (app->overlay != OVERLAY_NONE || app->view == VIEW_WORLD || app->view == VIEW_NOW_PLAYING)
+        kineticStop(&app->kinetic);
+    int px = kineticStep(&app->kinetic, now_ns);
+    if (px && !scrollList(app, px))
+        kineticStop(&app->kinetic);  // An end.
+}
+
 void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns)
 {
     // Touch coordinates are in the 1280x720 layout.
     TouchEvent e = touchUpdate(&app->touch, touching, x, y, now_ns);
+    glide(app, &e, now_ns);
     if (e.type == TOUCH_TAP) {
         appTap(app, e.x, e.y, now_ns);
     } else if (e.type == TOUCH_DRAG) {
@@ -572,17 +611,9 @@ void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns)
                                  start->kind == HIT_FAVORITE || start->kind == HIT_CATEGORY);
         if (!on_list)
             return;
-        // Dragging up shows the rows below, as on a phone.
-        app->drag_rows -= e.dy;
-        while (app->drag_rows >= UI_ROW_H) {
-            moveCursor(app, 1);
-            app->drag_rows -= UI_ROW_H;
-        }
-        while (app->drag_rows <= -UI_ROW_H) {
-            moveCursor(app, -1);
-            app->drag_rows += UI_ROW_H;
-        }
-    } else if (e.type == TOUCH_DRAG_END) {
-        app->drag_rows = 0;
+        // The list goes with the finger: dragging up shows the rows below, as on a phone.
+        bool starting = !app->kinetic.dragging;
+        kineticDrag(&app->kinetic, starting ? 0 : -e.dy, now_ns);
+        scrollList(app, -e.dy);
     }
 }

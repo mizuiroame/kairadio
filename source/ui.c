@@ -39,6 +39,66 @@ size_t uiFirstVisible(size_t cursor, size_t count)
     return first + UI_LIST_ROWS > count ? count - UI_LIST_ROWS : first;
 }
 
+UiListScroll g_list_scroll;
+
+static size_t clampFirst(size_t first, size_t count)
+{
+    return count <= UI_LIST_ROWS ? 0 : first > count - UI_LIST_ROWS ? count - UI_LIST_ROWS : first;
+}
+
+// A list starts drawing: the first row in view and pixels into it (offset);
+// it's drawn cut to its place, and its targets too, until listEnd.
+static size_t listBegin(const void *key, size_t cursor, size_t count, int *offset)
+{
+    UiListScroll *s = &g_list_scroll;
+    if (s->key != key)
+        s->free = false;
+    s->key = key;
+    s->cursor = cursor;
+    s->count = count;
+    size_t first = s->free ? clampFirst(s->first, count) : uiFirstVisible(cursor, count);
+    *offset = s->free && first == s->first ? s->offset : 0;
+    gfxSetClip(0, UI_LIST_Y, GFX_WIDTH, UI_LIST_ROWS * UI_ROW_H);
+    uiHitClip(UI_LIST_Y, UI_LIST_Y + UI_LIST_ROWS * UI_ROW_H);
+    return first;
+}
+
+static void listEnd(void)
+{
+    gfxResetClip();
+    uiHitClip(-100000, 100000);
+}
+
+bool uiListScrollPx(int px)
+{
+    UiListScroll *s = &g_list_scroll;
+    if (!s->free) {
+        s->first = uiFirstVisible(s->cursor, s->count);
+        s->offset = 0;
+        s->free = true;
+    }
+    long end = s->count > UI_LIST_ROWS ? (long)(s->count - UI_LIST_ROWS) * UI_ROW_H : 0;
+    long at = (long)s->first * UI_ROW_H + s->offset, to = at + px;
+    to = to < 0 ? 0 : to > end ? end : to;
+    s->first = (size_t)(to / UI_ROW_H);
+    s->offset = (int)(to % UI_ROW_H);
+    s->want_cursor = s->cursor;
+    if (s->count > 0) {  // The cursor stays on a row mostly in view.
+        size_t top = s->first + (s->offset * 2 > UI_ROW_H ? 1 : 0);
+        size_t bottom = top + UI_LIST_ROWS - 1 < s->count ? top + UI_LIST_ROWS - 1 : s->count - 1;
+        if (s->cursor < top)
+            s->want_cursor = top;
+        else if (s->cursor > bottom)
+            s->want_cursor = bottom;
+    }
+    return to != at && to == at + px;
+}
+
+void uiListRelease(void)
+{
+    g_list_scroll.free = false;
+}
+
 // --- Header ---
 
 static void drawTabs(const App *app)
@@ -160,7 +220,9 @@ static void drawScrollbar(size_t first, size_t count)
     int thumb_h = track_h * UI_LIST_ROWS / (int)count;
     if (thumb_h < 24)
         thumb_h = 24;
-    int thumb_y = UI_LIST_Y + (int)((long)(track_h - thumb_h) * (long)first / (long)(count - UI_LIST_ROWS));
+    long at = (long)first * UI_ROW_H + (g_list_scroll.free ? g_list_scroll.offset : 0);
+    long end = (long)(count - UI_LIST_ROWS) * UI_ROW_H;
+    int thumb_y = UI_LIST_Y + (int)((long)(track_h - thumb_h) * (at < end ? at : end) / end);
     gfxFillRoundRect(GFX_WIDTH - 12, UI_LIST_Y, 4, track_h, 2, COLOR_SURFACE);
     gfxFillRoundRect(GFX_WIDTH - 12, thumb_y, 4, thumb_h, 2, COLOR_FAINT);
 }
@@ -316,10 +378,11 @@ static void drawCategories(const App *app)
     }
     uiHitAdd(0, UI_LIST_Y, GFX_WIDTH, UI_LIST_ROWS * UI_ROW_H, HIT_LIST, 0);
     size_t cursor = app->category_cursor[mode];
-    size_t first = uiFirstVisible(cursor, list->count);
-    for (size_t i = first; i < list->count && i < first + UI_LIST_ROWS; i++) {
+    int offset;
+    size_t first = listBegin(&app->category_cursor[mode], cursor, list->count, &offset);
+    for (size_t i = first; i < list->count && i <= first + UI_LIST_ROWS; i++) {
         const Category *c = &list->items[i];
-        int y = UI_LIST_Y + (int)(i - first) * UI_ROW_H;
+        int y = UI_LIST_Y + (int)(i - first) * UI_ROW_H - offset;
         if (i == cursor) {
             gfxFillRoundRect(MARGIN - 12, y + 2, GFX_WIDTH - 2 * (MARGIN - 12), UI_ROW_H - 4, 10, COLOR_SURFACE_HI);
             gfxFillRect(MARGIN - 12, y + 14, 3, UI_ROW_H - 28, COLOR_ACCENT);
@@ -337,6 +400,7 @@ static void drawCategories(const App *app)
         gfxLine(cx - 4, cy - 8, cx + 4, cy, 3, COLOR_FAINT);
         gfxLine(cx + 4, cy, cx - 4, cy + 8, 3, COLOR_FAINT);
     }
+    listEnd();
     drawScrollbar(first, list->count);
 }
 
@@ -399,9 +463,12 @@ static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
     }
     uiHitAdd(0, UI_LIST_Y, GFX_WIDTH, UI_LIST_ROWS * UI_ROW_H, HIT_LIST, 0);
     size_t cursor = app->cursor[app->view];
-    size_t first = uiFirstVisible(cursor, list->count);
-    for (size_t i = first; i < list->count && i < first + UI_LIST_ROWS; i++)
-        drawRow(app, &list->items[i], i, UI_LIST_Y + (int)(i - first) * UI_ROW_H, i == cursor, radio, now_ns);
+    int offset;
+    size_t first = listBegin(&app->cursor[app->view], cursor, list->count, &offset);
+    for (size_t i = first; i < list->count && i <= first + UI_LIST_ROWS; i++)
+        drawRow(app, &list->items[i], i, UI_LIST_Y + (int)(i - first) * UI_ROW_H - offset, i == cursor, radio,
+                now_ns);
+    listEnd();
     drawScrollbar(first, list->count);
 }
 

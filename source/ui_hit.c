@@ -10,8 +10,19 @@ void uiHitReset(void)
     g_count = 0;
 }
 
+static int g_clip_top = -100000, g_clip_bottom = 100000;
+
+void uiHitClip(int top, int bottom)
+{
+    g_clip_top = top;
+    g_clip_bottom = bottom;
+}
+
 void uiHitAdd(int x, int y, int w, int h, HitKind kind, int arg)
 {
+    int y0 = y < g_clip_top ? g_clip_top : y, y1 = y + h > g_clip_bottom ? g_clip_bottom : y + h;
+    y = y0;
+    h = y1 - y0;
     if (g_count < HIT_MAX_REGIONS && w > 0 && h > 0)
         g_regions[g_count++] = (HitRegion){x, y, w, h, kind, arg};
 }
