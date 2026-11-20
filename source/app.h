@@ -87,6 +87,8 @@ typedef struct {
     // The World view: the country chosen, in categories[SEARCH_COUNTRY].
     size_t map_cursor;
     StationList random_results;  // The random country's stations: one played, L and R go through the rest.
+    char weather_code[4];        // The country picked when its weather was last asked for, and since when.
+    uint64_t weather_picked_ns;
     unsigned random_seed;
     // As a globe: which way it faces, where it's turning to, and its spin after a flick.
     GlobeView globe_view, globe_target;

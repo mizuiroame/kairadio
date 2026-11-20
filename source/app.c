@@ -8,6 +8,7 @@
 #include "keyboard_system.h"
 #include "ui.h"
 #include "ui_hit.h"
+#include "weatherfetch.h"
 #include "worldmap.h"
 
 #define GLOBE_TURN_RATE 6.0f        // Turning to a country: this share of the way left, each second.
@@ -15,6 +16,7 @@
 #define GLOBE_IDLE_DEG_S 2.5f       // this many degrees a second.
 #define GLOBE_TILT_HOME 18.0f       // Turning by itself, it leans back to show the north a little.
 #define RANDOM_MIN_STATIONS 5       // A random country has at least this many stations.
+#define WEATHER_SETTLE_NS 600000000ull  // A country picked this long gets its weather asked for (not each one passed).
 
 #define TOAST_NS 3000000000ull
 
@@ -535,8 +537,28 @@ static void handleWorld(App *app, uint64_t pressed, uint64_t now_ns)
     if (pressed & HidNpadButton_Y) appRandomStation(app, now_ns);
 }
 
+// The picked country's time and weather, once it has stayed picked a moment.
+static void askWeather(App *app, uint64_t now_ns)
+{
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    if (app->view != VIEW_WORLD || app->map_cursor >= countries->count)
+        return;
+    const char *code = countries->items[app->map_cursor].code;
+    if (strcmp(code, app->weather_code)) {  // Another country: wait until it stays.
+        snprintf(app->weather_code, sizeof(app->weather_code), "%.3s", code);
+        app->weather_picked_ns = now_ns;
+        return;
+    }
+    const MapCountry *c = mapFindCountry(code);
+    if (c && now_ns - app->weather_picked_ns >= WEATHER_SETTLE_NS) {
+        GeoPoint place = globeMapPlace(c->label);
+        weatherFetchAsk(code, place.lat, place.lon, now_ns);
+    }
+}
+
 void appGlobeTick(App *app, uint64_t now_ns)
 {
+    askWeather(app, now_ns);
     float seconds = app->globe_frame_ns && now_ns > app->globe_frame_ns ? (now_ns - app->globe_frame_ns) / 1e9f : 0.0f;
     app->globe_frame_ns = now_ns;
     if (seconds > 0.1f)

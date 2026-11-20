@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "font.h"
 #include "gfx.h"
@@ -14,6 +15,7 @@
 #include "ui_flag.h"
 #include "ui_hit.h"
 #include "world_map_png.h"
+#include "weatherfetch.h"
 #include "worldmap.h"
 
 #define COLOR_LAND GFX_RGB(0x33, 0x39, 0x47)
@@ -37,7 +39,8 @@
 #define PANEL_W 420
 #define PANEL_FLAG_W 112
 #define PANEL_FLAG_H 84
-#define RANDOM_Y (PANEL_Y + 268)
+#define RANDOM_Y (PANEL_Y + 322)
+#define INFO_ICON 22          // The time's and the weather's icons.
 #define RANDOM_H 84
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
@@ -266,8 +269,97 @@ static void drawDie(int x, int y, int size, Color body, Color pip)
     gfxFillCircle(x + size * 3 / 4, y + size * 3 / 4, r, pip);
 }
 
-// Beside the globe: the country picked (its flag, name and stations, and
-// Open), a random station, and how to turn the globe.
+// A clock face showing roughly the hour.
+static void drawClockIcon(float cx, float cy, float r, int hour, int minute, Color color)
+{
+    gfxArc(cx, cy, r, 2.2f, 0.0f, 6.2832f, color);
+    float hand = ((hour % 12) + minute / 60.0f) / 12.0f * 6.2832f, min_hand = minute / 60.0f * 6.2832f;
+    gfxLine(cx, cy, cx + sinf(hand) * r * 0.5f, cy - cosf(hand) * r * 0.5f, 2.2f, color);
+    gfxLine(cx, cy, cx + sinf(min_hand) * r * 0.75f, cy - cosf(min_hand) * r * 0.75f, 1.8f, color);
+}
+
+// A cloud: three puffs and a flat bottom.
+static void drawCloud(float cx, float cy, float s, Color color)
+{
+    gfxFillCircle((int)(cx - s * 0.32f), (int)(cy + s * 0.05f), (int)(s * 0.26f), color);
+    gfxFillCircle((int)(cx + s * 0.05f), (int)(cy - s * 0.12f), (int)(s * 0.34f), color);
+    gfxFillCircle((int)(cx + s * 0.36f), (int)(cy + s * 0.08f), (int)(s * 0.22f), color);
+    gfxFillRoundRect((int)(cx - s * 0.55f), (int)(cy + s * 0.02f), (int)(s * 1.1f), (int)(s * 0.3f), (int)(s * 0.14f),
+                     color);
+}
+
+// The weather as a small picture: sun or moon, clouds, rain, snow, fog, a storm.
+static void drawWeatherIcon(float cx, float cy, float s, WeatherKind kind, bool day, Color color)
+{
+    Color light = day ? GFX_RGB(0xFF, 0xC8, 0x4A) : GFX_RGB(0xE6, 0xE8, 0xF4);
+    if (kind == WEATHER_CLEAR || kind == WEATHER_PARTLY_CLOUDY) {
+        float sx = kind == WEATHER_CLEAR ? cx : cx - s * 0.18f, sy = kind == WEATHER_CLEAR ? cy : cy - s * 0.16f;
+        if (day) {
+            gfxFillCircle((int)sx, (int)sy, (int)(s * 0.26f), light);
+            for (int i = 0; i < 8; i++) {
+                float a = i * 0.7854f;
+                gfxLine(sx + cosf(a) * s * 0.36f, sy + sinf(a) * s * 0.36f, sx + cosf(a) * s * 0.48f,
+                        sy + sinf(a) * s * 0.48f, 2.0f, light);
+            }
+        } else {  // A crescent moon.
+            gfxFillCircle((int)sx, (int)sy, (int)(s * 0.32f), light);
+            gfxFillCircle((int)(sx + s * 0.14f), (int)(sy - s * 0.1f), (int)(s * 0.28f), COLOR_BG);
+        }
+        if (kind == WEATHER_PARTLY_CLOUDY)
+            drawCloud(cx + s * 0.12f, cy + s * 0.12f, s * 0.8f, color);
+        return;
+    }
+    if (kind == WEATHER_FOG) {
+        for (int i = 0; i < 3; i++)
+            gfxLine(cx - s * 0.45f, cy - s * 0.25f + i * s * 0.25f, cx + s * 0.45f, cy - s * 0.25f + i * s * 0.25f,
+                    2.5f, color);
+        return;
+    }
+    drawCloud(cx, cy - s * 0.12f, s, color);
+    Color drop = GFX_RGB(0x7C, 0xB8, 0xFF);
+    for (int i = -1; i <= 1 && kind != WEATHER_CLOUDY && kind != WEATHER_STORM; i++) {
+        float x = cx + i * s * 0.28f, y = cy + s * 0.32f;
+        if (kind == WEATHER_SNOW)
+            gfxFillCircle((int)x, (int)(y + s * 0.06f), (int)(s * 0.07f) + 1, GFX_RGB(0xF0, 0xF4, 0xFF));
+        else
+            gfxLine(x + s * 0.05f, y, x - s * 0.05f, y + (kind == WEATHER_DRIZZLE ? s * 0.12f : s * 0.22f), 2.0f,
+                    drop);
+    }
+    if (kind == WEATHER_STORM) {  // A bolt.
+        Color bolt = GFX_RGB(0xFF, 0xD2, 0x4A);
+        gfxTriangle(cx + s * 0.05f, cy + s * 0.18f, cx - s * 0.16f, cy + s * 0.46f, cx + s * 0.02f, cy + s * 0.42f, bolt);
+        gfxTriangle(cx + s * 0.02f, cy + s * 0.36f, cx + s * 0.16f, cy + s * 0.36f, cx - s * 0.06f, cy + s * 0.66f, bolt);
+    }
+}
+
+// The time and weather where the country's stations are, as they come.
+static void drawTimeAndWeather(const App *app, const Category *c, int x, int y)
+{
+    Weather w;
+    WeatherState state = weatherFetchGet(c->code, &w);
+    if (state != WEATHER_READY) {
+        fontDraw(FONT_REGULAR, 17, x, y + 4,
+                 state == WEATHER_FAILED ? "The weather there can't be had now." : "Asking for the time and weather there\xE2\x80\xA6",
+                 COLOR_FAINT);
+        return;
+    }
+    char time_text[24], line[64], temperature[48];
+    int64_t utc = (int64_t)time(NULL);
+    weatherLocalTime(utc, w.utc_offset_s, app->config.clock_24h, time_text, sizeof(time_text));
+    int64_t local = utc + w.utc_offset_s;
+    int seconds = (int)(((local % 86400) + 86400) % 86400);
+    drawClockIcon(x + INFO_ICON / 2.0f, y + 13.0f, INFO_ICON / 2.0f - 1, seconds / 3600, seconds % 3600 / 60, COLOR_DIM);
+    snprintf(line, sizeof(line), "%s there", time_text);
+    fontDraw(FONT_BOLD, 19, x + INFO_ICON + 12, y + 2, line, COLOR_TEXT);
+    WeatherKind kind = weatherKind(w.code);
+    drawWeatherIcon(x + INFO_ICON / 2.0f, y + 47.0f, INFO_ICON + 4.0f, kind, w.day, COLOR_DIM);
+    weatherTemperature(w.temperature, temperature, sizeof(temperature));
+    snprintf(line, sizeof(line), "%s  \xC2\xB7  %s", weatherKindName(kind), temperature);
+    fontDraw(FONT_REGULAR, 19, x + INFO_ICON + 12, y + 36, line, COLOR_TEXT);
+}
+
+// Beside the globe: the country picked (its flag, name and stations, its
+// time and weather, and Open), a random station, and how to turn the globe.
 static void drawPanel(const App *app, const Category *c)
 {
     int x = PANEL_X, y = PANEL_Y;
@@ -279,7 +371,8 @@ static void drawPanel(const App *app, const Category *c)
         snprintf(count, sizeof(count), "%d station%s", c->count, c->count == 1 ? "" : "s");
         fontDrawClipped(FONT_BOLD, 30, x, y + PANEL_FLAG_H + 18, PANEL_W, label, COLOR_TEXT);
         fontDraw(FONT_REGULAR, 19, x, y + PANEL_FLAG_H + 62, count, COLOR_DIM);
-        int pill_y = y + PANEL_FLAG_H + 100;
+        drawTimeAndWeather(app, c, x, y + PANEL_FLAG_H + 98);
+        int pill_y = y + PANEL_FLAG_H + 168;
         uiDrawPill(x, pill_y, "Open its stations", COLOR_ACCENT, COLOR_BG);
         uiHitAdd(x - 6, pill_y - 8, uiPillWidth("Open its stations") + 12, 46, HIT_MAP_OPEN, 0);
     }
@@ -292,9 +385,8 @@ static void drawPanel(const App *app, const Category *c)
     int said = fontDraw(FONT_REGULAR, 17, x + 86, ry + 48, "Somewhere unexpected", COLOR_DIM);
     uiDrawButton(x + 86 + said + 12, (float)(ry + 58), "Y", COLOR_SURFACE_HI, COLOR_DIM);
     uiHitAdd(x, ry, PANEL_W, RANDOM_H, HIT_RANDOM, 0);
-    (void)app;
-    fontDraw(FONT_REGULAR, 16, x, ry + RANDOM_H + 22, "Turn the globe with a finger; the stick goes", COLOR_FAINT);
-    fontDraw(FONT_REGULAR, 16, x, ry + RANDOM_H + 44, "from country to country.", COLOR_FAINT);
+    fontDraw(FONT_REGULAR, 16, x, ry + RANDOM_H + 18, "Turn the globe with a finger; the stick picks countries.",
+             COLOR_FAINT);
 }
 
 void uiDrawMap(const App *app, uint64_t now_ns)

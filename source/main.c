@@ -22,6 +22,7 @@
 #include "screen.h"
 #include "sysinfo.h"
 #include "ui.h"
+#include "weatherfetch.h"
 
 #define OLD_CONFIG_FOLDER "sdmc:/config/kairadio"  // Before files went next to the NRO.
 #define SCREEN_W 1280
@@ -207,6 +208,7 @@ int main(int argc, char **argv)
         return 1;
     }
     directoryInit();
+    weatherFetchStart();
     logosInit();
     sysinfoInit();
 
@@ -227,6 +229,7 @@ int main(int argc, char **argv)
     screenExit();
     radioExit();
     logosExit();
+    weatherFetchStop();
     directoryExit();
     sysinfoExit();
     appFree(&app);

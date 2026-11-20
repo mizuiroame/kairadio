@@ -33,3 +33,4 @@ void testSettings(void);
 void testAppRoot(void);
 void testKinetic(void);
 void testGlobe(void);
+void testWeather(void);

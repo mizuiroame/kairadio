@@ -10,6 +10,7 @@
 #include "logos.h"
 #include "radio.h"
 #include "stubs.h"
+#include "weatherfetch.h"
 
 int g_stub_calls;
 RadioStatus g_stub_radio;
@@ -107,4 +108,17 @@ const uint32_t *logosGet(const char *url)
 
 void logosEndFrame(void)
 {
+}
+
+// The weather beside the globe: a made-up one, as if it had come.
+void weatherFetchAsk(const char *key, float lat, float lon, uint64_t now_ns)
+{
+    (void)key, (void)lat, (void)lon, (void)now_ns;
+}
+
+WeatherState weatherFetchGet(const char *key, Weather *out)
+{
+    (void)key;
+    *out = (Weather){21.4f, 2, true, -5 * 3600};
+    return WEATHER_READY;
 }
