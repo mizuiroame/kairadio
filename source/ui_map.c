@@ -41,6 +41,8 @@
 #define PANEL_FLAG_H 84
 #define RANDOM_Y (PANEL_Y + 322)
 #define INFO_ICON 22          // The time's and the weather's icons.
+#define TUNER_TICKS 12        // The tuning dial's marks.
+#define TUNER_REST 0.62f      // Where its needle rests.
 #define RANDOM_H 84
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
@@ -259,14 +261,22 @@ static void drawPicked(const App *app, const Category *c, uint64_t now_ns)
     uiHitAdd(cx, cy, CARD_W, CARD_H, HIT_MAP_OPEN, 0);
 }
 
-// A die, for the random station: a rounded square with three pips.
-static void drawDie(int x, int y, int size, Color body, Color pip)
+// An old radio's tuning dial, for the random station: a window of
+// frequencies and a needle that rests somewhere, or sweeps while the
+// random country's stations come.
+static void drawTuner(int x, int y, int w, int h, float needle)
 {
-    gfxFillRoundRect(x, y, size, size, size / 5, body);
-    int r = size / 10 > 2 ? size / 10 : 2;
-    gfxFillCircle(x + size / 4, y + size / 4, r, pip);
-    gfxFillCircle(x + size / 2, y + size / 2, r, pip);
-    gfxFillCircle(x + size * 3 / 4, y + size * 3 / 4, r, pip);
+    gfxFillRoundRect(x, y, w, h, 10, COLOR_ACCENT);
+    gfxFillRoundRect(x + 3, y + 3, w - 6, h - 6, 8, GFX_RGB(0x14, 0x16, 0x1C));
+    int left = x + 10, right = x + w - 10, top = y + 9;
+    for (int i = 0; i <= TUNER_TICKS; i++) {
+        float tx = left + (right - left) * (float)i / TUNER_TICKS;
+        bool major = i % 4 == 0;
+        gfxLine(tx, top, tx, top + (major ? 11.0f : 6.0f), major ? 2.0f : 1.4f, major ? COLOR_ACCENT : COLOR_DIM);
+    }
+    fontDraw(FONT_BOLD, 12, left, y + h - 22, "FM", COLOR_DIM);
+    float nx = left + (right - left) * needle;
+    gfxLine(nx, y + 6, nx, y + h - 6, 3.0f, GFX_RGB(0xF0, 0x45, 0x3A));
 }
 
 // A clock face showing roughly the hour.
@@ -360,7 +370,7 @@ static void drawTimeAndWeather(const App *app, const Category *c, int x, int y)
 
 // Beside the globe: the country picked (its flag, name and stations, its
 // time and weather, and Open), a random station, and how to turn the globe.
-static void drawPanel(const App *app, const Category *c)
+static void drawPanel(const App *app, const Category *c, uint64_t now_ns)
 {
     int x = PANEL_X, y = PANEL_Y;
     if (c) {
@@ -380,7 +390,9 @@ static void drawPanel(const App *app, const Category *c)
     int ry = RANDOM_Y;
     gfxFillRoundRect(x, ry, PANEL_W, RANDOM_H, 16, COLOR_SURFACE);
     gfxFillRect(x, ry + 18, 3, RANDOM_H - 36, COLOR_ACCENT);
-    drawDie(x + 22, ry + (RANDOM_H - 44) / 2, 44, COLOR_ACCENT, COLOR_BG);
+    bool tuning = app->waiting_active && app->waiting_target == TARGET_RANDOM;
+    float needle = tuning ? 0.5f + 0.42f * sinf((float)(now_ns % 6283185307ull) / 1e9f * 5.0f) : TUNER_REST;
+    drawTuner(x + 16, ry + (RANDOM_H - 50) / 2, 62, 50, needle);
     fontDraw(FONT_BOLD, 22, x + 86, ry + 16, "Random station", COLOR_TEXT);
     int said = fontDraw(FONT_REGULAR, 17, x + 86, ry + 48, "Somewhere unexpected", COLOR_DIM);
     uiDrawButton(x + 86 + said + 12, (float)(ry + 58), "Y", COLOR_SURFACE_HI, COLOR_DIM);
@@ -426,7 +438,7 @@ void uiDrawMap(const App *app, uint64_t now_ns)
     if (app->config.world_globe) {  // Beside the globe, with room for more than the flat map's card.
         if (picked)
             drawPickedLight(app, picked, now_ns);
-        drawPanel(app, picked);
+        drawPanel(app, picked, now_ns);
     } else if (picked) {
         drawPicked(app, picked, now_ns);
     }
