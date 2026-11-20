@@ -477,8 +477,10 @@ static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
 static void drawWorld(const App *app, uint64_t now_ns)
 {
     fontDraw(FONT_REGULAR, 18, MARGIN, SUBTITLE_Y, "Stations around the world", COLOR_DIM);
-    fontDraw(FONT_REGULAR, 15, GFX_WIDTH - MARGIN - fontTextWidth(FONT_REGULAR, 15, "From radio-browser.info"),
-             SUBTITLE_Y + 2, "From radio-browser.info", COLOR_FAINT);
+    const char *credit = app->config.world_globe ? "From radio-browser.info  \xC2\xB7  Weather by open-meteo.com"
+                                                 : "From radio-browser.info";
+    fontDraw(FONT_REGULAR, 15, GFX_WIDTH - MARGIN - fontTextWidth(FONT_REGULAR, 15, credit), SUBTITLE_Y + 2, credit,
+             COLOR_FAINT);
     uiDrawMap(app, now_ns);
     if (app->categories[SEARCH_COUNTRY].count > 0)
         return;

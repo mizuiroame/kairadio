@@ -5,8 +5,8 @@ An **open-source internet radio player** for **Switch 2** running
 [KaiPlayer](https://github.com/mizuiroame/kaiplayer). Browse tens of
 thousands of public stations from the community
 [Radio Browser](https://www.radio-browser.info/) directory: the most played
-ones, by country on a map of the world, or by name, genre, country or
-language.
+ones, by country on a globe you turn with a finger, at random, or by name,
+genre, country or language.
 
 ![World](docs/screenshots/world.png)
 
@@ -26,8 +26,13 @@ The screenshots show made-up stations.
 
 ## What it does
 
-- **World**: a night map of the world, each country lit up by how many
-  stations it has. Move between countries and open one to see its stations.
+- **World**: a night globe, each country lit up by how many stations it has.
+  Turn it with a finger, or go from country to country with the stick. Beside
+  it, the country picked: its flag, how many stations it has, and its **time
+  and weather** right now. Open it to see its stations.
+- **Random station** (**Y** in World): a country at random, the globe turned
+  to it, and one of its stations playing; **L** and **R** go through the rest.
+- The globe can be a flat night map instead (Settings > World view).
 - **Popular**: the stations played most, worldwide.
 - **Search** by **name** (with the console's keyboard), or browse **genres**
   (each with an icon), **countries** (with their flags) and **languages**
@@ -43,7 +48,7 @@ The screenshots show made-up stations.
 - Reconnects on its own when the connection drops.
 - **Settings** (**+** > Settings): the accent color (or one taken from the
   station's logo), a background image of your own with as much blur as you
-  like, a 12- or 24-hour clock, a sleep timer, turning the screen off while
+  like, a 12- or 24-hour clock, the globe or a flat map, a sleep timer, turning the screen off while
   a station plays, the tab to start in, and playing the last station again
   when KaiRadio opens. Backgrounds are the JPEG or PNG images you put in the
   `Backgrounds` folder of KaiRadio's folder.
@@ -91,7 +96,7 @@ can delete it once everything is there).
 | Button | What it does |
 |--------|--------------|
 | **A** | Play the selected station (in World: open the country; in Now Playing: play or stop) |
-| **Y** | Add to favorites, or remove; on a list of genres, countries or languages, sort it (most or fewest stations, A to Z, Z to A) |
+| **Y** | In World: a random station. Elsewhere: add to favorites, or remove; on a list of genres, countries or languages, sort it (most or fewest stations, A to Z, Z to A) |
 | **X** | Now Playing; in Search by name, type a name |
 | **ZL** / **ZR** | Previous / next tab |
 | **L** / **R** | Previous / next station, in the list you played from |
@@ -102,10 +107,11 @@ can delete it once everything is there).
 | **+** | Menu: Settings, or exit (press **+** again to exit) |
 
 On the touch screen, tap a station to play it, its heart to keep it, a tab,
-genre or country to open it, a country on the map to pick it (tap it again,
-or its card, to open it), the sort at the top right of a list of genres,
+genre or country to open it, a country on the globe to pick it (tap it again,
+or Open its stations, to open it), Random station beside the globe, the sort at the top right of a list of genres,
 countries or languages to change it, and the bar at the bottom for Now Playing. Drag
-a list to scroll it. The title at the top left opens the menu, and the **×**
+the globe to turn it, and a list to scroll it: a quick flick keeps it gliding, and a
+touch stops it. The title at the top left opens the menu, and the **×**
 before it exits.
 
 ## Building
@@ -143,6 +149,9 @@ While a station plays, KaiRadio writes how the audio output keeps up to
   does, and it doesn't record them. Each station's content belongs to its
   owners. The station list comes from Radio Browser's public API, and KaiRadio
   reports plays to it, as the API asks clients to.
+- **Weather.** The time and weather beside the globe come from
+  [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). KaiRadio sends it only
+  the middle of the country picked on the map, nothing about you.
 - **FFmpeg.** KaiRadio uses FFmpeg, built under the LGPL 2.1 (no GPL or
   non-free parts). The script that builds it is in this repository, so it can
   be rebuilt, changed and relinked.
@@ -162,4 +171,5 @@ under the LGPL 2.1; the other bundled libraries are listed in
 from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
 `tools/make_map.py`; the flags come from
 [flag-icons](https://github.com/lipis/flag-icons) (MIT) and the genre icons
-from [Lucide](https://lucide.dev/) (ISC).
+from [Lucide](https://lucide.dev/) (ISC). Weather data by
+[Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0).

@@ -14,7 +14,7 @@
 #define PANEL_Y 22
 #define PANEL_H 648  // The rows, two sections and the line about the row picked.
 #define ROW_H 46
-#define ABOUT_H 470
+#define ABOUT_H 504
 #define SECTION_H 30
 #define PAD 28
 
@@ -115,6 +115,7 @@ static void drawAbout(void)
         "",
         "Stations: Radio Browser (radio-browser.info), a community directory.",
         "World map: Natural Earth (public domain). Flags: flag-icons (MIT).",
+        "Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0).",
         "Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1).",
         "Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.",
         "",
