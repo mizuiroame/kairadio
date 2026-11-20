@@ -11,8 +11,8 @@
 #define MENU_ROW_H 56
 #define PANEL_X 170
 #define PANEL_W (GFX_WIDTH - 2 * PANEL_X)
-#define PANEL_Y 34
-#define PANEL_H 612
+#define PANEL_Y 22
+#define PANEL_H 648  // The rows, two sections and the line about the row picked.
 #define ROW_H 46
 #define ABOUT_H 470
 #define SECTION_H 30

@@ -31,6 +31,14 @@
 #define COLOR_GLOBE_LAND GFX_RGB(0x46, 0x52, 0x66)
 #define COLOR_ICE GFX_RGB(0x8C, 0x98, 0xA8)
 #define COLOR_AIR GFX_RGB(0x5C, 0x9C, 0xE8)
+// Beside the globe: the country picked, and a random station.
+#define PANEL_X 32
+#define PANEL_Y 118
+#define PANEL_W 420
+#define PANEL_FLAG_W 112
+#define PANEL_FLAG_H 84
+#define RANDOM_Y (PANEL_Y + 268)
+#define RANDOM_H 84
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
 static bool g_land_failed;
@@ -209,6 +217,18 @@ static void drawGlobe(const App *app)
                          2 * half * GFX_SCALE, GLOBE_IMAGE, GLOBE_IMAGE, picture);
 }
 
+// The picked country's light: a ring around it, pulsing.
+static void drawPickedLight(const App *app, const Category *c, uint64_t now_ns)
+{
+    const MapCountry *place = mapFindCountry(c->code);
+    float x, y, fade;
+    if (place && placeOf(app, place->label, &x, &y, &fade)) {
+        float pulse = (float)(now_ns % 1600000000ull) / 1.6e9f;
+        gfxArc(x, y, 13.0f + 3.0f * sinf(pulse * 6.2832f), 3.0f, 0.0f, 6.2832f, COLOR_ACCENT);
+        drawDot(x, y, CORE_R + 1.0f, COLOR_ACCENT);
+    }
+}
+
 // The picked country: a ring around its light, and a card that opens it.
 static void drawPicked(const App *app, const Category *c, uint64_t now_ns)
 {
@@ -234,6 +254,47 @@ static void drawPicked(const App *app, const Category *c, uint64_t now_ns)
     fontDraw(FONT_REGULAR, 17, tx, cy + 44, count, COLOR_DIM);
     uiDrawPill(cx + CARD_W - w - 16, cy + (CARD_H - 30) / 2, open, COLOR_ACCENT, COLOR_BG);
     uiHitAdd(cx, cy, CARD_W, CARD_H, HIT_MAP_OPEN, 0);
+}
+
+// A die, for the random station: a rounded square with three pips.
+static void drawDie(int x, int y, int size, Color body, Color pip)
+{
+    gfxFillRoundRect(x, y, size, size, size / 5, body);
+    int r = size / 10 > 2 ? size / 10 : 2;
+    gfxFillCircle(x + size / 4, y + size / 4, r, pip);
+    gfxFillCircle(x + size / 2, y + size / 2, r, pip);
+    gfxFillCircle(x + size * 3 / 4, y + size * 3 / 4, r, pip);
+}
+
+// Beside the globe: the country picked (its flag, name and stations, and
+// Open), a random station, and how to turn the globe.
+static void drawPanel(const App *app, const Category *c)
+{
+    int x = PANEL_X, y = PANEL_Y;
+    if (c) {
+        if (!uiDrawFlag(x, y, PANEL_FLAG_W, PANEL_FLAG_H, c->code))
+            gfxFillRoundRect(x, y, PANEL_FLAG_W, PANEL_FLAG_H, 10, COLOR_SURFACE);
+        char label[CATEGORY_NAME_MAX], count[48];
+        categoryLabel(c, label, sizeof(label));
+        snprintf(count, sizeof(count), "%d station%s", c->count, c->count == 1 ? "" : "s");
+        fontDrawClipped(FONT_BOLD, 30, x, y + PANEL_FLAG_H + 18, PANEL_W, label, COLOR_TEXT);
+        fontDraw(FONT_REGULAR, 19, x, y + PANEL_FLAG_H + 62, count, COLOR_DIM);
+        int pill_y = y + PANEL_FLAG_H + 100;
+        uiDrawPill(x, pill_y, "Open its stations", COLOR_ACCENT, COLOR_BG);
+        uiHitAdd(x - 6, pill_y - 8, uiPillWidth("Open its stations") + 12, 46, HIT_MAP_OPEN, 0);
+    }
+    // A random station: somewhere unexpected.
+    int ry = RANDOM_Y;
+    gfxFillRoundRect(x, ry, PANEL_W, RANDOM_H, 16, COLOR_SURFACE);
+    gfxFillRect(x, ry + 18, 3, RANDOM_H - 36, COLOR_ACCENT);
+    drawDie(x + 22, ry + (RANDOM_H - 44) / 2, 44, COLOR_ACCENT, COLOR_BG);
+    fontDraw(FONT_BOLD, 22, x + 86, ry + 16, "Random station", COLOR_TEXT);
+    int said = fontDraw(FONT_REGULAR, 17, x + 86, ry + 48, "Somewhere unexpected", COLOR_DIM);
+    uiDrawButton(x + 86 + said + 12, (float)(ry + 58), "Y", COLOR_SURFACE_HI, COLOR_DIM);
+    uiHitAdd(x, ry, PANEL_W, RANDOM_H, HIT_RANDOM, 0);
+    (void)app;
+    fontDraw(FONT_REGULAR, 16, x, ry + RANDOM_H + 22, "Turn the globe with a finger; the stick goes", COLOR_FAINT);
+    fontDraw(FONT_REGULAR, 16, x, ry + RANDOM_H + 44, "from country to country.", COLOR_FAINT);
 }
 
 void uiDrawMap(const App *app, uint64_t now_ns)
@@ -269,6 +330,12 @@ void uiDrawMap(const App *app, uint64_t now_ns)
         if (c)
             drawCountry(app, c, item->count, now_ns, (unsigned)k);
     }
-    if (app->map_cursor < countries->count)
-        drawPicked(app, &countries->items[app->map_cursor], now_ns);
+    const Category *picked = app->map_cursor < countries->count ? &countries->items[app->map_cursor] : NULL;
+    if (app->config.world_globe) {  // Beside the globe, with room for more than the flat map's card.
+        if (picked)
+            drawPickedLight(app, picked, now_ns);
+        drawPanel(app, picked);
+    } else if (picked) {
+        drawPicked(app, picked, now_ns);
+    }
 }

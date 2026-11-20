@@ -14,6 +14,7 @@
 #define GLOBE_IDLE_NS 8000000000ull // Untouched this long, the globe turns by itself,
 #define GLOBE_IDLE_DEG_S 2.5f       // this many degrees a second.
 #define GLOBE_TILT_HOME 18.0f       // Turning by itself, it leans back to show the north a little.
+#define RANDOM_MIN_STATIONS 5       // A random country has at least this many stations.
 
 #define TOAST_NS 3000000000ull
 
@@ -54,6 +55,7 @@ static bool targetShown(const App *app, Target target, SearchMode mode)
     case TARGET_CATEGORIES:
         return (appBrowsingCategories(app) && app->search_mode == mode) ||
                (app->view == VIEW_WORLD && mode == SEARCH_COUNTRY);
+    case TARGET_RANDOM: return false;  // Said with toasts, over any view.
     }
     return false;
 }
@@ -90,6 +92,7 @@ void appFree(App *app)
     stationListFree(&app->popular);
     stationListFree(&app->name_results);
     stationListFree(&app->category_results);
+    stationListFree(&app->random_results);
     for (int i = 0; i < SEARCH_MODES; i++)
         categoryListFree(&app->categories[i]);
     stationListFree(&app->play_list);
@@ -237,9 +240,67 @@ void appOpenMapCountry(App *app, size_t index)
     app->category_from_map = true;
 }
 
+static void playFrom(App *app, const StationList *list, size_t index);
+static void turnGlobeToPick(App *app, uint64_t now_ns);
+static void playRandom(App *app, uint64_t now_ns);
+
+// A small random number (xorshift), seeded from the clock the first time.
+static unsigned nextRandom(App *app, uint64_t now_ns)
+{
+    if (!app->random_seed)
+        app->random_seed = (unsigned)(now_ns ^ (now_ns >> 29)) | 1u;
+    unsigned x = app->random_seed;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    app->random_seed = x;
+    return x;
+}
+
+void appRandomStation(App *app, uint64_t now_ns)
+{
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    size_t candidates = 0;
+    for (size_t i = 0; i < countries->count; i++)
+        candidates += countries->items[i].count >= RANDOM_MIN_STATIONS && mapFindCountry(countries->items[i].code);
+    if (!candidates) {
+        appToast(app, "The countries are still loading.", now_ns);
+        return;
+    }
+    size_t pick = nextRandom(app, now_ns) % candidates;
+    for (size_t i = 0; i < countries->count; i++) {
+        if (countries->items[i].count < RANDOM_MIN_STATIONS || !mapFindCountry(countries->items[i].code))
+            continue;
+        if (pick-- == 0) {
+            app->map_cursor = i;
+            break;
+        }
+    }
+    turnGlobeToPick(app, now_ns);
+    char label[CATEGORY_NAME_MAX], line[sizeof(app->toast)];
+    categoryLabel(&countries->items[app->map_cursor], label, sizeof(label));
+    snprintf(line, sizeof(line), "Somewhere unexpected: %s\xE2\x80\xA6", label);
+    appToast(app, line, now_ns);
+    ask(app, TARGET_RANDOM, DIR_COUNTRY, countries->items[app->map_cursor].code);
+}
+
+// The random country's stations came: one of them plays.
+static void playRandom(App *app, uint64_t now_ns)
+{
+    if (app->random_results.count == 0) {
+        appToast(app, "That country's stations can't be had right now: try again.", now_ns);
+        return;
+    }
+    size_t index = nextRandom(app, now_ns) % app->random_results.count;
+    playFrom(app, &app->random_results, index);
+    const Station *s = &app->random_results.items[index];
+    char line[sizeof(app->toast)];
+    snprintf(line, sizeof(line), "%.120s \xC2\xB7 %.80s", s->name, s->country[0] ? s->country : "on the air");
+    appToast(app, line, now_ns);
+}
+
 void appUpdate(App *app, uint64_t now_ns)
 {
-    (void)now_ns;
     directoryGetStatus(&app->directory);
     if (!app->waiting_active || app->directory.generation != app->waiting)
         return;
@@ -256,14 +317,19 @@ void appUpdate(App *app, uint64_t now_ns)
             if (directoryTake(app->waiting, &list)) {
                 StationList *target = app->waiting_target == TARGET_POPULAR        ? &app->popular
                                       : app->waiting_target == TARGET_NAME_RESULTS ? &app->name_results
+                                      : app->waiting_target == TARGET_RANDOM       ? &app->random_results
                                                                                    : &app->category_results;
                 stationListFree(target);
                 *target = list;
             }
         }
         app->waiting_active = false;
+        if (app->waiting_target == TARGET_RANDOM)
+            playRandom(app, now_ns);
     } else if (app->directory.state == DIR_FAILED) {
         app->waiting_active = false;
+        if (app->waiting_target == TARGET_RANDOM)
+            appToast(app, "The station directory can't be reached.", now_ns);
         // Ask again next time rather than keep an empty list.
         if (app->waiting_target == TARGET_CATEGORIES)
             app->categories_asked[app->waiting_mode] = false;
@@ -466,11 +532,7 @@ static void handleWorld(App *app, uint64_t pressed, uint64_t now_ns)
     }
     if (pressed & HidNpadButton_A) appOpenMapCountry(app, app->map_cursor);
     if (pressed & HidNpadButton_X) appSetView(app, VIEW_NOW_PLAYING);
-    if (pressed & HidNpadButton_Y) {  // The globe, or the flat map.
-        app->config.world_globe = !app->config.world_globe;
-        configSave(&app->config, app->config_folder);
-        turnGlobeToPick(app, now_ns);
-    }
+    if (pressed & HidNpadButton_Y) appRandomStation(app, now_ns);
 }
 
 void appGlobeTick(App *app, uint64_t now_ns)
@@ -601,6 +663,7 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         break;
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
+    case HIT_RANDOM: appRandomStation(app, now_ns); break;
     case HIT_SORT: appCycleSort(app, now_ns); break;
     case HIT_MENU_BUTTON: appOpenMenu(app); break;
     case HIT_MENU_ITEM:

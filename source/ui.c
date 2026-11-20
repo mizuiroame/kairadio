@@ -567,9 +567,7 @@ static const char *footerHelp(const App *app)
     }
     switch (app->view) {
     case VIEW_WORLD:
-        return app->config.world_globe
-                   ? "[<>^v] country  [A] open  [Y] flat map  [X] now playing  [L][R] station  [-] play/stop  [+] exit"
-                   : "[<>^v] country  [A] open  [Y] globe  [X] now playing  [L][R] station  [-] play/stop  [+] exit";
+        return "[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit";
     case VIEW_NOW_PLAYING:
         return "[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit";
     case VIEW_SEARCH:

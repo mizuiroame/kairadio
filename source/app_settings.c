@@ -72,6 +72,7 @@ void appChangeSetting(App *app, int row, int delta, uint64_t now_ns)
         backgroundSetBlur(c->background_blur);
         break;
     case SETTING_CLOCK: c->clock_24h = !c->clock_24h; break;
+    case SETTING_WORLD: c->world_globe = !c->world_globe; break;
     case SETTING_SLEEP:
         app->sleep_minutes = settingsSleepStep(app->sleep_minutes, delta);
         app->sleep_until_ns = app->sleep_minutes ? now_ns + (uint64_t)app->sleep_minutes * NS_PER_MINUTE : 0;
@@ -100,6 +101,7 @@ void appSettingValue(const App *app, int row, uint64_t now_ns, char *out, size_t
     case SETTING_BACKGROUND: snprintf(out, size, "%s", c->background[0] ? c->background : "None"); break;
     case SETTING_BLUR: snprintf(out, size, "%s", backgroundBlurName(c->background_blur)); break;
     case SETTING_CLOCK: snprintf(out, size, "%s", c->clock_24h ? "24-hour (21:47)" : "12-hour (9:47 PM)"); break;
+    case SETTING_WORLD: snprintf(out, size, "%s", c->world_globe ? "Globe" : "Flat map"); break;
     case SETTING_SLEEP:
         if (!app->sleep_until_ns || now_ns >= app->sleep_until_ns)
             snprintf(out, size, "Off");

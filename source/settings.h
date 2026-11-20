@@ -10,6 +10,7 @@ typedef enum {
     SETTING_BACKGROUND,
     SETTING_BLUR,
     SETTING_CLOCK,
+    SETTING_WORLD,  // The World tab as a globe or a flat map.
     // Playback.
     SETTING_SLEEP,
     SETTING_SCREEN_OFF,

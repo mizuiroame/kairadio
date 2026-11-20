@@ -5,7 +5,7 @@
 #include "config.h"
 
 static const char *const ROW_LABELS[SETTING_COUNT] = {
-    "Accent color", "Background", "Background blur", "Clock",
+    "Accent color", "Background", "Background blur", "Clock", "World view",
     "Sleep timer", "Turn the screen off", "Start in", "Resume the last station", "About KaiRadio",
 };
 
@@ -21,6 +21,7 @@ const char *settingsRowHelp(SettingRow row)
         "JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.",
         "How soft the background image is.",
         "The clock at the top right.",
+        "The World tab as a globe you turn with a finger or the stick, or as a flat map.",
         "Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.",
         "While a station plays and nothing is pressed. Any button or touch turns it back on.",
         "The tab KaiRadio opens on. Automatic: Favorites if you have some, else World.",

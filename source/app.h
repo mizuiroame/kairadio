@@ -43,6 +43,7 @@ typedef enum {
     TARGET_NAME_RESULTS,
     TARGET_CATEGORY_RESULTS,
     TARGET_CATEGORIES,  // Of waiting_mode.
+    TARGET_RANDOM,      // A random country's stations: one of them plays.
 } Target;
 
 #define SEARCH_MAX 64
@@ -85,6 +86,8 @@ typedef struct {
 
     // The World view: the country chosen, in categories[SEARCH_COUNTRY].
     size_t map_cursor;
+    StationList random_results;  // The random country's stations: one played, L and R go through the rest.
+    unsigned random_seed;
     // As a globe: which way it faces, where it's turning to, and its spin after a flick.
     GlobeView globe_view, globe_target;
     bool globe_turning;          // Turning to globe_target (a country chosen).
@@ -143,6 +146,9 @@ void appFree(App *app);
 
 // Shows a short message in the player bar.
 void appToast(App *app, const char *message, uint64_t now_ns);
+// Somewhere unexpected: a random country (on the globe, with a few stations),
+// the globe turned to it, and one of its stations playing.
+void appRandomStation(App *app, uint64_t now_ns);
 
 // Once per frame, before drawing: takes directory answers.
 void appUpdate(App *app, uint64_t now_ns);
