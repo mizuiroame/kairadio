@@ -1,6 +1,7 @@
 #include "ui_settings.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "lang.h"
 #include "settings.h"
@@ -8,16 +9,19 @@
 #include "ui_common.h"
 #include "ui_hit.h"
 
-#define MENU_W 440
-#define MENU_ROW_H 56
-#define PANEL_X 170
-#define PANEL_W (GFX_WIDTH - 2 * PANEL_X)
-#define PANEL_Y 22
-#define PANEL_H 648  // The rows, two sections and the line about the row picked.
-#define ROW_H 42     // Eleven rows fit over the help line: 66 + 2 sections + 11 rows = 588.
+#define MENU_W 640  // The + menu, as KaiVideo's and KaiPlayer's.
+#define MENU_ROW_H 48
+#define SETTINGS_W 760  // Settings, as KaiVideo's.
+#define ROW_H 48
+#define HEAD_H 76
+#define FOOT_H 76  // The row's help, on up to two lines.
+#define HELP_PX 16
+#define HELP_LINE_H 24
+#define VALUE_MAX_W 300
+#define ABOUT_X 170
+#define ABOUT_W (GFX_WIDTH - 2 * ABOUT_X)
 #define ABOUT_H 504
-#define SECTION_H 30
-#define PAD 28
+#define PAD 32
 
 // Dims the view, and makes the space around the panel close it on a tap.
 static void backdrop(int x, int y, int w, int h)
@@ -28,85 +32,137 @@ static void backdrop(int x, int y, int w, int h)
     uiHitAdd(0, y + h, GFX_WIDTH, GFX_HEIGHT - y - h, HIT_OVERLAY_OUT, 0);
     uiHitAdd(0, y, x, h, HIT_OVERLAY_OUT, 0);
     uiHitAdd(x + w, y, GFX_WIDTH - x - w, h, HIT_OVERLAY_OUT, 0);
-    gfxFillRoundRect(x, y, w, h, 20, COLOR_SURFACE);
+    gfxFillRoundRect(x, y, w, h, 16, COLOR_SURFACE);
 }
 
 static void highlight(int x, int y, int w, int h)
 {
-    gfxFillRoundRect(x, y + 2, w, h - 4, 10, COLOR_SURFACE_HI);
-    gfxFillRect(x, y + 12, 3, h - 24, COLOR_ACCENT);
+    gfxFillRoundRect(x, y, w, h, 10, COLOR_SURFACE_HI);
+    gfxFillRect(x, y + 10, 3, h - 20, COLOR_ACCENT);
 }
 
+// The + menu (the app's name and version over its items), or the exit question.
 static void drawMenu(const App *app)
 {
     static const char *const ITEMS[MENU_COUNT] = {N_("Settings"), N_("Exit KaiRadio")};
-    int h = 76 + MENU_COUNT * MENU_ROW_H + 16;
+    static const char *const ANSWERS[EXIT_COUNT] = {N_("Exit"), N_("Cancel")};
+    bool asking = app->overlay == OVERLAY_EXIT;
+    int count = asking ? EXIT_COUNT : MENU_COUNT;
+    int h = 76 + count * MENU_ROW_H + 20;
     int x = (GFX_WIDTH - MENU_W) / 2, y = (GFX_HEIGHT - h) / 2;
     backdrop(x, y, MENU_W, h);
-    fontDraw(FONT_BOLD, 24, x + PAD, y + 22, "KaiRadio", COLOR_ACCENT);
-    fontDraw(FONT_REGULAR, 15, x + PAD + fontTextWidth(FONT_BOLD, 24, "KaiRadio") + 12, y + 30,
-             KAIRADIO_VERSION, COLOR_FAINT);
-    for (int i = 0; i < MENU_COUNT; i++) {
+    if (asking) {
+        fontDraw(FONT_BOLD, 22, x + PAD, y + 24, T("Exit KaiRadio?"), COLOR_TEXT);
+    } else {
+        int title_w = fontDraw(FONT_BOLD, 22, x + PAD, y + 24, "KaiRadio", COLOR_ACCENT);
+        fontDraw(FONT_REGULAR, 15, x + PAD + title_w + 12, y + 31, KAIRADIO_VERSION, COLOR_FAINT);
+    }
+    for (int i = 0; i < count; i++) {
         int row_y = y + 76 + i * MENU_ROW_H;
-        if (app->menu_cursor == i)
-            highlight(x + 12, row_y, MENU_W - 24, MENU_ROW_H);
-        fontDraw(FONT_REGULAR, 21, x + PAD, row_y + 14, T(ITEMS[i]), app->menu_cursor == i ? COLOR_TEXT : COLOR_DIM);
-        uiHitAdd(x, row_y, MENU_W, MENU_ROW_H, HIT_MENU_ITEM, i);
+        bool picked = app->menu_cursor == i;
+        if (picked)
+            highlight(x + 16, row_y, MENU_W - 32, MENU_ROW_H - 6);
+        fontDrawClipped(picked ? FONT_BOLD : FONT_REGULAR, 21, x + PAD, row_y + 9, MENU_W - 2 * PAD,
+                        T(asking ? ANSWERS[i] : ITEMS[i]), COLOR_TEXT);
+        uiHitAdd(x + 16, row_y, MENU_W - 32, MENU_ROW_H - 6, HIT_MENU_ITEM, i);
     }
 }
 
-// An arrow (left or right) beside a value, and the target that steps it.
-static void stepArrow(float cx, float cy, bool right, int row, Color color)
+// "Back" with an arrow, left of a page's title. Returns its width.
+static int backButton(int x, int y)
 {
-    float d = right ? 1.0f : -1.0f;
-    gfxLine(cx - 4 * d, cy - 7, cx + 3 * d, cy, 3, color);
-    gfxLine(cx + 3 * d, cy, cx - 4 * d, cy + 7, 3, color);
-    uiHitAdd((int)cx - 20, (int)cy - ROW_H / 2, 40, ROW_H, HIT_SETTING_STEP, row * 2 + (right ? 1 : 0));
+    const char *label = T("Back");
+    int w = fontTextWidth(FONT_BOLD, 17, label) + 44;
+    float mid = (float)y + 15.0f;
+    gfxFillRoundRect(x, y, w, 30, 15, COLOR_SURFACE_HI);
+    gfxTriangle((float)x + 12.0f, mid, (float)x + 21.0f, mid - 6.5f, (float)x + 21.0f, mid + 6.5f, COLOR_TEXT);
+    fontDrawMiddle(FONT_BOLD, 17, x + 28, mid, label, COLOR_TEXT);
+    uiHitAdd(x - 8, y - 10, w + 16, 50, HIT_SETTINGS_BACK, 0);
+    return w;
 }
 
-static void drawSettingRow(const App *app, int row, int x, int y, int w, uint64_t now_ns)
+static void drawSettingRow(const App *app, SettingRow row, int x, int y, uint64_t now_ns)
 {
-    bool picked = app->settings_cursor == row;
+    bool picked = app->settings_cursor == (int)row, choice = settingsRowEditable(row);
+    SettingsPage page;
+    bool opens = settingOpensPage(row, &page);
+    int w = SETTINGS_W - 32, h = ROW_H - 6;
     if (picked)
-        highlight(x, y, w, ROW_H);
-    uiHitAdd(x, y, w, ROW_H, HIT_SETTING, row);
-    fontDrawMiddle(FONT_REGULAR, 20, x + 18, y + ROW_H / 2.0f, settingsRowLabel(row), picked ? COLOR_TEXT : COLOR_DIM);
-    float cy = y + ROW_H / 2.0f;
-    if (!settingsRowEditable(row)) {  // About: a chevron, it opens.
-        float cx = x + w - 24.0f;
-        gfxLine(cx - 4, cy - 7, cx + 3, cy, 3, COLOR_FAINT);
-        gfxLine(cx + 3, cy, cx - 4, cy + 7, 3, COLOR_FAINT);
-        return;
-    }
+        highlight(x + 16, y, w, h);
+    uiHitAdd(x + 16, y, w, h, HIT_SETTING, row);
+    fontDraw(picked ? FONT_BOLD : FONT_REGULAR, 21, x + PAD, y + 8, settingsRowLabel(row), COLOR_TEXT);
     char value[CONFIG_BACKGROUND_MAX + 128];
     appSettingValue(app, row, now_ns, value, sizeof(value));
-    int max_w = w / 2 - 60, value_w = fontTextWidth(FONT_BOLD, 19, value);
-    if (value_w > max_w)
-        value_w = max_w;
-    int right = x + w - 44, left = right - value_w;
-    Color color = picked ? COLOR_ACCENT : COLOR_TEXT;
-    fontDrawClipped(FONT_BOLD, 19, left, (int)cy - 13, max_w, value, color);
-    stepArrow((float)left - 22, cy, false, row, picked ? COLOR_DIM : COLOR_FAINT);
-    stepArrow((float)right + 22, cy, true, row, picked ? COLOR_DIM : COLOR_FAINT);
+    int value_w = fontTextWidth(FONT_BOLD, 20, value);
+    if (value_w > VALUE_MAX_W)
+        value_w = VALUE_MAX_W;
+    int right = x + SETTINGS_W - PAD;
+    int value_x = right - value_w - (choice || opens ? 24 : 0);
+    if (value[0])
+        fontDrawClipped(FONT_BOLD, 20, value_x, y + 9, value_w, value, choice ? COLOR_ACCENT : COLOR_DIM);
+    if (opens) {  // A page: an arrow into it.
+        gfxFillTriangleRight(right - 12, y + 13, 10, 16, picked ? COLOR_TEXT : COLOR_DIM);
+    } else if (choice) {  // Arrows to step it; a tap on either half of the value steps it that way.
+        gfxFillTriangleLeft(value_x - 22, y + 13, 10, 16, COLOR_DIM);
+        gfxFillTriangleRight(right - 12, y + 13, 10, 16, COLOR_DIM);
+        uiHitAdd(value_x - 40, y, value_w / 2 + 40, h, HIT_SETTING_STEP, row * 2);
+        uiHitAdd(value_x + value_w / 2, y, right - value_x - value_w / 2 + 16, h, HIT_SETTING_STEP, row * 2 + 1);
+    } else if (picked) {  // About: A opens it.
+        uiDrawButton(value_x - (value[0] ? 34 : 22), (float)y + 21.0f, "A", COLOR_SURFACE, COLOR_TEXT);
+    }
+}
+
+// How much of text goes on a line max_w wide: whole words when it has spaces,
+// else as many characters as fit (Chinese, Japanese). In bytes.
+static size_t fitLine(const char *text, int px, int max_w)
+{
+    char line[512];
+    size_t length = strlen(text), best = 0, space = 0;
+    if (fontTextWidth(FONT_REGULAR, px, text) <= max_w || length >= sizeof(line))
+        return length;
+    for (size_t i = 1; i < length; i++) {
+        if ((text[i] & 0xC0) == 0x80)
+            continue;  // Inside a character.
+        memcpy(line, text, i);
+        line[i] = '\0';
+        if (fontTextWidth(FONT_REGULAR, px, line) > max_w)
+            break;
+        best = i;
+        if (text[i] == ' ')
+            space = i;
+    }
+    return space ? space : best;
+}
+
+// The picked row's help at the panel's foot, on up to two lines.
+static void drawHelp(const char *help, int x, int y, int max_w)
+{
+    size_t first = fitLine(help, HELP_PX, max_w);
+    char line[512];
+    snprintf(line, sizeof(line), "%.*s", (int)first, help);
+    fontDraw(FONT_REGULAR, HELP_PX, x, y, line, COLOR_DIM);
+    const char *rest = help + first;
+    while (*rest == ' ')
+        rest++;
+    if (*rest)
+        fontDrawClipped(FONT_REGULAR, HELP_PX, x, y + HELP_LINE_H, max_w, rest, COLOR_DIM);
 }
 
 static void drawSettings(const App *app, uint64_t now_ns)
 {
-    backdrop(PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-    fontDraw(FONT_BOLD, 26, PANEL_X + PAD, PANEL_Y + 20, T("Settings"), COLOR_TEXT);
-    int x = PANEL_X + 16, w = PANEL_W - 32, y = PANEL_Y + 66;
-    for (int row = 0; row < SETTING_COUNT; row++) {
-        const char *section = settingsRowSection(row);
-        if (section) {
-            fontDraw(FONT_BOLD, 15, x + 18, y + 8, section, COLOR_FAINT);
-            y += SECTION_H;
-        }
-        drawSettingRow(app, row, x, y, w, now_ns);
-        y += ROW_H;
-    }
-    gfxFillRect(PANEL_X + PAD, PANEL_Y + PANEL_H - 52, PANEL_W - 2 * PAD, 1, COLOR_SURFACE_HI);
-    fontDrawClipped(FONT_REGULAR, 16, PANEL_X + PAD, PANEL_Y + PANEL_H - 40, PANEL_W - 2 * PAD,
-                    settingsRowHelp(app->settings_cursor), COLOR_DIM);
+    SettingsPage page = (SettingsPage)app->settings_page;
+    SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
+    int count = settingsPageRows(page, rows);
+    int h = HEAD_H + count * ROW_H + FOOT_H;
+    int x = (GFX_WIDTH - SETTINGS_W) / 2, y = (GFX_HEIGHT - h) / 2;
+    backdrop(x, y, SETTINGS_W, h);
+    int title_x = x + PAD;
+    if (page != SETTINGS_PAGE_MAIN)  // A page: back to the main one.
+        title_x += backButton(x + PAD - 4, y + 18) + 12;
+    fontDraw(FONT_BOLD, 24, title_x, y + 22, settingsPageTitle(page), COLOR_TEXT);
+    for (int n = 0; n < count; n++)
+        drawSettingRow(app, rows[n], x, y + HEAD_H + n * ROW_H, now_ns);
+    drawHelp(settingsRowHelp(app->settings_cursor), x + PAD, y + h - FOOT_H + 10, SETTINGS_W - 2 * PAD);
 }
 
 static void drawAbout(void)
@@ -126,19 +182,20 @@ static void drawAbout(void)
         N_("Not affiliated with Nintendo, Radio Browser or any station."),
     };
     int top = (GFX_HEIGHT - ABOUT_H) / 2 - 20;
-    backdrop(PANEL_X, top, PANEL_W, ABOUT_H);
-    int x = PANEL_X + PAD, y = top + 20;
+    backdrop(ABOUT_X, top, ABOUT_W, ABOUT_H);
+    int x = ABOUT_X + PAD, y = top + 20;
     int title_w = fontDraw(FONT_BOLD, 26, x, y, "KaiRadio", COLOR_ACCENT);
     fontDraw(FONT_REGULAR, 18, x + title_w + 12, y + 7, KAIRADIO_VERSION, COLOR_DIM);
     y += 64;
     for (size_t i = 0; i < sizeof(LINES) / sizeof(LINES[0]); i++, y += LINES[i - 1][0] ? 34 : 18)
-        fontDrawClipped(FONT_REGULAR, 18, x, y, PANEL_W - 2 * PAD, T(LINES[i]), i == 0 ? COLOR_TEXT : COLOR_DIM);
+        fontDrawClipped(FONT_REGULAR, 18, x, y, ABOUT_W - 2 * PAD, T(LINES[i]), i == 0 ? COLOR_TEXT : COLOR_DIM);
 }
 
 void uiDrawOverlay(const App *app, uint64_t now_ns)
 {
     switch (app->overlay) {
-    case OVERLAY_MENU: drawMenu(app); break;
+    case OVERLAY_MENU:
+    case OVERLAY_EXIT: drawMenu(app); break;
     case OVERLAY_SETTINGS: drawSettings(app, now_ns); break;
     case OVERLAY_ABOUT: drawAbout(); break;
     default: break;

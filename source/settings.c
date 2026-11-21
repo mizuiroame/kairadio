@@ -6,9 +6,50 @@
 #include "lang.h"
 
 static const char *const ROW_LABELS[SETTING_COUNT] = {
+    N_("Playback"), N_("Display"), N_("About"),
+    N_("Sleep timer"), N_("Resume the last station"), N_("Screen off while playing"),
     N_("Language"), N_("Accent color"), N_("Background"), N_("Background blur"), N_("Clock"), N_("World view"),
-    N_("Sleep timer"), N_("Turn the screen off"), N_("Start in"), N_("Resume the last station"), N_("About KaiRadio"),
+    N_("Start in"),
 };
+// Each page's rows, ended by SETTING_COUNT.
+static const SettingRow PAGE_ROWS[SETTINGS_PAGE_COUNT][SETTINGS_PAGE_MAX_ROWS] = {
+    {SETTING_OPEN_PLAYBACK, SETTING_OPEN_DISPLAY, SETTING_ABOUT, SETTING_COUNT},
+    {SETTING_SLEEP, SETTING_RESUME, SETTING_SCREEN_OFF, SETTING_COUNT},
+    {SETTING_LANGUAGE, SETTING_ACCENT, SETTING_BACKGROUND, SETTING_BLUR, SETTING_CLOCK, SETTING_WORLD, SETTING_START,
+     SETTING_COUNT},
+};
+static const char *const PAGE_TITLES[SETTINGS_PAGE_COUNT] = {N_("Settings"), N_("Playback"), N_("Display")};
+
+int settingsPageRows(SettingsPage page, SettingRow rows[SETTINGS_PAGE_MAX_ROWS])
+{
+    int n = 0;
+    if (page < 0 || page >= SETTINGS_PAGE_COUNT)
+        return 0;
+    while (n < SETTINGS_PAGE_MAX_ROWS && PAGE_ROWS[page][n] != SETTING_COUNT) {
+        rows[n] = PAGE_ROWS[page][n];
+        n++;
+    }
+    return n;
+}
+
+const char *settingsPageTitle(SettingsPage page)
+{
+    return page >= 0 && page < SETTINGS_PAGE_COUNT ? T(PAGE_TITLES[page]) : "";
+}
+
+bool settingOpensPage(SettingRow row, SettingsPage *page)
+{
+    switch (row) {
+    case SETTING_OPEN_PLAYBACK: *page = SETTINGS_PAGE_PLAYBACK; return true;
+    case SETTING_OPEN_DISPLAY: *page = SETTINGS_PAGE_DISPLAY; return true;
+    default: return false;
+    }
+}
+
+SettingRow settingPageOpener(SettingsPage page)
+{
+    return page == SETTINGS_PAGE_DISPLAY ? SETTING_OPEN_DISPLAY : SETTING_OPEN_PLAYBACK;
+}
 
 const char *settingsRowLabel(SettingRow row)
 {
@@ -18,29 +59,26 @@ const char *settingsRowLabel(SettingRow row)
 const char *settingsRowHelp(SettingRow row)
 {
     static const char *const HELP[SETTING_COUNT] = {
+        N_("The sleep timer, the last station when KaiRadio opens, and the screen while a station plays."),
+        N_("Language, colors, background, clock, the World tab and the tab KaiRadio opens on."),
+        N_("Version, credits and licenses."),
+        N_("Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes."),
+        N_("Plays the last station again when KaiRadio opens."),
+        N_("While a station plays and nothing is pressed. Any button or touch turns it back on."),
         N_("The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio."),
         N_("Highlights, buttons and the map's pick. From station logo follows the station playing."),
         N_("JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable."),
         N_("How soft the background image is."),
         N_("The clock at the top right."),
         N_("The World tab as a globe you turn with a finger or the stick, or as a flat map."),
-        N_("Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes."),
-        N_("While a station plays and nothing is pressed. Any button or touch turns it back on."),
         N_("The tab KaiRadio opens on. Automatic: Favorites if you have some, else World."),
-        N_("Plays the last station again when KaiRadio opens."),
-        N_("Version, credits and licenses."),
     };
     return row >= 0 && row < SETTING_COUNT ? T(HELP[row]) : "";
 }
 
-const char *settingsRowSection(SettingRow row)
-{
-    return row == SETTING_LANGUAGE ? T("Display") : row == SETTING_SLEEP ? T("Playback") : NULL;
-}
-
 bool settingsRowEditable(SettingRow row)
 {
-    return row >= 0 && row < SETTING_COUNT && row != SETTING_ABOUT;
+    return row >= SETTING_SLEEP && row < SETTING_COUNT;
 }
 
 static int clampSleep(long minutes)

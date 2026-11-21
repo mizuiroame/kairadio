@@ -33,11 +33,17 @@ language = Deutsch
 24-hour (21:47)
 24 Stunden (21:47)
 
-[<>] change  [A] change or open  [B] close
-[<>] Ändern  [A] Ändern/Öffnen  [B] Schließen
-
 [<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
 [<>^v] Land  [A] Öffnen  [Y] Zufallssender  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Beenden
+
+[^v] choose  [<>][A] change  [B] back
+[^v] Wählen  [<>][A] Ändern  [B] Zurück
+
+[^v] choose  [>][A] open  [B] close
+[^v] Wählen  [>][A] Öffnen  [B] Schließen
+
+[A] choose  [B] cancel  [+] exit
+[A] Wählen  [B] Abbrechen  [+] Beenden
 
 [A] choose  [B] close  [+] exit
 [A] Wählen  [B] Schließen  [+] Beenden
@@ -54,8 +60,8 @@ language = Deutsch
 [A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
 [A] Start/Stopp  [Y] Favorit  [L][R] Sender  [B] Zurück  [ZL][ZR] Tabs  [+] Beenden
 
-[B] back
-[B] Zurück
+[A][B] back
+[A][B] Zurück
 
 [X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
 [X] Name eingeben  [A] Abspielen  [Y] Favorit  [<>] Suchen nach  [L][R] Sender  [+] Beenden
@@ -63,8 +69,8 @@ language = Deutsch
 A to Z
 A bis Z
 
-About KaiRadio
-Info zu KaiRadio
+About
+Info
 
 Accent color
 Akzentfarbe
@@ -102,6 +108,9 @@ Wird gepuffert…
 Can't play
 Nicht abspielbar
 
+Cancel
+Abbrechen
+
 Clear
 Klar
 
@@ -135,8 +144,14 @@ Anzeige
 Drizzle
 Nieselregen
 
+Exit
+Beenden
+
 Exit KaiRadio
 KaiRadio beenden
+
+Exit KaiRadio?
+KaiRadio beenden?
 
 Favorite
 Favorit
@@ -215,6 +230,9 @@ KaiRadio ist quelloffen unter der MIT-Lizenz. Copyright (c) 2026 Mizuiro.
 
 Language
 Sprache
+
+Language, colors, background, clock, the World tab and the tab KaiRadio opens on.
+Sprache, Farben, Hintergrund, Uhr, der Tab Welt und der Tab, mit dem KaiRadio startet.
 
 Languages sorted A to Z
 Sprachen von A bis Z sortiert
@@ -375,6 +393,9 @@ Removed %s from favorites
 Resume the last station
 Letzten Sender fortsetzen
 
+Screen off while playing
+Bildschirm aus beim Abspielen
+
 Search
 Suche
 
@@ -468,6 +489,9 @@ Der Server hat %ld geantwortet
 The settings couldn't be saved on the card.
 Die Einstellungen konnten nicht auf der Karte gespeichert werden.
 
+The sleep timer, the last station when KaiRadio opens, and the screen while a station plays.
+Der Sleep-Timer, der letzte Sender beim Start von KaiRadio und der Bildschirm, während ein Sender läuft.
+
 The station directory can't be reached.
 Das Senderverzeichnis ist nicht erreichbar.
 
@@ -533,9 +557,6 @@ Versuch einen anderen Namen.
 
 Turn the globe with a finger; the stick picks countries.
 Dreh den Globus mit dem Finger; der Stick wählt Länder.
-
-Turn the screen off
-Bildschirm ausschalten
 
 Version, credits and licenses.
 Version, Mitwirkende und Lizenzen.

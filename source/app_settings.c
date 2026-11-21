@@ -20,12 +20,50 @@ void appOpenMenu(App *app)
     app->menu_cursor = MENU_SETTINGS;
 }
 
+static void askExit(App *app)
+{
+    app->overlay = OVERLAY_EXIT;
+    app->menu_cursor = EXIT_CONFIRM;
+}
+
+void appChooseMenuItem(App *app, int item)
+{
+    if (app->overlay == OVERLAY_EXIT) {
+        if (item == EXIT_CONFIRM)
+            app->quit = true;
+        else
+            app->overlay = OVERLAY_NONE;
+    } else if (item == MENU_EXIT) {
+        askExit(app);
+    } else {
+        appOpenSettings(app);
+    }
+}
+
+static void openPage(App *app, SettingsPage page)
+{
+    SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
+    settingsPageRows(page, rows);
+    app->settings_page = page;
+    app->settings_cursor = rows[0];
+}
+
 void appOpenSettings(App *app)
 {
     app->overlay = OVERLAY_SETTINGS;
-    app->settings_cursor = SETTING_LANGUAGE;
+    openPage(app, SETTINGS_PAGE_MAIN);
     // The images there are now: a new one shows the next time Settings opens.
     app->background_count = backgroundList(app->config_folder, app->backgrounds, BACKGROUND_MAX_IMAGES);
+}
+
+void appSettingsBack(App *app)
+{
+    if (app->settings_page == SETTINGS_PAGE_MAIN) {
+        app->overlay = OVERLAY_NONE;
+    } else {
+        app->settings_cursor = settingPageOpener((SettingsPage)app->settings_page);
+        app->settings_page = SETTINGS_PAGE_MAIN;
+    }
 }
 
 static void save(App *app, uint64_t now_ns)
@@ -113,7 +151,10 @@ void appChangeSetting(App *app, int row, int delta, uint64_t now_ns)
 
 void appActivateSetting(App *app, int row, uint64_t now_ns)
 {
-    if (row == SETTING_ABOUT)
+    SettingsPage page;
+    if (settingOpensPage(row, &page))
+        openPage(app, page);
+    else if (row == SETTING_ABOUT)
         app->overlay = OVERLAY_ABOUT;
     else
         appChangeSetting(app, row, 1, now_ns);
@@ -144,6 +185,7 @@ void appSettingValue(const App *app, int row, uint64_t now_ns, char *out, size_t
         break;
     case SETTING_START: snprintf(out, size, "%s", settingsStartName(c->start_view)); break;
     case SETTING_RESUME: snprintf(out, size, "%s", c->resume ? T("On") : T("Off")); break;
+    case SETTING_ABOUT: snprintf(out, size, "KaiRadio %s", KAIRADIO_VERSION); break;
     default: out[0] = '\0'; break;
     }
 }
@@ -158,36 +200,65 @@ void appCheckSleep(App *app, uint64_t now_ns)
     appToast(app, T("Sleep timer: the radio stopped."), now_ns);
 }
 
+// The + menu and its exit question, as KaiPlayer's and KaiVideo's: + in the
+// menu asks "Exit KaiRadio?", and + there exits.
 static void handleMenu(App *app, uint64_t pressed)
 {
-    if (pressed & BUTTONS_UP) app->menu_cursor = wrap(app->menu_cursor, -1, MENU_COUNT);
-    if (pressed & BUTTONS_DOWN) app->menu_cursor = wrap(app->menu_cursor, 1, MENU_COUNT);
-    if (pressed & HidNpadButton_Plus) app->quit = true;  // + twice: out, as before.
-    if (pressed & HidNpadButton_B) app->overlay = OVERLAY_NONE;
-    if (pressed & HidNpadButton_A) {
-        if (app->menu_cursor == MENU_EXIT)
+    int count = app->overlay == OVERLAY_EXIT ? EXIT_COUNT : MENU_COUNT;
+    if (pressed & HidNpadButton_Plus) {
+        if (app->overlay == OVERLAY_EXIT)
             app->quit = true;
         else
-            appOpenSettings(app);
+            askExit(app);
+        return;
     }
+    if (pressed & BUTTONS_UP) app->menu_cursor = wrap(app->menu_cursor, -1, count);
+    if (pressed & BUTTONS_DOWN) app->menu_cursor = wrap(app->menu_cursor, 1, count);
+    if (pressed & HidNpadButton_B)
+        app->overlay = OVERLAY_NONE;
+    else if (pressed & HidNpadButton_A)
+        appChooseMenuItem(app, app->menu_cursor);
+}
+
+// Up or down a row on the page shown, wrapping.
+static void moveSettingsCursor(App *app, int delta)
+{
+    SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
+    int count = settingsPageRows((SettingsPage)app->settings_page, rows), at = 0;
+    for (int i = 0; i < count; i++)
+        if ((int)rows[i] == app->settings_cursor)
+            at = i;
+    app->settings_cursor = rows[wrap(at, delta, count)];
 }
 
 static void handleSettings(App *app, uint64_t pressed, uint64_t now_ns)
 {
-    if (pressed & BUTTONS_UP) app->settings_cursor = wrap(app->settings_cursor, -1, SETTING_COUNT);
-    if (pressed & BUTTONS_DOWN) app->settings_cursor = wrap(app->settings_cursor, 1, SETTING_COUNT);
-    if (settingsRowEditable(app->settings_cursor)) {
-        if (pressed & BUTTONS_LEFT) appChangeSetting(app, app->settings_cursor, -1, now_ns);
-        if (pressed & BUTTONS_RIGHT) appChangeSetting(app, app->settings_cursor, 1, now_ns);
+    if (pressed & HidNpadButton_Plus) {
+        app->overlay = OVERLAY_NONE;
+        return;
     }
-    if (pressed & HidNpadButton_A) appActivateSetting(app, app->settings_cursor, now_ns);
-    if (pressed & (HidNpadButton_B | HidNpadButton_Plus)) app->overlay = OVERLAY_NONE;
+    if (pressed & BUTTONS_UP) moveSettingsCursor(app, -1);
+    if (pressed & BUTTONS_DOWN) moveSettingsCursor(app, 1);
+    int row = app->settings_cursor;
+    SettingsPage page;
+    if (settingsRowEditable(row)) {
+        if (pressed & BUTTONS_LEFT) appChangeSetting(app, row, -1, now_ns);
+        if (pressed & BUTTONS_RIGHT) appChangeSetting(app, row, 1, now_ns);
+    } else if ((pressed & BUTTONS_RIGHT) && settingOpensPage(row, &page)) {
+        appActivateSetting(app, row, now_ns);
+        return;
+    }
+    if (pressed & HidNpadButton_A)
+        appActivateSetting(app, app->settings_cursor, now_ns);
+    else if (pressed & HidNpadButton_B)
+        appSettingsBack(app);
 }
 
 void appHandleOverlay(App *app, uint64_t pressed, uint64_t now_ns)
 {
     switch (app->overlay) {
-    case OVERLAY_MENU: handleMenu(app, pressed); break;
+    case OVERLAY_MENU:
+    case OVERLAY_EXIT: handleMenu(app, pressed); break;
     case OVERLAY_SETTINGS: handleSettings(app, pressed, now_ns); break;
     case OVERLAY_ABOUT:
         if (pressed & (HidNpadButton_A | HidNpadButton_B)) app->overlay = OVERLAY_SETTINGS;

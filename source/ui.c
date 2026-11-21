@@ -9,6 +9,7 @@
 #include "icons_bin.h"
 #include "lang.h"
 #include "logos.h"
+#include "settings.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
 #include "ui_flag.h"
@@ -570,8 +571,11 @@ static const char *footerHelp(const App *app)
 {
     switch (app->overlay) {
     case OVERLAY_MENU: return T("[A] choose  [B] close  [+] exit");
-    case OVERLAY_SETTINGS: return T("[<>] change  [A] change or open  [B] close");
-    case OVERLAY_ABOUT: return T("[B] back");
+    case OVERLAY_EXIT: return T("[A] choose  [B] cancel  [+] exit");
+    case OVERLAY_SETTINGS:
+        return app->settings_page == SETTINGS_PAGE_MAIN ? T("[^v] choose  [>][A] open  [B] close")
+                                                        : T("[^v] choose  [<>][A] change  [B] back");
+    case OVERLAY_ABOUT: return T("[A][B] back");
     default: break;
     }
     switch (app->view) {

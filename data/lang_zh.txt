@@ -33,11 +33,17 @@ language = 简体中文
 24-hour (21:47)
 24小时制（21:47）
 
-[<>] change  [A] change or open  [B] close
-[<>] 更改  [A] 更改/打开  [B] 关闭
-
 [<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
 [<>^v] 国家  [A] 打开  [Y] 随机电台  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 退出
+
+[^v] choose  [<>][A] change  [B] back
+[^v] 选择  [<>][A] 更改  [B] 返回
+
+[^v] choose  [>][A] open  [B] close
+[^v] 选择  [>][A] 打开  [B] 关闭
+
+[A] choose  [B] cancel  [+] exit
+[A] 选择  [B] 取消  [+] 退出
 
 [A] choose  [B] close  [+] exit
 [A] 选择  [B] 关闭  [+] 退出
@@ -54,8 +60,8 @@ language = 简体中文
 [A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
 [A] 播放/停止  [Y] 收藏  [L][R] 换台  [B] 返回  [ZL][ZR] 标签  [+] 退出
 
-[B] back
-[B] 返回
+[A][B] back
+[A][B] 返回
 
 [X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
 [X] 输入名称  [A] 播放  [Y] 收藏  [<>] 搜索方式  [L][R] 换台  [+] 退出
@@ -63,8 +69,8 @@ language = 简体中文
 A to Z
 A到Z
 
-About KaiRadio
-关于KaiRadio
+About
+关于
 
 Accent color
 强调色
@@ -102,6 +108,9 @@ Buffering…
 Can't play
 无法播放
 
+Cancel
+取消
+
 Clear
 晴
 
@@ -135,8 +144,14 @@ Display
 Drizzle
 毛毛雨
 
+Exit
+退出
+
 Exit KaiRadio
 退出KaiRadio
+
+Exit KaiRadio?
+要退出KaiRadio吗？
 
 Favorite
 已收藏
@@ -215,6 +230,9 @@ KaiRadio是基于MIT许可证的开源软件。版权所有 (c) 2026 Mizuiro。
 
 Language
 语言
+
+Language, colors, background, clock, the World tab and the tab KaiRadio opens on.
+语言、颜色、背景、时钟、世界标签，以及KaiRadio启动时打开的标签。
 
 Languages sorted A to Z
 语言已按A到Z排序
@@ -375,6 +393,9 @@ Removed %s from favorites
 Resume the last station
 继续播放上次的电台
 
+Screen off while playing
+播放时关闭屏幕
+
 Search
 搜索
 
@@ -468,6 +489,9 @@ The server answered %ld
 The settings couldn't be saved on the card.
 无法将设置保存到SD卡。
 
+The sleep timer, the last station when KaiRadio opens, and the screen while a station plays.
+睡眠定时、打开KaiRadio时的上次电台，以及播放电台时的屏幕。
+
 The station directory can't be reached.
 无法连接电台目录。
 
@@ -533,9 +557,6 @@ Try another name.
 
 Turn the globe with a finger; the stick picks countries.
 用手指转动地球仪；用摇杆选择国家。
-
-Turn the screen off
-关闭屏幕
 
 Version, credits and licenses.
 版本、致谢和许可证。

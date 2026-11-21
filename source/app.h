@@ -49,10 +49,12 @@ typedef enum {
 #define SEARCH_MAX 64
 #define CONFIG_FOLDER_MAX 128
 
-// A panel over the view: the + menu, Settings, or About. Only it takes input.
+// A panel over the view: the + menu, its "Exit KaiRadio?", Settings, or
+// About. Only it takes input.
 typedef enum {
     OVERLAY_NONE,
     OVERLAY_MENU,
+    OVERLAY_EXIT,
     OVERLAY_SETTINGS,
     OVERLAY_ABOUT,
 } Overlay;
@@ -60,9 +62,16 @@ typedef enum {
 // The + menu's items.
 typedef enum {
     MENU_SETTINGS,
-    MENU_EXIT,
+    MENU_EXIT,  // Asks "Exit KaiRadio?".
     MENU_COUNT,
 } MenuItem;
+
+// The answers to "Exit KaiRadio?".
+typedef enum {
+    EXIT_CONFIRM,
+    EXIT_CANCEL,
+    EXIT_COUNT,
+} ExitItem;
 
 typedef struct {
     View view;
@@ -115,8 +124,9 @@ typedef struct {
     Config config;
     char config_folder[CONFIG_FOLDER_MAX];
     Overlay overlay;
-    int menu_cursor;             // MenuItem.
-    int settings_cursor;         // SettingRow.
+    int menu_cursor;             // MenuItem, or ExitItem in the exit question.
+    int settings_page;           // SettingsPage.
+    int settings_cursor;         // SettingRow, on settings_page.
     char backgrounds[BACKGROUND_MAX_IMAGES][BACKGROUND_NAME_MAX];  // The images there were when Settings opened.
     size_t background_count;
     int sleep_minutes;           // The sleep timer as set; 0 is off.
@@ -171,7 +181,11 @@ void appPlayFrom(App *app, const StationList *list, size_t index);
 
 // app_settings.c: the + menu, Settings and About.
 void appOpenMenu(App *app);
+// A menu item chosen (MenuItem, or ExitItem in the exit question).
+void appChooseMenuItem(App *app, int item);
 void appOpenSettings(App *app);
+// Back from a Settings page to the main one (on the row that opened it), or Settings closed.
+void appSettingsBack(App *app);
 void appHandleOverlay(App *app, uint64_t pressed, uint64_t now_ns);
 // Steps a setting's value by delta (left -1, right +1) and saves the settings.
 // Finds the languages (English, those in the app, config/lang's files) and uses the one chosen.
@@ -179,7 +193,7 @@ void appStartLanguages(App *app);
 // Uses app->config.language (English if it's gone), and names it for Settings.
 void appUseLanguage(App *app);
 void appChangeSetting(App *app, int row, int delta, uint64_t now_ns);
-// A on a row: About opens, the others step forward.
+// A on a row: a page or About opens, the others step forward.
 void appActivateSetting(App *app, int row, uint64_t now_ns);
 // The value a row shows ("Sky blue", "Off", "in 42 min").
 void appSettingValue(const App *app, int row, uint64_t now_ns, char *out, size_t size);

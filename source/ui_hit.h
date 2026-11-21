@@ -27,9 +27,10 @@ typedef enum {
     HIT_RANDOM,       // Plays a station from a random country.
     HIT_SORT,         // How genres, countries or languages are sorted: a tap changes it.
     HIT_MENU_BUTTON,  // The title: opens the + menu.
-    HIT_MENU_ITEM,    // arg: MenuItem.
-    HIT_SETTING,      // arg: SettingRow. A tap picks it, a tap on the picked one steps it (or opens About).
-    HIT_SETTING_STEP, // arg: SettingRow * 2, + 1 for the right arrow: steps it back or forward.
+    HIT_MENU_ITEM,    // arg: MenuItem, or ExitItem in the exit question.
+    HIT_SETTING,      // arg: SettingRow. A tap picks a choice, a tap on the picked one steps it; a page or About opens.
+    HIT_SETTING_STEP, // arg: SettingRow * 2, + 1 for the right half: steps it back or forward.
+    HIT_SETTINGS_BACK,  // The Back button on a Settings page: back to the main one.
     HIT_OVERLAY_OUT,  // Outside a panel: closes it (About back to Settings).
 } HitKind;
 

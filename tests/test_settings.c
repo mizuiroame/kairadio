@@ -55,9 +55,47 @@ static void testRows(void)
     for (int row = 0; row < SETTING_COUNT; row++)
         CHECK(settingsRowLabel(row)[0] && settingsRowHelp(row)[0]);
     CHECK(!settingsRowEditable(SETTING_ABOUT) && settingsRowEditable(SETTING_ACCENT));
-    CHECK(settingsRowSection(SETTING_LANGUAGE) && settingsRowSection(SETTING_SLEEP) && !settingsRowSection(SETTING_CLOCK));
-    CHECK(!settingsRowSection(SETTING_ACCENT) && settingsRowEditable(SETTING_LANGUAGE));
+    CHECK(!settingsRowEditable(SETTING_OPEN_PLAYBACK) && settingsRowEditable(SETTING_LANGUAGE));
+    CHECK(strcmp(settingsRowLabel(SETTING_SCREEN_OFF), "Screen off while playing") == 0);
+    CHECK(strcmp(settingsRowLabel(SETTING_ABOUT), "About") == 0);
     CHECK(strcmp(settingsStartName(START_WORLD), "World") == 0 && strcmp(settingsStartName(99), "Automatic") == 0);
+}
+
+static bool pageIs(SettingsPage page, const SettingRow *want, int count)
+{
+    SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
+    return settingsPageRows(page, rows) == count && memcmp(rows, want, count * sizeof(SettingRow)) == 0;
+}
+
+// The pages: the main one opens Playback and Display, and each row is on one page.
+static void testPages(void)
+{
+    static const SettingRow MAIN[] = {SETTING_OPEN_PLAYBACK, SETTING_OPEN_DISPLAY, SETTING_ABOUT};
+    static const SettingRow PLAYBACK[] = {SETTING_SLEEP, SETTING_RESUME, SETTING_SCREEN_OFF};
+    static const SettingRow DISPLAY[] = {SETTING_LANGUAGE, SETTING_ACCENT, SETTING_BACKGROUND, SETTING_BLUR,
+                                         SETTING_CLOCK, SETTING_WORLD, SETTING_START};
+    CHECK(pageIs(SETTINGS_PAGE_MAIN, MAIN, 3) && pageIs(SETTINGS_PAGE_PLAYBACK, PLAYBACK, 3));
+    CHECK(pageIs(SETTINGS_PAGE_DISPLAY, DISPLAY, 7));
+    SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
+    CHECK(settingsPageRows(SETTINGS_PAGE_COUNT, rows) == 0);
+
+    int seen[SETTING_COUNT] = {0};
+    for (int page = 0; page < SETTINGS_PAGE_COUNT; page++) {
+        int n = settingsPageRows(page, rows);
+        for (int i = 0; i < n; i++)
+            seen[rows[i]]++;
+    }
+    for (int row = 0; row < SETTING_COUNT; row++)
+        CHECK(seen[row] == 1);
+
+    SettingsPage page = SETTINGS_PAGE_MAIN;
+    CHECK(settingOpensPage(SETTING_OPEN_DISPLAY, &page) && page == SETTINGS_PAGE_DISPLAY);
+    CHECK(settingOpensPage(SETTING_OPEN_PLAYBACK, &page) && page == SETTINGS_PAGE_PLAYBACK);
+    CHECK(!settingOpensPage(SETTING_ABOUT, &page) && !settingOpensPage(SETTING_CLOCK, &page));
+    CHECK(settingPageOpener(SETTINGS_PAGE_DISPLAY) == SETTING_OPEN_DISPLAY);
+    CHECK(settingPageOpener(SETTINGS_PAGE_PLAYBACK) == SETTING_OPEN_PLAYBACK);
+    CHECK(strcmp(settingsPageTitle(SETTINGS_PAGE_MAIN), "Settings") == 0);
+    CHECK(strcmp(settingsPageTitle(SETTINGS_PAGE_DISPLAY), "Display") == 0 && !settingsPageTitle(99)[0]);
 }
 
 static void testTheme(void)
@@ -137,6 +175,7 @@ void testSettings(void)
 {
     testConfig();
     testRows();
+    testPages();
     testTheme();
     testBackground();
     testHugeLogo();

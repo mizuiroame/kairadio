@@ -33,11 +33,17 @@ language = Español (Latinoamérica)
 24-hour (21:47)
 24 horas (21:47)
 
-[<>] change  [A] change or open  [B] close
-[<>] cambiar  [A] cambiar o abrir  [B] cerrar
-
 [<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
 [<>^v] país  [A] abrir  [Y] estación al azar  [X] en reproducción  [L][R] estación  [-] reproducir/parar  [+] salir
+
+[^v] choose  [<>][A] change  [B] back
+[^v] elegir  [<>][A] cambiar  [B] atrás
+
+[^v] choose  [>][A] open  [B] close
+[^v] elegir  [>][A] abrir  [B] cerrar
+
+[A] choose  [B] cancel  [+] exit
+[A] elegir  [B] cancelar  [+] salir
 
 [A] choose  [B] close  [+] exit
 [A] elegir  [B] cerrar  [+] salir
@@ -54,8 +60,8 @@ language = Español (Latinoamérica)
 [A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
 [A] reproducir/parar  [Y] favorito  [L][R] estación  [B] atrás  [ZL][ZR] pestañas  [+] salir
 
-[B] back
-[B] atrás
+[A][B] back
+[A][B] atrás
 
 [X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
 [X] escribir un nombre  [A] reproducir  [Y] favorito  [<>] buscar por  [L][R] estación  [+] salir
@@ -63,8 +69,8 @@ language = Español (Latinoamérica)
 A to Z
 A a Z
 
-About KaiRadio
-Acerca de KaiRadio
+About
+Acerca de
 
 Accent color
 Color de acento
@@ -102,6 +108,9 @@ Cargando búfer…
 Can't play
 No se puede reproducir
 
+Cancel
+Cancelar
+
 Clear
 Despejado
 
@@ -135,8 +144,14 @@ Pantalla
 Drizzle
 Llovizna
 
+Exit
+Salir
+
 Exit KaiRadio
 Salir de KaiRadio
+
+Exit KaiRadio?
+¿Salir de KaiRadio?
 
 Favorite
 Favorito
@@ -215,6 +230,9 @@ KaiRadio es de código abierto con licencia MIT. Copyright (c) 2026 Mizuiro.
 
 Language
 Idioma
+
+Language, colors, background, clock, the World tab and the tab KaiRadio opens on.
+Idioma, colores, fondo, reloj, la pestaña Mundo y la pestaña con la que abre KaiRadio.
 
 Languages sorted A to Z
 Idiomas ordenados de la A a la Z
@@ -375,6 +393,9 @@ Se quitó %s de favoritos
 Resume the last station
 Continuar con la última estación
 
+Screen off while playing
+Apagar la pantalla al reproducir
+
 Search
 Buscar
 
@@ -468,6 +489,9 @@ El servidor respondió %ld
 The settings couldn't be saved on the card.
 No se pudo guardar la configuración en la tarjeta.
 
+The sleep timer, the last station when KaiRadio opens, and the screen while a station plays.
+El temporizador para dormir, la última estación al abrir KaiRadio y la pantalla mientras suena una estación.
+
 The station directory can't be reached.
 No se puede contactar el directorio de estaciones.
 
@@ -533,9 +557,6 @@ Prueba otro nombre.
 
 Turn the globe with a finger; the stick picks countries.
 Gira el globo con el dedo; la palanca elige países.
-
-Turn the screen off
-Apagar la pantalla
 
 Version, credits and licenses.
 Versión, créditos y licencias.

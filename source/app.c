@@ -7,6 +7,7 @@
 #include "buttons.h"
 #include "keyboard_system.h"
 #include "lang.h"
+#include "settings.h"
 #include "ui.h"
 #include "ui_hit.h"
 #include "weatherfetch.h"
@@ -695,18 +696,18 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     case HIT_RANDOM: appRandomStation(app, now_ns); break;
     case HIT_SORT: appCycleSort(app, now_ns); break;
     case HIT_MENU_BUTTON: appOpenMenu(app); break;
-    case HIT_MENU_ITEM:
-        if (hit->arg == MENU_EXIT)
-            app->quit = true;
-        else
-            appOpenSettings(app);
-        break;
+    case HIT_MENU_ITEM: appChooseMenuItem(app, hit->arg); break;
     case HIT_SETTING:
-        if (app->settings_cursor == hit->arg)
-            appActivateSetting(app, hit->arg, now_ns);
-        else
+        if (!settingsRowEditable(hit->arg)) {  // A page or About: opens at once.
             app->settings_cursor = hit->arg;
+            appActivateSetting(app, hit->arg, now_ns);
+        } else if (app->settings_cursor == hit->arg) {
+            appActivateSetting(app, hit->arg, now_ns);
+        } else {
+            app->settings_cursor = hit->arg;
+        }
         break;
+    case HIT_SETTINGS_BACK: appSettingsBack(app); break;
     case HIT_SETTING_STEP:
         app->settings_cursor = hit->arg / 2;
         appChangeSetting(app, hit->arg / 2, hit->arg % 2 ? 1 : -1, now_ns);

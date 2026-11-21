@@ -9,10 +9,12 @@
 #include <unistd.h>
 
 #include "app.h"
+#include "buttons.h"
 #include "globe.h"
 #include "font.h"
 #include "lang.h"
 #include "gfx.h"
+#include "settings.h"
 #include "stubs.h"
 #include "ui.h"
 #include "ui_hit.h"
@@ -99,7 +101,7 @@ typedef struct {
     size_t map_cursor;
     CategorySort category_sort[SEARCH_MODES];
     Overlay overlay;
-    int menu_cursor, settings_cursor, sleep_minutes;
+    int menu_cursor, settings_page, settings_cursor, sleep_minutes;
     Config config;
     char toast[224];
 } Snapshot;
@@ -122,6 +124,7 @@ static Snapshot snapshot(const App *app)
     memcpy(s.category_sort, app->category_sort, sizeof(s.category_sort));
     s.overlay = app->overlay;
     s.menu_cursor = app->menu_cursor;
+    s.settings_page = app->settings_page;
     s.settings_cursor = app->settings_cursor;
     s.sleep_minutes = app->sleep_minutes;
     s.config = app->config;
@@ -199,17 +202,46 @@ static void checkTouch(const char *name, App *app)
     }
 }
 
-static void render(const char *dir, const char *name, App *app)
+static uint32_t g_pixels[GFX_FB_WIDTH * GFX_FB_HEIGHT];
+
+// Draws a frame, which sets the touch targets.
+static void draw(const App *app)
 {
-    static uint32_t pixels[GFX_FB_WIDTH * GFX_FB_HEIGHT];
-    char path[512];
-    gfxSetTarget(pixels, GFX_FB_WIDTH);
+    gfxSetTarget(g_pixels, GFX_FB_WIDTH);
     uiDraw(app, &g_stub_radio, 1234567890ull);
     gfxSetTarget(NULL, 0);
+}
+
+static void render(const char *dir, const char *name, App *app)
+{
+    char path[512];
+    draw(app);
     checkTouch(name, app);
     snprintf(path, sizeof(path), "%s/%s.ppm", dir, name);
-    if (!writePpm(path, pixels))
+    if (!writePpm(path, g_pixels))
         fprintf(stderr, "cannot write %s\n", path);
+}
+
+// Taps the last frame's target of this kind and arg. False if there is none
+// or it's covered.
+static bool tapTarget(App *app, HitKind kind, int arg)
+{
+    for (int i = uiHitCount() - 1; i >= 0; i--) {
+        const HitRegion *r = uiHitAt(i);
+        int x, y;
+        if (r->kind == kind && r->arg == arg && reachablePoint(i, &x, &y))
+            return appTap(app, x, y, 0);
+    }
+    return false;
+}
+
+// A step of a flow (buttons or taps) that didn't do what it should.
+static void expect(bool ok, const char *what)
+{
+    if (!ok) {
+        printf("FLOW: %s\n", what);
+        g_problems++;
+    }
 }
 
 static void playing(App *app, size_t index, RadioState state, const char *title)
@@ -394,20 +426,54 @@ int main(int argc, char **argv)
     g_stub_radio = (RadioStatus){0};
     render(dir, "now_playing_empty", &app);
 
-    // The + menu, Settings (pink, with the sleep timer on) and About, over World.
+    // The + menu and its exit question, Settings' pages (pink, with the sleep
+    // timer on) and About, over Popular; and the way through them.
     appSetView(&app, VIEW_POPULAR);
     app.toast[0] = '\0';  // The sort's message from earlier: not part of these shots.
     appOpenMenu(&app);
     render(dir, "menu", &app);
-    appOpenSettings(&app);
+    appHandleOverlay(&app, HidNpadButton_Plus, 0);
+    expect(app.overlay == OVERLAY_EXIT && app.menu_cursor == EXIT_CONFIRM && !app.quit, "+ in the menu asks first");
+    render(dir, "menu_exit", &app);
+    appHandleOverlay(&app, HidNpadButton_B, 0);
+    expect(app.overlay == OVERLAY_NONE && !app.quit, "B cancels the exit question");
+    appOpenMenu(&app);
+    draw(&app);
+    expect(tapTarget(&app, HIT_MENU_ITEM, MENU_SETTINGS) && app.overlay == OVERLAY_SETTINGS &&
+               app.settings_page == SETTINGS_PAGE_MAIN && app.settings_cursor == SETTING_OPEN_PLAYBACK,
+           "a tap on Settings opens its main page");
     app.config.accent = 1;
     app.sleep_minutes = 45;
     app.sleep_until_ns = 1234567890ull + 45ull * 60000000000ull;
-    app.settings_cursor = 4;
     render(dir, "settings", &app);
-    app.overlay = OVERLAY_ABOUT;
+    expect(tapTarget(&app, HIT_SETTING, SETTING_OPEN_PLAYBACK) && app.settings_page == SETTINGS_PAGE_PLAYBACK &&
+               app.settings_cursor == SETTING_SLEEP,
+           "a tap on Playback opens its page");
+    render(dir, "settings_playback", &app);
+    expect(tapTarget(&app, HIT_SETTINGS_BACK, 0) && app.settings_page == SETTINGS_PAGE_MAIN &&
+               app.settings_cursor == SETTING_OPEN_PLAYBACK,
+           "Back goes to the main page, on Playback");
+    draw(&app);
+    expect(tapTarget(&app, HIT_SETTING, SETTING_OPEN_DISPLAY) && app.settings_page == SETTINGS_PAGE_DISPLAY &&
+               app.settings_cursor == SETTING_LANGUAGE,
+           "a tap on Display opens its page");
+    app.settings_cursor = SETTING_BACKGROUND;  // A long help, on two lines.
+    render(dir, "settings_display", &app);
+    appHandleOverlay(&app, HidNpadButton_B, 0);
+    expect(app.overlay == OVERLAY_SETTINGS && app.settings_page == SETTINGS_PAGE_MAIN &&
+               app.settings_cursor == SETTING_OPEN_DISPLAY,
+           "B goes back a page, on Display");
+    appHandleOverlay(&app, HidNpadButton_Right, 0);
+    expect(app.settings_page == SETTINGS_PAGE_DISPLAY, "right opens a page");
+    appHandleOverlay(&app, HidNpadButton_B, 0);
+    appHandleOverlay(&app, HidNpadButton_Down, 0);
+    appHandleOverlay(&app, HidNpadButton_A, 0);
+    expect(app.overlay == OVERLAY_ABOUT, "A on About opens it");
     render(dir, "about", &app);
-    app.overlay = OVERLAY_NONE;
+    appHandleOverlay(&app, HidNpadButton_B, 0);
+    expect(app.overlay == OVERLAY_SETTINGS && app.settings_cursor == SETTING_ABOUT, "B goes back from About");
+    appHandleOverlay(&app, HidNpadButton_B, 0);
+    expect(app.overlay == OVERLAY_NONE, "B on the main page closes Settings");
     app.config.accent = 0;
     app.sleep_minutes = 0;
     app.sleep_until_ns = 0;

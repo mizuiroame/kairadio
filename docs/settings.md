@@ -4,16 +4,22 @@
 
 ## Settings
 
-Open them with **+** > Settings. You can choose:
+Open them with **+** > Settings. **Playback** has:
 
+- a sleep timer,
+- playing the last station again when KaiRadio opens,
+- turning the screen off while a station plays.
+
+**Display** has:
+
+- the language,
 - the accent color (or one taken from the station's logo),
 - a background image of your own, with as much blur as you like,
 - a 12- or 24-hour clock,
 - the globe or a flat map (World view),
-- a sleep timer,
-- turning the screen off while a station plays,
-- the tab to start in,
-- playing the last station again when KaiRadio opens.
+- the tab to start in.
+
+**About** shows the version, credits and licenses.
 
 Backgrounds are the JPEG or PNG images you put in the `Backgrounds` folder of
 KaiRadio's folder.

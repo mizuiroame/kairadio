@@ -33,11 +33,17 @@ language = 한국어
 24-hour (21:47)
 24시간제 (21:47)
 
-[<>] change  [A] change or open  [B] close
-[<>] 변경  [A] 변경 / 열기  [B] 닫기
-
 [<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
 [<>^v] 국가  [A] 열기  [Y] 랜덤 방송국  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 종료
+
+[^v] choose  [<>][A] change  [B] back
+[^v] 선택  [<>][A] 변경  [B] 뒤로
+
+[^v] choose  [>][A] open  [B] close
+[^v] 선택  [>][A] 열기  [B] 닫기
+
+[A] choose  [B] cancel  [+] exit
+[A] 선택  [B] 취소  [+] 종료
 
 [A] choose  [B] close  [+] exit
 [A] 선택  [B] 닫기  [+] 종료
@@ -54,8 +60,8 @@ language = 한국어
 [A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
 [A] 재생/정지  [Y] 즐겨찾기  [L][R] 방송국  [B] 뒤로  [ZL][ZR] 탭  [+] 종료
 
-[B] back
-[B] 뒤로
+[A][B] back
+[A][B] 뒤로
 
 [X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
 [X] 이름 입력  [A] 재생  [Y] 즐겨찾기  [<>] 검색 기준  [L][R] 방송국  [+] 종료
@@ -63,8 +69,8 @@ language = 한국어
 A to Z
 A-Z순
 
-About KaiRadio
-KaiRadio 정보
+About
+정보
 
 Accent color
 강조 색상
@@ -102,6 +108,9 @@ Buffering…
 Can't play
 재생할 수 없음
 
+Cancel
+취소
+
 Clear
 맑음
 
@@ -135,8 +144,14 @@ Display
 Drizzle
 이슬비
 
+Exit
+종료
+
 Exit KaiRadio
 KaiRadio 종료
+
+Exit KaiRadio?
+KaiRadio를 종료하시겠습니까?
 
 Favorite
 즐겨찾기
@@ -215,6 +230,9 @@ KaiRadio는 MIT 라이선스의 오픈 소스입니다. Copyright (c) 2026 Mizui
 
 Language
 언어
+
+Language, colors, background, clock, the World tab and the tab KaiRadio opens on.
+언어, 색상, 배경, 시계, 세계 탭, KaiRadio를 열 때 표시할 탭입니다.
 
 Languages sorted A to Z
 언어를 A-Z순으로 정렬했습니다
@@ -375,6 +393,9 @@ Removed %s from favorites
 Resume the last station
 마지막 방송국 이어 듣기
 
+Screen off while playing
+재생 중 화면 끄기
+
 Search
 검색
 
@@ -468,6 +489,9 @@ The server answered %ld
 The settings couldn't be saved on the card.
 설정을 SD 카드에 저장할 수 없었습니다.
 
+The sleep timer, the last station when KaiRadio opens, and the screen while a station plays.
+슬립 타이머, KaiRadio를 열 때의 마지막 방송국, 방송 재생 중의 화면입니다.
+
 The station directory can't be reached.
 방송국 디렉터리에 연결할 수 없습니다.
 
@@ -533,9 +557,6 @@ Try another name.
 
 Turn the globe with a finger; the stick picks countries.
 손가락으로 지구본을 돌리고, 스틱으로 국가를 선택합니다.
-
-Turn the screen off
-화면 끄기
 
 Version, credits and licenses.
 버전, 크레딧, 라이선스입니다.
