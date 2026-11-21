@@ -22,38 +22,28 @@ The screenshots show made-up stations.
 
 > KaiRadio is an independent project. It is not affiliated with, endorsed by
 > or sponsored by Nintendo, Radio Browser or any station. See the
-> [Legal notice](#legal-notice).
+> [legal notice](docs/legal.md).
 
-## What it does
+## What it can do
 
-- **World**: a night globe, each country lit up by how many stations it has.
-  Turn it with a finger, or go from country to country with the stick. Beside
-  it, the country picked: its flag, how many stations it has, and its **time
-  and weather** right now. Open it to see its stations.
-- **Random station** (**Y** in World): a country at random, the globe turned
-  to it, and one of its stations playing; **L** and **R** go through the rest.
-- The globe can be a flat night map instead (Settings > World view).
-- **Popular**: the stations played most, worldwide.
-- **Search** by **name** (with the console's keyboard), or browse **genres**
-  (each with an icon), **countries** (with their flags) and **languages**
-  (with letters in their own script), each with how many stations it has.
-- **Favorites** and **Recent**: kept on your card, in KaiRadio's folder (see
-  [Where KaiRadio keeps its files](#where-kairadio-keeps-its-files)).
-- **Now Playing**: the station's logo, the song playing when the station sends
-  it, and the format: codec, bitrate and sample rate.
+- **World**: a night globe, each country lit up by how many stations it has,
+  with its flag, **time and weather**. Or a flat night map.
+  [More](docs/stations.md#world)
+- **Random station** (**Y** in World): a country at random and one of its
+  stations playing. [More](docs/stations.md#random-station)
+- **Popular**, **Search** by name, and **genres**, **countries** and
+  **languages** to browse. [More](docs/stations.md#popular-and-search)
+- **Favorites** and **Recent**, kept on your card.
+  [More](docs/stations.md#favorites-and-recent)
+- **Now Playing**: the station's logo, the song playing and the format.
+  [More](docs/playback.md#now-playing)
 - Plays **MP3**, **AAC** and **HE-AAC**, **Ogg Vorbis**, **Opus** and **FLAC**
-  streams over HTTP and HTTPS. It follows `.pls` and `.m3u` playlists to the
-  stream, and plays **HLS** stations, with MPEG-TS, AAC or fMP4 segments
-  (encrypted ones aren't supported).
-- Reconnects on its own when the connection drops.
-- **Settings** (**+** > Settings): the accent color (or one taken from the
-  station's logo), a background image of your own with as much blur as you
-  like, a 12- or 24-hour clock, the globe or a flat map, a sleep timer, turning the screen off while
-  a station plays, the tab to start in, and playing the last station again
-  when KaiRadio opens. Backgrounds are the JPEG or PNG images you put in the
-  `Backgrounds` folder of KaiRadio's folder.
-- Drawn on the GPU, sharp in handheld and docked. Every control works with the
-  buttons and the touch screen.
+  streams, `.pls` and `.m3u` playlists and **HLS** stations. Reconnects on its
+  own. [More](docs/playback.md#streams-it-plays)
+- **Settings**: accent color, your own background, clock, sleep timer, screen
+  off while playing, and more. [More](docs/settings.md)
+- Drawn on the GPU, sharp in handheld and docked. **Touch and buttons** for
+  every control. [Controls](docs/controls.md)
 
 ## Install
 
@@ -76,100 +66,20 @@ card: OunceShell's FTP server with an FTP client such as
 > means restarting the console, and kaiHEN has to be started again after
 > that.
 
-### Where KaiRadio keeps its files
+## Documentation
 
-Favorites, recent stations, settings, backgrounds and the audio log are kept
-in a `config` folder next to `KaiRadio.nro`, in its own folder:
-
-| Where `KaiRadio.nro` is | Its files |
-|-------------------------|-----------|
-| `sdmc:/switch/KaiRadio.nro` | `sdmc:/switch/kairadio/config/` |
-| `sdmc:/switch/kairadio/KaiRadio.nro` | `sdmc:/switch/kairadio/config/` |
-| `sdmc:/brewstore/apps/kairadio/KaiRadio.nro` | `sdmc:/brewstore/apps/kairadio/config/` |
-
-Before 1.0.0-rc2 they were in `sdmc:/config/kairadio`. The first time a newer
-KaiRadio opens, it copies them over (and leaves that folder as it is, so you
-can delete it once everything is there).
-
-## Controls
-
-| Button | What it does |
-|--------|--------------|
-| **A** | Play the selected station (in World: open the country; in Now Playing: play or stop) |
-| **Y** | In World: a random station. Elsewhere: add to favorites, or remove; on a list of genres, countries or languages, sort it (most or fewest stations, A to Z, Z to A) |
-| **X** | Now Playing; in Search by name, type a name |
-| **ZL** / **ZR** | Previous / next tab |
-| **L** / **R** | Previous / next station, in the list you played from |
-| **◀** / **▶** | In World: the country that way. In Search: by name, genre, country or language. Elsewhere: a page up or down |
-| **↑** / **↓** | Move in the list; in World, the country that way |
-| **B** | Back (out of Now Playing, or out of a genre, country or language, to the map if opened from it) |
-| **−** | Play or stop |
-| **+** | Menu: Settings, or exit (press **+** again to exit) |
-
-On the touch screen, tap a station to play it, its heart to keep it, a tab,
-genre or country to open it, a country on the globe to pick it (tap it again,
-or Open its stations, to open it), Random station beside the globe, the sort at the top right of a list of genres,
-countries or languages to change it, and the bar at the bottom for Now Playing. Drag
-the globe to turn it, and a list to scroll it: a quick flick keeps it gliding, and a
-touch stops it. The title at the top left opens the menu, and the **×**
-before it exits.
-
-## Building
-
-KaiRadio is built in Docker, on top of the
-[ounce-devkit](https://github.com/ouncebrew/ounce-devkit) image:
-
-```sh
-docker build -t kairadio-devkit ffmpeg   # once: the devkit plus FFmpeg (LGPL)
-.\build.ps1                              # KaiRadio.nro
-.\build.ps1 test                         # host tests
-.\build.ps1 preview                      # screenshots and touch checks
-```
-
-`ffmpeg/Dockerfile` builds FFmpeg 7.1 from its release tarball (checked by
-SHA-256) with only the demuxers, parsers and audio decoders radio needs, and
-fails if the build would include GPL or non-free parts.
-
-While a station plays, KaiRadio writes how the audio output keeps up to
-`audio.log` in its folder. It helps when a station stutters.
-
-## Legal notice
-
-- **Independent project.** KaiRadio is not affiliated with, endorsed by or
-  sponsored by Nintendo Co., Ltd. or its subsidiaries, by Radio Browser, or by
-  any radio station.
-- **Trademarks.** "Nintendo", "Nintendo Switch" and "Switch 2" are trademarks
-  of their owners. They are used here only to say which hardware this program
-  works with. Format names are used only to name the streams KaiRadio plays.
-- **No Nintendo material.** This repository and its releases contain no
-  Nintendo code, SDK, firmware, cryptographic keys, games, or graphics or audio
-  assets. KaiRadio is built only with open-source tools and libraries.
-- **Stations.** KaiRadio ships no station list, logos or broadcasts. It plays
-  the public streams that stations publish themselves, as any web radio player
-  does, and it doesn't record them. Each station's content belongs to its
-  owners. The station list comes from Radio Browser's public API, and KaiRadio
-  reports plays to it, as the API asks clients to.
-- **Weather.** The time and weather beside the globe come from
-  [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). KaiRadio sends it only
-  the middle of the country picked on the map, nothing about you.
-- **FFmpeg.** KaiRadio uses FFmpeg, built under the LGPL 2.1 (no GPL or
-  non-free parts). The script that builds it is in this repository, so it can
-  be rebuilt, changed and relinked.
-- **User responsibility.** Running homebrew (kaiHEN) can put your console at
-  risk, can affect its warranty and can go against the manufacturer's terms of
-  service. You do it at your own risk.
-- **No warranty.** The software is provided "as is", without warranty of any
-  kind. See [LICENSE](LICENSE).
-
-This notice is not legal advice.
+- [Finding stations](docs/stations.md): World, random station, Popular,
+  Search, Favorites and Recent
+- [Playback](docs/playback.md): Now Playing, the streams it plays, when a
+  station stutters
+- [Settings and files](docs/settings.md): every setting, backgrounds, where
+  KaiRadio keeps its files
+- [Controls](docs/controls.md): buttons and touch
+- [Building](docs/building.md)
+- [Legal notice and licenses](docs/legal.md)
 
 ## License
 
-KaiRadio is released under the [MIT License](LICENSE). FFmpeg is released
-under the LGPL 2.1; the other bundled libraries are listed in
-[third_party/VERSIONS.md](third_party/VERSIONS.md). The world map is drawn
-from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
-`tools/make_map.py`; the flags come from
-[flag-icons](https://github.com/lipis/flag-icons) (MIT) and the genre icons
-from [Lucide](https://lucide.dev/) (ISC). Weather data by
-[Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0).
+KaiRadio is released under the [MIT License](LICENSE). It uses FFmpeg under
+the LGPL 2.1, and other open-source libraries, data and icons. The full list
+is in [docs/legal.md](docs/legal.md#licenses).

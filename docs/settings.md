@@ -1,0 +1,34 @@
+# Settings and files
+
+[Back to the README](../README.md)
+
+## Settings
+
+Open them with **+** > Settings. You can choose:
+
+- the accent color (or one taken from the station's logo),
+- a background image of your own, with as much blur as you like,
+- a 12- or 24-hour clock,
+- the globe or a flat map (World view),
+- a sleep timer,
+- turning the screen off while a station plays,
+- the tab to start in,
+- playing the last station again when KaiRadio opens.
+
+Backgrounds are the JPEG or PNG images you put in the `Backgrounds` folder of
+KaiRadio's folder.
+
+## Where KaiRadio keeps its files
+
+Favorites, recent stations, settings, backgrounds and the audio log are kept
+in a `config` folder next to `KaiRadio.nro`, in its own folder:
+
+| Where `KaiRadio.nro` is | Its files |
+|-------------------------|-----------|
+| `sdmc:/switch/KaiRadio.nro` | `sdmc:/switch/kairadio/config/` |
+| `sdmc:/switch/kairadio/KaiRadio.nro` | `sdmc:/switch/kairadio/config/` |
+| `sdmc:/brewstore/apps/kairadio/KaiRadio.nro` | `sdmc:/brewstore/apps/kairadio/config/` |
+
+Before 1.0.0-rc2 they were in `sdmc:/config/kairadio`. The first time a newer
+KaiRadio opens, it copies them over (and leaves that folder as it is, so you
+can delete it once everything is there).
