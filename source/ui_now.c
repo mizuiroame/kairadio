@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "lang.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
 #include "ui_flag.h"
@@ -20,14 +21,14 @@ static void drawBack(void)
     int x = MARGIN, y = SUBTITLE_Y - 4;
     gfxLine(x + 14, y + 6, x + 6, y + 15, 3, COLOR_TEXT);
     gfxLine(x + 6, y + 15, x + 14, y + 24, 3, COLOR_TEXT);
-    fontDraw(FONT_REGULAR, 18, x + 22, y + 4, "Back", COLOR_TEXT);
+    fontDraw(FONT_REGULAR, 18, x + 22, y + 4, T("Back"), COLOR_TEXT);
     uiHitAdd(0, y - 8, 120, 46, HIT_BACK, 0);
 }
 
 static void drawEmpty(void)
 {
-    fontDrawCentered(FONT_BOLD, 28, GFX_WIDTH / 2.0f, 300.0f, "Nothing is playing.", COLOR_TEXT);
-    fontDrawCentered(FONT_REGULAR, 20, GFX_WIDTH / 2.0f, 345.0f, "Pick a station in Popular, Search or Favorites.",
+    fontDrawCentered(FONT_BOLD, 28, GFX_WIDTH / 2.0f, 300.0f, T("Nothing is playing."), COLOR_TEXT);
+    fontDrawCentered(FONT_REGULAR, 20, GFX_WIDTH / 2.0f, 345.0f, T("Pick a station in Popular, Search or Favorites."),
                      COLOR_DIM);
 }
 
@@ -71,8 +72,8 @@ void uiDrawNowPlaying(const App *app, const RadioStatus *radio, uint64_t now_ns)
     bool active = radio->state != RADIO_STOPPED && radio->state != RADIO_FAILED;
     // State: a red LIVE pill while playing, else a word for what happens.
     if (radio->state == RADIO_PLAYING) {
-        uiDrawPill(INFO_X, y, "LIVE", COLOR_LIVE, COLOR_TEXT);
-        uiDrawLiveBars(INFO_X + uiPillWidth("LIVE") + 14, y + 6, 18, now_ns, COLOR_LIVE);
+        uiDrawPill(INFO_X, y, T("LIVE"), COLOR_LIVE, COLOR_TEXT);
+        uiDrawLiveBars(INFO_X + uiPillWidth(T("LIVE")) + 14, y + 6, 18, now_ns, COLOR_LIVE);
     } else {
         uiDrawPill(INFO_X, y, radioStateLabel(radio->state), COLOR_SURFACE_HI,
                    radio->state == RADIO_FAILED ? COLOR_ERROR : COLOR_DIM);
@@ -81,7 +82,7 @@ void uiDrawNowPlaying(const App *app, const RadioStatus *radio, uint64_t now_ns)
     fontDrawClipped(FONT_REGULAR, 22, INFO_X, y, INFO_W, s->name, COLOR_ACCENT);
     y += 40;
     if (radio->state == RADIO_FAILED)
-        fontDrawClipped(FONT_REGULAR, 20, INFO_X, y, INFO_W, radio->error, COLOR_ERROR);
+        fontDrawClipped(FONT_REGULAR, 20, INFO_X, y, INFO_W, T(radio->error), COLOR_ERROR);
     else
         drawTitle(radio->title[0] ? radio->title : s->name, y);
     y += 96;
@@ -112,7 +113,7 @@ void uiDrawNowPlaying(const App *app, const RadioStatus *radio, uint64_t now_ns)
         uiHitAdd(x - 36, cy - 40, 72, 80, HIT_NEXT, 0);
     x += 80;
     bool favorite = libraryIsFavorite(&app->library, s);
-    const char *label = favorite ? "Favorite" : "Add to favorites";
+    const char *label = favorite ? T("Favorite") : T("Add to favorites");
     int w = uiPillWidth(label) + 34;
     gfxFillRoundRect(x, cy - 20, w, 40, 20, favorite ? gfxMix(COLOR_SURFACE_HI, COLOR_LIVE, 60) : COLOR_SURFACE_HI);
     uiDrawHeart(x + 24.0f, (float)cy, 20, favorite, favorite ? COLOR_LIVE : COLOR_DIM);

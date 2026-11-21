@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include "lang.h"
 #include "settings.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
@@ -13,7 +14,7 @@
 #define PANEL_W (GFX_WIDTH - 2 * PANEL_X)
 #define PANEL_Y 22
 #define PANEL_H 648  // The rows, two sections and the line about the row picked.
-#define ROW_H 46
+#define ROW_H 42     // Eleven rows fit over the help line: 66 + 2 sections + 11 rows = 588.
 #define ABOUT_H 504
 #define SECTION_H 30
 #define PAD 28
@@ -38,7 +39,7 @@ static void highlight(int x, int y, int w, int h)
 
 static void drawMenu(const App *app)
 {
-    static const char *const ITEMS[MENU_COUNT] = {"Settings", "Exit KaiRadio"};
+    static const char *const ITEMS[MENU_COUNT] = {N_("Settings"), N_("Exit KaiRadio")};
     int h = 76 + MENU_COUNT * MENU_ROW_H + 16;
     int x = (GFX_WIDTH - MENU_W) / 2, y = (GFX_HEIGHT - h) / 2;
     backdrop(x, y, MENU_W, h);
@@ -49,7 +50,7 @@ static void drawMenu(const App *app)
         int row_y = y + 76 + i * MENU_ROW_H;
         if (app->menu_cursor == i)
             highlight(x + 12, row_y, MENU_W - 24, MENU_ROW_H);
-        fontDraw(FONT_REGULAR, 21, x + PAD, row_y + 14, ITEMS[i], app->menu_cursor == i ? COLOR_TEXT : COLOR_DIM);
+        fontDraw(FONT_REGULAR, 21, x + PAD, row_y + 14, T(ITEMS[i]), app->menu_cursor == i ? COLOR_TEXT : COLOR_DIM);
         uiHitAdd(x, row_y, MENU_W, MENU_ROW_H, HIT_MENU_ITEM, i);
     }
 }
@@ -77,7 +78,7 @@ static void drawSettingRow(const App *app, int row, int x, int y, int w, uint64_
         gfxLine(cx + 3, cy, cx - 4, cy + 7, 3, COLOR_FAINT);
         return;
     }
-    char value[CONFIG_BACKGROUND_MAX + 16];
+    char value[CONFIG_BACKGROUND_MAX + 128];
     appSettingValue(app, row, now_ns, value, sizeof(value));
     int max_w = w / 2 - 60, value_w = fontTextWidth(FONT_BOLD, 19, value);
     if (value_w > max_w)
@@ -92,7 +93,7 @@ static void drawSettingRow(const App *app, int row, int x, int y, int w, uint64_
 static void drawSettings(const App *app, uint64_t now_ns)
 {
     backdrop(PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-    fontDraw(FONT_BOLD, 26, PANEL_X + PAD, PANEL_Y + 20, "Settings", COLOR_TEXT);
+    fontDraw(FONT_BOLD, 26, PANEL_X + PAD, PANEL_Y + 20, T("Settings"), COLOR_TEXT);
     int x = PANEL_X + 16, w = PANEL_W - 32, y = PANEL_Y + 66;
     for (int row = 0; row < SETTING_COUNT; row++) {
         const char *section = settingsRowSection(row);
@@ -111,18 +112,18 @@ static void drawSettings(const App *app, uint64_t now_ns)
 static void drawAbout(void)
 {
     static const char *const LINES[] = {
-        "Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.",
+        N_("Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer."),
         "",
-        "Stations: Radio Browser (radio-browser.info), a community directory.",
-        "World map: Natural Earth (public domain). Flags: flag-icons (MIT).",
-        "Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0).",
-        "Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1).",
-        "Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.",
+        N_("Stations: Radio Browser (radio-browser.info), a community directory."),
+        N_("World map: Natural Earth (public domain). Flags: flag-icons (MIT)."),
+        N_("Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0)."),
+        N_("Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1)."),
+        N_("Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl."),
         "",
-        "KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.",
+        N_("KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro."),
         "github.com/mizuiroame/kairadio",
         "",
-        "Not affiliated with Nintendo, Radio Browser or any station.",
+        N_("Not affiliated with Nintendo, Radio Browser or any station."),
     };
     int top = (GFX_HEIGHT - ABOUT_H) / 2 - 20;
     backdrop(PANEL_X, top, PANEL_W, ABOUT_H);
@@ -131,7 +132,7 @@ static void drawAbout(void)
     fontDraw(FONT_REGULAR, 18, x + title_w + 12, y + 7, KAIRADIO_VERSION, COLOR_DIM);
     y += 64;
     for (size_t i = 0; i < sizeof(LINES) / sizeof(LINES[0]); i++, y += LINES[i - 1][0] ? 34 : 18)
-        fontDrawClipped(FONT_REGULAR, 18, x, y, PANEL_W - 2 * PAD, LINES[i], i == 0 ? COLOR_TEXT : COLOR_DIM);
+        fontDrawClipped(FONT_REGULAR, 18, x, y, PANEL_W - 2 * PAD, T(LINES[i]), i == 0 ? COLOR_TEXT : COLOR_DIM);
 }
 
 void uiDrawOverlay(const App *app, uint64_t now_ns)

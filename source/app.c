@@ -6,6 +6,7 @@
 
 #include "buttons.h"
 #include "keyboard_system.h"
+#include "lang.h"
 #include "ui.h"
 #include "ui_hit.h"
 #include "weatherfetch.h"
@@ -195,20 +196,22 @@ static size_t findCategory(const CategoryList *list, const Category *c, size_t f
 
 void appCycleSort(App *app, uint64_t now_ns)
 {
-    static const char *const LISTS[SEARCH_MODES] = {"", "Genres", "Countries", "Languages"};
+    // Say what changed, as the pill alone is easy to miss: "Genres sorted A to Z".
+    static const char *const SAID[SEARCH_MODES][SORT_COUNT] = {
+        {"", "", "", ""},
+        {N_("Genres sorted with the most stations first"), N_("Genres sorted with the fewest stations first"),
+         N_("Genres sorted A to Z"), N_("Genres sorted Z to A")},
+        {N_("Countries sorted with the most stations first"), N_("Countries sorted with the fewest stations first"),
+         N_("Countries sorted A to Z"), N_("Countries sorted Z to A")},
+        {N_("Languages sorted with the most stations first"), N_("Languages sorted with the fewest stations first"),
+         N_("Languages sorted A to Z"), N_("Languages sorted Z to A")},
+    };
     SearchMode mode = app->search_mode;
     CategoryList *list = &app->categories[mode];
     if (mode == SEARCH_NAME)
         return;
     app->category_sort[mode] = (CategorySort)((app->category_sort[mode] + 1) % SORT_COUNT);
-    // Say what changed, as the pill alone is easy to miss: "Genres sorted A to Z".
-    char message[64];
-    const char *how = app->category_sort[mode] == SORT_MOST     ? "with the most stations first"
-                      : app->category_sort[mode] == SORT_FEWEST ? "with the fewest stations first"
-                      : app->category_sort[mode] == SORT_AZ     ? "A to Z"
-                                                                : "Z to A";
-    snprintf(message, sizeof(message), "%s sorted %s", LISTS[mode], how);
-    appToast(app, message, now_ns);
+    appToast(app, T(SAID[mode][app->category_sort[mode]]), now_ns);
     if (list->count == 0)
         return;  // The list comes sorted this way when it arrives.
     size_t *cursor = &app->category_cursor[mode];
@@ -266,7 +269,7 @@ void appRandomStation(App *app, uint64_t now_ns)
     for (size_t i = 0; i < countries->count; i++)
         candidates += countries->items[i].count >= RANDOM_MIN_STATIONS && mapFindCountry(countries->items[i].code);
     if (!candidates) {
-        appToast(app, "The countries are still loading.", now_ns);
+        appToast(app, T("The countries are still loading."), now_ns);
         return;
     }
     size_t pick = nextRandom(app, now_ns) % candidates;
@@ -281,7 +284,7 @@ void appRandomStation(App *app, uint64_t now_ns)
     turnGlobeToPick(app, now_ns);
     char label[CATEGORY_NAME_MAX], line[sizeof(app->toast)];
     categoryLabel(&countries->items[app->map_cursor], label, sizeof(label));
-    snprintf(line, sizeof(line), "Somewhere unexpected: %s\xE2\x80\xA6", label);
+    snprintf(line, sizeof(line), T("Somewhere unexpected: %s\xE2\x80\xA6"), label);
     appToast(app, line, now_ns);
     ask(app, TARGET_RANDOM, DIR_COUNTRY, countries->items[app->map_cursor].code);
 }
@@ -290,14 +293,17 @@ void appRandomStation(App *app, uint64_t now_ns)
 static void playRandom(App *app, uint64_t now_ns)
 {
     if (app->random_results.count == 0) {
-        appToast(app, "That country's stations can't be had right now: try again.", now_ns);
+        appToast(app, T("That country's stations can't be had right now: try again."), now_ns);
         return;
     }
     size_t index = nextRandom(app, now_ns) % app->random_results.count;
     playFrom(app, &app->random_results, index);
     const Station *s = &app->random_results.items[index];
     char line[sizeof(app->toast)];
-    snprintf(line, sizeof(line), "%.120s \xC2\xB7 %.80s", s->name, s->country[0] ? s->country : "on the air");
+    if (s->country[0])
+        snprintf(line, sizeof(line), "%.120s \xC2\xB7 %.80s", s->name, s->country);
+    else
+        snprintf(line, sizeof(line), T("%s \xC2\xB7 on the air"), s->name);
     appToast(app, line, now_ns);
 }
 
@@ -331,7 +337,7 @@ void appUpdate(App *app, uint64_t now_ns)
     } else if (app->directory.state == DIR_FAILED) {
         app->waiting_active = false;
         if (app->waiting_target == TARGET_RANDOM)
-            appToast(app, "The station directory can't be reached.", now_ns);
+            appToast(app, T("The station directory can't be reached."), now_ns);
         // Ask again next time rather than keep an empty list.
         if (app->waiting_target == TARGET_CATEGORIES)
             app->categories_asked[app->waiting_mode] = false;
@@ -396,8 +402,9 @@ static void togglePlay(App *app)
 static void toggleFavorite(App *app, const Station *station, uint64_t now_ns)
 {
     bool now = libraryToggleFavorite(&app->library, station);
-    char message[STATION_NAME_MAX + 48];
-    snprintf(message, sizeof(message), now ? "Added %s to favorites" : "Removed %s from favorites", station->name);
+    char message[sizeof(app->toast)];
+    snprintf(message, sizeof(message), now ? T("Added %s to favorites") : T("Removed %s from favorites"),
+             station->name);
     appToast(app, message, now_ns);
     // The Favorites list changed under its cursor.
     size_t count = app->library.favorites.count;
@@ -425,9 +432,9 @@ static void favoritePlaying(App *app, uint64_t now_ns)
 static void typeSearch(App *app, uint64_t now_ns)
 {
     char text[SEARCH_MAX];
-    SystemKeyboardResult r = systemKeyboardInput("Search stations", app->query, text, sizeof(text), SEARCH_MAX - 1);
+    SystemKeyboardResult r = systemKeyboardInput(T("Search stations"), app->query, text, sizeof(text), SEARCH_MAX - 1);
     if (r == SYSTEM_KEYBOARD_UNAVAILABLE) {
-        appToast(app, "The keyboard couldn't open.", now_ns);
+        appToast(app, T("The keyboard couldn't open."), now_ns);
         return;
     }
     if (r != SYSTEM_KEYBOARD_OK || !text[0])

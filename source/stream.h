@@ -24,7 +24,7 @@ typedef struct {
     char content_type[64];    // Of the audio ("audio/mpeg", "audio/aac", "video/mp2t"...).
     char title[256];          // The song now, from ICY metadata; may be empty.
     unsigned title_changes;   // Counts title changes.
-    char error[160];
+    char error[160];          // In English, as logged: shown with T().
 } StreamInfo;
 
 bool streamInit(void);

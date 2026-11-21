@@ -25,6 +25,8 @@ typedef struct {
     int start_view;             // StartView.
     bool resume;                // Play the last station again when KaiRadio opens.
     bool world_globe;           // The World view as a globe (Y turns it into the flat map and back).
+    char language[64];          // Its id: "en", "es", or a file in config/lang; "" is English.
+    char language_name[64];     // Its name, as Settings shows it (not kept: set at start).
 } Config;
 
 void configDefaults(Config *c);

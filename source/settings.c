@@ -3,37 +3,39 @@
 #include <stddef.h>
 
 #include "config.h"
+#include "lang.h"
 
 static const char *const ROW_LABELS[SETTING_COUNT] = {
-    "Accent color", "Background", "Background blur", "Clock", "World view",
-    "Sleep timer", "Turn the screen off", "Start in", "Resume the last station", "About KaiRadio",
+    N_("Language"), N_("Accent color"), N_("Background"), N_("Background blur"), N_("Clock"), N_("World view"),
+    N_("Sleep timer"), N_("Turn the screen off"), N_("Start in"), N_("Resume the last station"), N_("About KaiRadio"),
 };
 
 const char *settingsRowLabel(SettingRow row)
 {
-    return row >= 0 && row < SETTING_COUNT ? ROW_LABELS[row] : "";
+    return row >= 0 && row < SETTING_COUNT ? T(ROW_LABELS[row]) : "";
 }
 
 const char *settingsRowHelp(SettingRow row)
 {
     static const char *const HELP[SETTING_COUNT] = {
-        "Highlights, buttons and the map's pick. From station logo follows the station playing.",
-        "JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.",
-        "How soft the background image is.",
-        "The clock at the top right.",
-        "The World tab as a globe you turn with a finger or the stick, or as a flat map.",
-        "Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.",
-        "While a station plays and nothing is pressed. Any button or touch turns it back on.",
-        "The tab KaiRadio opens on. Automatic: Favorites if you have some, else World.",
-        "Plays the last station again when KaiRadio opens.",
-        "Version, credits and licenses.",
+        N_("The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio."),
+        N_("Highlights, buttons and the map's pick. From station logo follows the station playing."),
+        N_("JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable."),
+        N_("How soft the background image is."),
+        N_("The clock at the top right."),
+        N_("The World tab as a globe you turn with a finger or the stick, or as a flat map."),
+        N_("Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes."),
+        N_("While a station plays and nothing is pressed. Any button or touch turns it back on."),
+        N_("The tab KaiRadio opens on. Automatic: Favorites if you have some, else World."),
+        N_("Plays the last station again when KaiRadio opens."),
+        N_("Version, credits and licenses."),
     };
-    return row >= 0 && row < SETTING_COUNT ? HELP[row] : "";
+    return row >= 0 && row < SETTING_COUNT ? T(HELP[row]) : "";
 }
 
 const char *settingsRowSection(SettingRow row)
 {
-    return row == SETTING_ACCENT ? "Display" : row == SETTING_SLEEP ? "Playback" : NULL;
+    return row == SETTING_LANGUAGE ? T("Display") : row == SETTING_SLEEP ? T("Playback") : NULL;
 }
 
 bool settingsRowEditable(SettingRow row)
@@ -72,6 +74,7 @@ int settingsScreenOffStep(int minutes, int delta)
 
 const char *settingsStartName(int start)
 {
-    static const char *const NAMES[START_COUNT] = {"Automatic", "World", "Popular", "Favorites", "Recent"};
-    return start >= 0 && start < START_COUNT ? NAMES[start] : NAMES[START_AUTO];
+    static const char *const NAMES[START_COUNT] = {N_("Automatic"), N_("World"), N_("Popular"),
+                                                     N_("Favorites"), N_("Recent")};
+    return start >= 0 && start < START_COUNT ? T(NAMES[start]) : T(NAMES[START_AUTO]);
 }

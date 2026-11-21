@@ -6,6 +6,7 @@
 
 #include "directory.h"
 #include "keyboard_system.h"
+#include "languages.h"
 #include "logo.h"
 #include "logos.h"
 #include "radio.h"
@@ -121,4 +122,40 @@ WeatherState weatherFetchGet(const char *key, Weather *out)
     (void)key;
     *out = (Weather){21.4f, 2, true, -5 * 3600};
     return WEATHER_READY;
+}
+
+// Languages: only English (the preview loads another through KAI_LANG_FILE).
+int languagesFind(const char *folder)
+{
+    (void)folder;
+    return 1;
+}
+
+int languagesCount(void)
+{
+    return 1;
+}
+
+const char *languageId(int index)
+{
+    (void)index;
+    return "en";
+}
+
+const char *languageName(int index)
+{
+    (void)index;
+    return "English";
+}
+
+int languageIndex(const char *id)
+{
+    (void)id;
+    return 0;
+}
+
+bool languageUse(const char *id)
+{
+    (void)id;
+    return true;
 }

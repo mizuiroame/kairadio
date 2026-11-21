@@ -11,6 +11,7 @@
 #include "app.h"
 #include "globe.h"
 #include "font.h"
+#include "lang.h"
 #include "gfx.h"
 #include "stubs.h"
 #include "ui.h"
@@ -226,9 +227,26 @@ static void playing(App *app, size_t index, RadioState state, const char *title)
     app->play_index = index;
 }
 
+// KAI_LANG_FILE names a language file: the screens are drawn in it (the
+// Makefile draws every language in data/, to see what no longer fits).
+static void useLanguageFile(void)
+{
+    const char *path = getenv("KAI_LANG_FILE");
+    if (!path)
+        return;
+    FILE *f = fopen(path, "rb");
+    static char text[1 << 20];
+    size_t size = f ? fread(text, 1, sizeof(text), f) : 0;
+    if (f)
+        fclose(f);
+    if (!size || !langLoadText(text, size))
+        fprintf(stderr, "cannot read the language in %s\n", path);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : ".";
+    useLanguageFile();
     if (!fontInit()) {
         fprintf(stderr, "fonts failed\n");
         return 1;

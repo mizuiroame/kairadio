@@ -1,0 +1,556 @@
+# KaiRadio 日本語版。
+# 英語の行の次の行がその訳で、組ごとに空行を入れます。
+# %d、%s などはそのまま、同じ順番で残します。source/lang.h を参照。
+language = 日本語
+
+%d station
+%d局
+
+%d stations
+%d局
+
+%s there
+現地 %s
+
+%s · %d station
+%s · %d局
+
+%s · %d stations
+%s · %d局
+
+%s · on the air
+%s · 放送中
+
+%zu favorite
+お気に入り %zu件
+
+%zu favorites
+お気に入り %zu件
+
+12-hour (9:47 PM)
+12時間制（午後9:47）
+
+24-hour (21:47)
+24時間制（21:47）
+
+[<>] change  [A] change or open  [B] close
+[<>] 変更  [A] 変更 / 開く  [B] 閉じる
+
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[<>^v] 国  [A] 開く  [Y] ランダム選局  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] 終了
+
+[A] choose  [B] close  [+] exit
+[A] 決定  [B] 閉じる  [+] 終了
+
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
+[A] 開く  [Y] 並べ替え  [<>] 名前、ジャンル、国、言語  [ZL][ZR] タブ  [+] 終了
+
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
+[A] 再生  [Y] お気に入り  [B] 戻る  [<>] 検索方法  [L][R] 選局  [+] 終了
+
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[A] 再生  [Y] お気に入り  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] 終了
+
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
+[A] 再生/停止  [Y] お気に入り  [L][R] 選局  [B] 戻る  [ZL][ZR] タブ  [+] 終了
+
+[B] back
+[B] 戻る
+
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
+[X] 名前を入力  [A] 再生  [Y] お気に入り  [<>] 検索方法  [L][R] 選局  [+] 終了
+
+A to Z
+A→Z
+
+About KaiRadio
+KaiRadioについて
+
+Accent color
+アクセントカラー
+
+Add to favorites
+お気に入りに追加
+
+Added %s to favorites
+%sをお気に入りに追加しました
+
+After %d min playing
+再生して%d分後
+
+Asking for the time and weather there…
+現地の時刻と天気を問い合わせています…
+
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
+音声: FFmpeg（LGPL 2.1）。ほかに cJSON、stb、libcurl を使用しています。
+
+Automatic
+自動
+
+Back
+戻る
+
+Background
+背景
+
+Background blur
+背景のぼかし
+
+Buffering…
+バッファリング中…
+
+Can't play
+再生できません
+
+Clear
+晴れ
+
+Clock
+時計
+
+Cloudy
+曇り
+
+Connecting…
+接続しています…
+
+Countries sorted A to Z
+国をA→Zの順に並べ替えました
+
+Countries sorted with the fewest stations first
+国を局の少ない順に並べ替えました
+
+Countries sorted with the most stations first
+国を局の多い順に並べ替えました
+
+Countries sorted Z to A
+国をZ→Aの順に並べ替えました
+
+Country
+国
+
+Display
+画面
+
+Drizzle
+霧雨
+
+Exit KaiRadio
+KaiRadioを終了
+
+Favorite
+お気に入り登録済み
+
+Favorites
+お気に入り
+
+Fewest stations
+局が少ない順
+
+Find a station by its name.
+局の名前で探します。
+
+Flat map
+平面地図
+
+Fog
+霧
+
+From radio-browser.info
+radio-browser.info より
+
+From radio-browser.info  ·  Weather by open-meteo.com
+radio-browser.info より  ·  天気: open-meteo.com
+
+From station logo
+局のロゴから
+
+Genre
+ジャンル
+
+Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1).
+ジャンルのアイコン: Lucide（ISC）。フォント: Noto Sans（SIL OFL 1.1）。
+
+Genres sorted A to Z
+ジャンルをA→Zの順に並べ替えました
+
+Genres sorted with the fewest stations first
+ジャンルを局の少ない順に並べ替えました
+
+Genres sorted with the most stations first
+ジャンルを局の多い順に並べ替えました
+
+Genres sorted Z to A
+ジャンルをZ→Aの順に並べ替えました
+
+Globe
+地球儀
+
+Go back and pick another one.
+戻って別の局を選んでください。
+
+Green
+グリーン
+
+High
+高
+
+Highlights, buttons and the map's pick. From station logo follows the station playing.
+ハイライト、ボタン、地図で選んだ国の色です。「局のロゴから」は再生中の局に合わせて変わります。
+
+How soft the background image is.
+背景画像をぼかす強さです。
+
+Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
+KaiPlayer の流れをくむ、Switch 2 自作ソフト（kaiHEN）用のインターネットラジオです。
+
+JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
+KaiRadio と同じ場所の Backgrounds フォルダーにある JPEG か PNG の画像です。文字が読みやすいように暗くして表示します。
+
+KaiRadio couldn't start the download.
+KaiRadio はダウンロードを開始できませんでした。
+
+KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
+KaiRadio は MIT ライセンスのオープンソースソフトです。Copyright (c) 2026 Mizuiro.
+
+Language
+言語
+
+Languages sorted A to Z
+言語をA→Zの順に並べ替えました
+
+Languages sorted with the fewest stations first
+言語を局の少ない順に並べ替えました
+
+Languages sorted with the most stations first
+言語を局の多い順に並べ替えました
+
+Languages sorted Z to A
+言語をZ→Aの順に並べ替えました
+
+Lighting up the world…
+世界を照らしています…
+
+Live
+ライブ
+
+LIVE
+ライブ
+
+Loading countries…
+国を読み込んでいます…
+
+Loading genres…
+ジャンルを読み込んでいます…
+
+Loading languages…
+言語を読み込んでいます…
+
+Loading stations…
+局を読み込んでいます…
+
+Low
+低
+
+Medium
+中
+
+Most stations
+局が多い順
+
+Name
+名前
+
+Never
+しない
+
+No favorites yet.
+まだお気に入りがありません。
+
+No stations found.
+局が見つかりませんでした。
+
+No stations here right now.
+今はここに局がありません。
+
+None
+なし
+
+Not affiliated with Nintendo, Radio Browser or any station.
+Nintendo、Radio Browser、各放送局とは無関係です。
+
+Nothing is playing.
+再生していません。
+
+Nothing played yet.
+まだ何も再生していません。
+
+Now Playing
+再生中
+
+Off
+オフ
+
+On
+オン
+
+Open
+開く
+
+Open a country to see its stations.
+国を開くと、その国の局が表示されます。
+
+Open its stations
+局を見る
+
+Orange
+オレンジ
+
+Out of memory
+メモリーが足りません
+
+Out of memory.
+メモリーが足りません。
+
+Partly cloudy
+晴れ時々曇り
+
+Pick a station
+局を選んでください
+
+Pick a station in Popular, Search or Favorites.
+「人気」「検索」「お気に入り」で局を選んでください。
+
+Pick one to see its stations
+選ぶと局が表示されます
+
+Pink
+ピンク
+
+Playback
+再生
+
+Played lately
+最近再生した局
+
+Plays the last station again when KaiRadio opens.
+KaiRadio を開いたときに、前回の局をもう一度再生します。
+
+Popular
+人気
+
+Press A or tap one to play it.
+Aを押すかタッチすると再生します。
+
+Press X or tap the box above.
+Xを押すか、上の欄をタッチしてください。
+
+Press Y or tap the heart on a station to keep it here.
+Yを押すか局のハートをタッチすると、ここに登録されます。
+
+Purple
+パープル
+
+Put JPEG or PNG images in %s/Backgrounds first.
+先に %s/Backgrounds に JPEG か PNG の画像を入れてください。
+
+Rain
+雨
+
+Random station
+ランダム選局
+
+Recent
+最近
+
+Reconnecting…
+再接続しています…
+
+Red
+レッド
+
+Removed %s from favorites
+%sをお気に入りから外しました
+
+Resume the last station
+前回の局を再開
+
+Search
+検索
+
+Search by station name
+局の名前で検索
+
+Search stations
+局を検索
+
+Settings
+設定
+
+Sky blue
+スカイブルー
+
+Sleep timer
+スリープタイマー
+
+Sleep timer: the radio stopped.
+スリープタイマー: ラジオを停止しました。
+
+Snow
+雪
+
+Somewhere unexpected
+思いがけない国へ
+
+Somewhere unexpected: %s…
+思いがけない国へ: %s…
+
+Sort: %s
+並び順: %s
+
+Start in
+起動時のタブ
+
+Stations around the world
+世界の放送局
+
+Stations: Radio Browser (radio-browser.info), a community directory.
+放送局: Radio Browser（radio-browser.info）、コミュニティによるディレクトリーです。
+
+Stopped
+停止中
+
+Stops in %d min
+%d分後に停止
+
+Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.
+この時間が過ぎるとラジオを停止します。聴きながら眠るときに使えます。KaiRadio を閉じるまで有効です。
+
+That country's stations can't be had right now: try again.
+今はその国の局を取得できません。もう一度お試しください。
+
+That image couldn't be opened (too big, or not a JPEG or PNG).
+その画像を開けませんでした（大きすぎるか、JPEG または PNG ではありません）。
+
+That search is too long.
+検索する文字が長すぎます。
+
+The answer is too large
+応答が大きすぎます
+
+The background image couldn't be opened.
+背景画像を開けませんでした。
+
+The clock at the top right.
+右上の時計です。
+
+The countries are still loading.
+国をまだ読み込んでいます。
+
+The directory can't be reached.
+ディレクトリーに接続できません。
+
+The directory sent an answer KaiRadio can't read.
+ディレクトリーから KaiRadio が読み込めない応答が届きました。
+
+The keyboard couldn't open.
+キーボードを開けませんでした。
+
+The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
+KaiRadio の表示言語です。KaiRadio と同じ場所の lang フォルダーにファイルを入れると、言語を追加できます。
+
+The most played stations
+よく再生されている局
+
+The server answered %ld
+サーバーの応答: %ld
+
+The settings couldn't be saved on the card.
+設定をSDカードに保存できませんでした。
+
+The station directory can't be reached.
+放送局のディレクトリーに接続できません。
+
+The station ended the broadcast.
+局が放送を終了しました。
+
+The station sent nothing.
+局から何も届きませんでした。
+
+The station stopped answering.
+局が応答しなくなりました。
+
+The station's audio stopped.
+局の音声が止まりました。
+
+The station's HLS playlist can't be read.
+局の HLS プレイリストを読み込めません。
+
+The station's playlist has no stream in it.
+局のプレイリストにストリームがありません。
+
+The station's playlist is empty.
+局のプレイリストが空です。
+
+The station's playlists lead in circles.
+局のプレイリストが循環しています。
+
+The station's stream couldn't be read.
+局のストリームを読み込めませんでした。
+
+The stations you play show up here.
+再生した局がここに表示されます。
+
+The tab KaiRadio opens on. Automatic: Favorites if you have some, else World.
+KaiRadio を開いたときのタブです。「自動」では、お気に入りがあれば「お気に入り」、なければ「世界」を開きます。
+
+The weather there can't be had now.
+今は現地の天気を取得できません。
+
+The World tab as a globe you turn with a finger or the stick, or as a flat map.
+「世界」タブを、指やスティックで回す地球儀か、平面地図で表示します。
+
+This station's audio format isn't supported.
+この局の音声フォーマットには対応していません。
+
+This station's HLS format (fMP4 by byte range) isn't supported.
+この局の HLS 形式（バイト範囲指定の fMP4）には対応していません。
+
+This station's stream is encrypted.
+この局のストリームは暗号化されています。
+
+Thunderstorm
+雷雨
+
+Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0).
+タイムゾーンと天気: Open-Meteo（open-meteo.com、CC BY 4.0）。
+
+Try again
+再試行
+
+Try another name.
+別の名前を試してください。
+
+Turn the globe with a finger; the stick picks countries.
+地球儀は指で回せます。スティックで国を選べます。
+
+Turn the screen off
+画面をオフにする
+
+Version, credits and licenses.
+バージョン、クレジット、ライセンスです。
+
+While a station plays and nothing is pressed. Any button or touch turns it back on.
+局の再生中に何も操作しないときです。ボタンかタッチで画面が戻ります。
+
+World
+世界
+
+World map: Natural Earth (public domain). Flags: flag-icons (MIT).
+世界地図: Natural Earth（パブリックドメイン）。国旗: flag-icons（MIT）。
+
+World view
+世界の表示
+
+Z to A
+Z→A

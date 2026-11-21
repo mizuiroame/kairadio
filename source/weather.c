@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "cJSON.h"
+#include "lang.h"
 
 #define SECONDS_PER_DAY 86400
 #define SECONDS_PER_HOUR 3600
@@ -61,9 +62,9 @@ WeatherKind weatherKind(int code)
 
 const char *weatherKindName(WeatherKind kind)
 {
-    static const char *const NAMES[] = {"Clear", "Partly cloudy", "Cloudy", "Fog",
-                                        "Drizzle", "Rain", "Snow", "Thunderstorm"};
-    return kind >= 0 && kind <= WEATHER_STORM ? NAMES[kind] : "";
+    static const char *const NAMES[] = {N_("Clear"),   N_("Partly cloudy"), N_("Cloudy"), N_("Fog"),
+                                        N_("Drizzle"), N_("Rain"),          N_("Snow"),   N_("Thunderstorm")};
+    return kind >= 0 && kind <= WEATHER_STORM ? T(NAMES[kind]) : "";
 }
 
 void weatherTemperature(float celsius, char *out, size_t size)

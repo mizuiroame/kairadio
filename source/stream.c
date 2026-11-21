@@ -12,6 +12,7 @@
 
 #include "hls.h"
 #include "icy.h"
+#include "lang.h"
 #include "link.h"
 #include "net.h"
 
@@ -218,7 +219,7 @@ static bool fetchText(const char *url, Request *r, char *error, size_t error_siz
         return false;
     }
     if (!r->body) {
-        snprintf(error, error_size, "The station's playlist is empty.");
+        snprintf(error, error_size, "%s", N_("The station's playlist is empty."));
         return false;
     }
     return true;
@@ -242,7 +243,7 @@ static void playHls(const char *url, char *body)
     snprintf(playlist_url, sizeof(playlist_url), "%s", url);
     HlsPlaylist p;
     if (!hlsParse(body, playlist_url, HLS_MAX_BANDWIDTH, &p)) {
-        setState(STREAM_FAILED, "The station's HLS playlist can't be read.");
+        setState(STREAM_FAILED, N_("The station's HLS playlist can't be read."));
         return;
     }
     if (p.master) {
@@ -252,7 +253,7 @@ static void playHls(const char *url, char *body)
         if (!fetchText(playlist_url, &r, error, sizeof(error)) || !hlsParse(r.body, playlist_url, HLS_MAX_BANDWIDTH, &p) ||
             p.master) {
             freeRequest(&r);
-            setState(STREAM_FAILED, error[0] ? error : "The station's HLS playlist can't be read.");
+            setState(STREAM_FAILED, error[0] ? error : N_("The station's HLS playlist can't be read."));
             return;
         }
         freeRequest(&r);
@@ -265,8 +266,9 @@ static void playHls(const char *url, char *body)
     bool map_sent = false;  // fMP4: the init segment went first, once.
     while (!g_stop) {
         if (p.encrypted || (p.fragmented_mp4 && !p.map[0])) {
-            setState(STREAM_FAILED, p.encrypted ? "This station's stream is encrypted." :
-                                                  "This station's HLS format (fMP4 by byte range) isn't supported.");
+            setState(STREAM_FAILED,
+                     p.encrypted ? N_("This station's stream is encrypted.")
+                                 : N_("This station's HLS format (fMP4 by byte range) isn't supported."));
             break;
         }
         if (p.fragmented_mp4 && !map_sent && hlsFirstSegment(&p, last) < p.count) {
@@ -279,7 +281,7 @@ static void playHls(const char *url, char *body)
             freeRequest(&init);
             if (rc != CURLE_OK) {
                 if (!g_stop)
-                    setState(STREAM_FAILED, error[0] ? error : "The station's stream couldn't be read.");
+                    setState(STREAM_FAILED, error[0] ? error : N_("The station's stream couldn't be read."));
                 break;
             }
             map_sent = true;
@@ -306,7 +308,7 @@ static void playHls(const char *url, char *body)
             freeRequest(&r);
             memset(&p, 0, sizeof(p));
             if (++failures > MAX_RETRIES) {
-                setState(STREAM_FAILED, error[0] ? error : "The station stopped answering.");
+                setState(STREAM_FAILED, error[0] ? error : N_("The station stopped answering."));
                 break;
             }
             setState(STREAM_RECONNECTING, NULL);
@@ -331,7 +333,7 @@ static void run(void)
         snprintf(g_url, sizeof(g_url), "%s", url);
         Request *r = calloc(1, sizeof(Request));
         if (!r) {
-            setState(STREAM_FAILED, "Out of memory.");
+            setState(STREAM_FAILED, N_("Out of memory."));
             return;
         }
         char error[160] = "";
@@ -349,8 +351,8 @@ static void run(void)
             freeRequest(r);
             free(r);
             if (!found || ++hops > MAX_PLAYLIST_HOPS) {
-                setState(STREAM_FAILED, found ? "The station's playlists lead in circles." :
-                                                "The station's playlist has no stream in it.");
+                setState(STREAM_FAILED, found ? N_("The station's playlists lead in circles.") :
+                                                N_("The station's playlist has no stream in it."));
                 return;
             }
             snprintf(url, sizeof(url), "%s", next);
@@ -363,7 +365,7 @@ static void run(void)
             if (body)
                 playHls(url, body);
             else
-                setState(STREAM_FAILED, error[0] ? error : "The station's playlist is empty.");
+                setState(STREAM_FAILED, error[0] ? error : N_("The station's playlist is empty."));
             free(body);
             return;
         }
@@ -374,11 +376,11 @@ static void run(void)
         if (got_audio)
             retries = 0;
         if (rc == CURLE_OK && !got_audio) {
-            setState(STREAM_FAILED, "The station sent nothing.");
+            setState(STREAM_FAILED, N_("The station sent nothing."));
             return;
         }
         if (++retries > MAX_RETRIES || (!got_audio && retries > 2)) {
-            setState(STREAM_FAILED, error[0] ? error : "The station stopped answering.");
+            setState(STREAM_FAILED, error[0] ? error : N_("The station stopped answering."));
             return;
         }
         setState(STREAM_RECONNECTING, NULL);
@@ -421,7 +423,7 @@ void streamStart(Ring *ring, const char *url)
     g_running_thread = pthread_create(&g_thread, &attr, threadMain, NULL) == 0;
     pthread_attr_destroy(&attr);
     if (!g_running_thread)
-        setState(STREAM_FAILED, "KaiRadio couldn't start the download.");
+        setState(STREAM_FAILED, N_("KaiRadio couldn't start the download."));
 }
 
 void streamStop(void)

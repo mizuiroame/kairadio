@@ -7,6 +7,7 @@
 #include <switch.h>
 
 #include "audiodec.h"
+#include "lang.h"
 #include "ring.h"
 #include "stream.h"
 
@@ -59,12 +60,12 @@ static struct {
 const char *radioStateLabel(RadioState state)
 {
     switch (state) {
-    case RADIO_CONNECTING: return "Connecting\xE2\x80\xA6";
-    case RADIO_BUFFERING: return "Buffering\xE2\x80\xA6";
-    case RADIO_PLAYING: return "Live";
-    case RADIO_RECONNECTING: return "Reconnecting\xE2\x80\xA6";
-    case RADIO_FAILED: return "Can't play";
-    default: return "Stopped";
+    case RADIO_CONNECTING: return T("Connecting\xE2\x80\xA6");
+    case RADIO_BUFFERING: return T("Buffering\xE2\x80\xA6");
+    case RADIO_PLAYING: return T("Live");
+    case RADIO_RECONNECTING: return T("Reconnecting\xE2\x80\xA6");
+    case RADIO_FAILED: return T("Can't play");
+    default: return T("Stopped");
     }
 }
 
@@ -249,7 +250,7 @@ static bool openWhenBuffered(void)
     streamGetInfo(&info);
     if (!decoderOpen(&g_ring, info.content_type, g_out_rate, &g_abort, g_prebuffer)) {
         if (!g_abort)
-            failWith("This station's audio format isn't supported.");
+            failWith(N_("This station's audio format isn't supported."));
         return false;
     }
     g_open = true;
@@ -279,7 +280,8 @@ static void playStep(void)
                 break;  // Let what's queued play out first.
             StreamInfo info;
             streamGetInfo(&info);
-            failWith(info.state == STREAM_ENDED ? "The station ended the broadcast." : "The station's audio stopped.");
+            failWith(info.state == STREAM_ENDED ? N_("The station ended the broadcast.")
+                                                : N_("The station's audio stopped."));
             return;
         }
         if (n < BUFFER_FRAMES) {

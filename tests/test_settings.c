@@ -55,7 +55,8 @@ static void testRows(void)
     for (int row = 0; row < SETTING_COUNT; row++)
         CHECK(settingsRowLabel(row)[0] && settingsRowHelp(row)[0]);
     CHECK(!settingsRowEditable(SETTING_ABOUT) && settingsRowEditable(SETTING_ACCENT));
-    CHECK(settingsRowSection(SETTING_ACCENT) && settingsRowSection(SETTING_SLEEP) && !settingsRowSection(SETTING_CLOCK));
+    CHECK(settingsRowSection(SETTING_LANGUAGE) && settingsRowSection(SETTING_SLEEP) && !settingsRowSection(SETTING_CLOCK));
+    CHECK(!settingsRowSection(SETTING_ACCENT) && settingsRowEditable(SETTING_LANGUAGE));
     CHECK(strcmp(settingsStartName(START_WORLD), "World") == 0 && strcmp(settingsStartName(99), "Automatic") == 0);
 }
 

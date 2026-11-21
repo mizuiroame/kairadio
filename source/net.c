@@ -9,6 +9,8 @@
 #include <switch.h>
 #endif
 
+#include "lang.h"
+
 #define CONNECT_TIMEOUT_S 10L
 #define TRANSFER_TIMEOUT_S 30L
 #define MAX_REDIRECTS 5L
@@ -72,7 +74,7 @@ bool netGet(const char *url, size_t max_bytes, const volatile bool *cancel, NetR
     memset(out, 0, sizeof(*out));
     CURL *curl = curl_easy_init();
     if (!curl) {
-        snprintf(out->error, sizeof(out->error), "Out of memory");
+        snprintf(out->error, sizeof(out->error), "%s", T("Out of memory"));
         return false;
     }
     char error[CURL_ERROR_SIZE] = "";
@@ -97,11 +99,11 @@ bool netGet(const char *url, size_t max_bytes, const volatile bool *cancel, NetR
     bool ok = rc == CURLE_OK && out->status >= 200 && out->status < 300;
     if (!ok) {
         if (sink.too_big)
-            snprintf(out->error, sizeof(out->error), "The answer is too large");
+            snprintf(out->error, sizeof(out->error), "%s", T("The answer is too large"));
         else if (rc != CURLE_OK)
             snprintf(out->error, sizeof(out->error), "%s", error[0] ? error : curl_easy_strerror(rc));
         else
-            snprintf(out->error, sizeof(out->error), "The server answered %ld", out->status);
+            snprintf(out->error, sizeof(out->error), T("The server answered %ld"), out->status);
         netResponseFree(out);
     }
     return ok;

@@ -27,7 +27,7 @@ typedef struct {
     unsigned sample_rate;   // Of the stream; 0 until known.
     bool hls;
     float buffered_seconds; // Audio waiting to be played.
-    char error[160];
+    char error[160];        // In English, as logged: shown with T().
 } RadioStatus;
 
 // False if the audio output can't start.

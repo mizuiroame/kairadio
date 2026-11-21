@@ -50,6 +50,8 @@ static void applyLine(Config *c, char *line)
         c->resume = strcmp(value, "1") == 0;
     else if (strcmp(key, "world_globe") == 0)
         c->world_globe = strcmp(value, "0") != 0;
+    else if (strcmp(key, "language") == 0 && strlen(value) < sizeof(c->language) && !strpbrk(value, "/\\"))
+        strcpy(c->language, value);  // An id, or a name in the lang folder: never a path.
 }
 
 void configLoad(Config *c, const char *folder)
@@ -91,6 +93,8 @@ bool configSave(const Config *c, const char *folder)
     fprintf(f, "accent=%d\nbackground_blur=%d\nclock24=%d\nscreen_off=%d\nstart_view=%d\nresume=%d\n", c->accent,
             c->background_blur, c->clock_24h ? 1 : 0, c->screen_off_minutes, c->start_view, c->resume ? 1 : 0);
     fprintf(f, "world_globe=%d\n", c->world_globe ? 1 : 0);
+    if (c->language[0] && !strpbrk(c->language, "\r\n"))
+        fprintf(f, "language=%s\n", c->language);
     // A line break or a slash in the name would make another setting, or leave the folder.
     if (c->background[0] && !strpbrk(c->background, "\r\n/"))
         fprintf(f, "background=%s\n", c->background);

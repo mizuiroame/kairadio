@@ -15,7 +15,7 @@ typedef struct {
     char *data;    // NUL-terminated; free() it.
     size_t size;
     long status;   // HTTP status, 0 if no answer.
-    char error[128];
+    char error[256];  // In the language in use.
 } NetResponse;
 
 // GETs url, up to max_bytes (more fails). cancel, if not NULL, stops the

@@ -9,6 +9,7 @@
 #include "gfx.h"
 #include "globe.h"
 #include "image_config.h"
+#include "lang.h"
 #include "stb_image.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
@@ -247,10 +248,10 @@ static void drawPicked(const App *app, const Category *c, uint64_t now_ns)
     int cx = MARGIN, cy = MAP_Y + MAP_H - CARD_H - 8;
     gfxFillRoundRect(cx, cy, CARD_W, CARD_H, 14, COLOR_SURFACE);
     gfxFillRect(cx, cy + 16, 3, CARD_H - 32, COLOR_ACCENT);
-    char label[CATEGORY_NAME_MAX], count[48];
+    char label[CATEGORY_NAME_MAX], count[64];
     categoryLabel(c, label, sizeof(label));
-    snprintf(count, sizeof(count), "%d station%s", c->count, c->count == 1 ? "" : "s");
-    const char *open = "Open";
+    snprintf(count, sizeof(count), c->count == 1 ? T("%d station") : T("%d stations"), c->count);
+    const char *open = T("Open");
     int w = uiPillWidth(open);
     int tx = cx + 20;
     if (uiDrawFlag(tx, cy + (CARD_H - 30) / 2, 40, 30, c->code))
@@ -349,17 +350,18 @@ static void drawTimeAndWeather(const App *app, const Category *c, int x, int y)
     WeatherState state = weatherFetchGet(c->code, &w);
     if (state != WEATHER_READY) {
         fontDraw(FONT_REGULAR, 17, x, y + 4,
-                 state == WEATHER_FAILED ? "The weather there can't be had now." : "Asking for the time and weather there\xE2\x80\xA6",
+                 state == WEATHER_FAILED ? T("The weather there can't be had now.")
+                                         : T("Asking for the time and weather there\xE2\x80\xA6"),
                  COLOR_FAINT);
         return;
     }
-    char time_text[24], line[64], temperature[48];
+    char time_text[24], line[128], temperature[48];
     int64_t utc = (int64_t)time(NULL);
     weatherLocalTime(utc, w.utc_offset_s, app->config.clock_24h, time_text, sizeof(time_text));
     int64_t local = utc + w.utc_offset_s;
     int seconds = (int)(((local % 86400) + 86400) % 86400);
     drawClockIcon(x + INFO_ICON / 2.0f, y + 13.0f, INFO_ICON / 2.0f - 1, seconds / 3600, seconds % 3600 / 60, COLOR_DIM);
-    snprintf(line, sizeof(line), "%s there", time_text);
+    snprintf(line, sizeof(line), T("%s there"), time_text);
     fontDraw(FONT_BOLD, 19, x + INFO_ICON + 12, y + 2, line, COLOR_TEXT);
     WeatherKind kind = weatherKind(w.code);
     drawWeatherIcon(x + INFO_ICON / 2.0f, y + 47.0f, INFO_ICON + 4.0f, kind, w.day, COLOR_DIM);
@@ -376,15 +378,16 @@ static void drawPanel(const App *app, const Category *c, uint64_t now_ns)
     if (c) {
         if (!uiDrawFlag(x, y, PANEL_FLAG_W, PANEL_FLAG_H, c->code))
             gfxFillRoundRect(x, y, PANEL_FLAG_W, PANEL_FLAG_H, 10, COLOR_SURFACE);
-        char label[CATEGORY_NAME_MAX], count[48];
+        char label[CATEGORY_NAME_MAX], count[64];
         categoryLabel(c, label, sizeof(label));
-        snprintf(count, sizeof(count), "%d station%s", c->count, c->count == 1 ? "" : "s");
+        snprintf(count, sizeof(count), c->count == 1 ? T("%d station") : T("%d stations"), c->count);
         fontDrawClipped(FONT_BOLD, 30, x, y + PANEL_FLAG_H + 18, PANEL_W, label, COLOR_TEXT);
         fontDraw(FONT_REGULAR, 19, x, y + PANEL_FLAG_H + 62, count, COLOR_DIM);
         drawTimeAndWeather(app, c, x, y + PANEL_FLAG_H + 98);
         int pill_y = y + PANEL_FLAG_H + 168;
-        uiDrawPill(x, pill_y, "Open its stations", COLOR_ACCENT, COLOR_BG);
-        uiHitAdd(x - 6, pill_y - 8, uiPillWidth("Open its stations") + 12, 46, HIT_MAP_OPEN, 0);
+        const char *open = T("Open its stations");
+        uiDrawPill(x, pill_y, open, COLOR_ACCENT, COLOR_BG);
+        uiHitAdd(x - 6, pill_y - 8, uiPillWidth(open) + 12, 46, HIT_MAP_OPEN, 0);
     }
     // A random station: somewhere unexpected.
     int ry = RANDOM_Y;
@@ -393,12 +396,12 @@ static void drawPanel(const App *app, const Category *c, uint64_t now_ns)
     bool tuning = app->waiting_active && app->waiting_target == TARGET_RANDOM;
     float needle = tuning ? 0.5f + 0.42f * sinf((float)(now_ns % 6283185307ull) / 1e9f * 5.0f) : TUNER_REST;
     drawTuner(x + 16, ry + (RANDOM_H - 50) / 2, 62, 50, needle);
-    fontDraw(FONT_BOLD, 22, x + 86, ry + 16, "Random station", COLOR_TEXT);
-    int said = fontDraw(FONT_REGULAR, 17, x + 86, ry + 48, "Somewhere unexpected", COLOR_DIM);
+    fontDraw(FONT_BOLD, 22, x + 86, ry + 16, T("Random station"), COLOR_TEXT);
+    int said = fontDraw(FONT_REGULAR, 17, x + 86, ry + 48, T("Somewhere unexpected"), COLOR_DIM);
     uiDrawButton(x + 86 + said + 12, (float)(ry + 58), "Y", COLOR_SURFACE_HI, COLOR_DIM);
     uiHitAdd(x, ry, PANEL_W, RANDOM_H, HIT_RANDOM, 0);
-    fontDraw(FONT_REGULAR, 16, x, ry + RANDOM_H + 18, "Turn the globe with a finger; the stick picks countries.",
-             COLOR_FAINT);
+    fontDrawClipped(FONT_REGULAR, 16, x, ry + RANDOM_H + 18, PANEL_W,
+                    T("Turn the globe with a finger; the stick picks countries."), COLOR_FAINT);
 }
 
 void uiDrawMap(const App *app, uint64_t now_ns)

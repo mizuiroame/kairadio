@@ -1,0 +1,556 @@
+# KaiRadio 한국어.
+# 영어 줄 다음에 번역 줄이 오고, 쌍 사이에는 빈 줄이 하나 있습니다.
+# %d, %s 등은 그대로, 같은 순서로 둡니다. source/lang.h 참고.
+language = 한국어
+
+%d station
+방송국 %d개
+
+%d stations
+방송국 %d개
+
+%s there
+현지 시각 %s
+
+%s · %d station
+%s · 방송국 %d개
+
+%s · %d stations
+%s · 방송국 %d개
+
+%s · on the air
+%s · 방송 중
+
+%zu favorite
+즐겨찾기 %zu개
+
+%zu favorites
+즐겨찾기 %zu개
+
+12-hour (9:47 PM)
+12시간제 (오후 9:47)
+
+24-hour (21:47)
+24시간제 (21:47)
+
+[<>] change  [A] change or open  [B] close
+[<>] 변경  [A] 변경 / 열기  [B] 닫기
+
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[<>^v] 국가  [A] 열기  [Y] 랜덤 방송국  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 종료
+
+[A] choose  [B] close  [+] exit
+[A] 선택  [B] 닫기  [+] 종료
+
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
+[A] 열기  [Y] 정렬  [<>] 이름, 장르, 국가, 언어  [ZL][ZR] 탭  [+] 종료
+
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
+[A] 재생  [Y] 즐겨찾기  [B] 뒤로  [<>] 검색 기준  [L][R] 방송국  [+] 종료
+
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[A] 재생  [Y] 즐겨찾기  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 종료
+
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
+[A] 재생/정지  [Y] 즐겨찾기  [L][R] 방송국  [B] 뒤로  [ZL][ZR] 탭  [+] 종료
+
+[B] back
+[B] 뒤로
+
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
+[X] 이름 입력  [A] 재생  [Y] 즐겨찾기  [<>] 검색 기준  [L][R] 방송국  [+] 종료
+
+A to Z
+A-Z순
+
+About KaiRadio
+KaiRadio 정보
+
+Accent color
+강조 색상
+
+Add to favorites
+즐겨찾기에 추가
+
+Added %s to favorites
+%s: 즐겨찾기에 추가했습니다
+
+After %d min playing
+재생 %d분 후
+
+Asking for the time and weather there…
+현지 시각과 날씨를 확인하는 중…
+
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
+오디오: FFmpeg (LGPL 2.1). 그 외 cJSON, stb, libcurl.
+
+Automatic
+자동
+
+Back
+뒤로
+
+Background
+배경
+
+Background blur
+배경 흐림
+
+Buffering…
+버퍼링 중…
+
+Can't play
+재생할 수 없음
+
+Clear
+맑음
+
+Clock
+시계
+
+Cloudy
+흐림
+
+Connecting…
+연결하는 중…
+
+Countries sorted A to Z
+국가를 A-Z순으로 정렬했습니다
+
+Countries sorted with the fewest stations first
+국가를 방송국이 적은 순으로 정렬했습니다
+
+Countries sorted with the most stations first
+국가를 방송국이 많은 순으로 정렬했습니다
+
+Countries sorted Z to A
+국가를 Z-A순으로 정렬했습니다
+
+Country
+국가
+
+Display
+표시
+
+Drizzle
+이슬비
+
+Exit KaiRadio
+KaiRadio 종료
+
+Favorite
+즐겨찾기
+
+Favorites
+즐겨찾기
+
+Fewest stations
+방송국 적은 순
+
+Find a station by its name.
+이름으로 방송국을 찾습니다.
+
+Flat map
+평면 지도
+
+Fog
+안개
+
+From radio-browser.info
+출처: radio-browser.info
+
+From radio-browser.info  ·  Weather by open-meteo.com
+출처: radio-browser.info  ·  날씨: open-meteo.com
+
+From station logo
+방송국 로고에서
+
+Genre
+장르
+
+Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1).
+장르 아이콘: Lucide (ISC). 글꼴: Noto Sans (SIL OFL 1.1).
+
+Genres sorted A to Z
+장르를 A-Z순으로 정렬했습니다
+
+Genres sorted with the fewest stations first
+장르를 방송국이 적은 순으로 정렬했습니다
+
+Genres sorted with the most stations first
+장르를 방송국이 많은 순으로 정렬했습니다
+
+Genres sorted Z to A
+장르를 Z-A순으로 정렬했습니다
+
+Globe
+지구본
+
+Go back and pick another one.
+뒤로 돌아가 다른 방송국을 고르세요.
+
+Green
+초록색
+
+High
+높음
+
+Highlights, buttons and the map's pick. From station logo follows the station playing.
+강조 표시, 버튼, 지도에서 선택한 곳의 색상입니다. 방송국 로고에서를 고르면 재생 중인 방송국에 맞춥니다.
+
+How soft the background image is.
+배경 이미지를 얼마나 흐리게 할지 정합니다.
+
+Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
+KaiPlayer를 닮은 Switch 2 홈브루(kaiHEN)용 인터넷 라디오입니다.
+
+JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
+KaiRadio 옆 Backgrounds 폴더의 JPEG 또는 PNG 이미지입니다. 글자가 잘 보이도록 어둡게 표시합니다.
+
+KaiRadio couldn't start the download.
+KaiRadio가 다운로드를 시작할 수 없었습니다.
+
+KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
+KaiRadio는 MIT 라이선스의 오픈 소스입니다. Copyright (c) 2026 Mizuiro.
+
+Language
+언어
+
+Languages sorted A to Z
+언어를 A-Z순으로 정렬했습니다
+
+Languages sorted with the fewest stations first
+언어를 방송국이 적은 순으로 정렬했습니다
+
+Languages sorted with the most stations first
+언어를 방송국이 많은 순으로 정렬했습니다
+
+Languages sorted Z to A
+언어를 Z-A순으로 정렬했습니다
+
+Lighting up the world…
+세계를 밝히는 중…
+
+Live
+생방송
+
+LIVE
+생방송
+
+Loading countries…
+국가를 불러오는 중…
+
+Loading genres…
+장르를 불러오는 중…
+
+Loading languages…
+언어를 불러오는 중…
+
+Loading stations…
+방송국을 불러오는 중…
+
+Low
+낮음
+
+Medium
+보통
+
+Most stations
+방송국 많은 순
+
+Name
+이름
+
+Never
+안 함
+
+No favorites yet.
+아직 즐겨찾기가 없습니다.
+
+No stations found.
+방송국을 찾지 못했습니다.
+
+No stations here right now.
+지금은 이곳에 방송국이 없습니다.
+
+None
+없음
+
+Not affiliated with Nintendo, Radio Browser or any station.
+Nintendo, Radio Browser 및 각 방송국과 제휴하지 않은 소프트웨어입니다.
+
+Nothing is playing.
+재생 중인 방송이 없습니다.
+
+Nothing played yet.
+아직 재생한 방송국이 없습니다.
+
+Now Playing
+재생 중
+
+Off
+끔
+
+On
+켬
+
+Open
+열기
+
+Open a country to see its stations.
+국가를 열면 방송국을 볼 수 있습니다.
+
+Open its stations
+방송국 보기
+
+Orange
+주황색
+
+Out of memory
+메모리 부족
+
+Out of memory.
+메모리가 부족합니다.
+
+Partly cloudy
+구름 조금
+
+Pick a station
+방송국을 고르세요
+
+Pick a station in Popular, Search or Favorites.
+인기, 검색, 즐겨찾기에서 방송국을 고르세요.
+
+Pick one to see its stations
+선택하면 방송국을 볼 수 있습니다
+
+Pink
+분홍색
+
+Playback
+재생
+
+Played lately
+최근 재생
+
+Plays the last station again when KaiRadio opens.
+KaiRadio를 열면 마지막 방송국을 다시 재생합니다.
+
+Popular
+인기
+
+Press A or tap one to play it.
+A를 누르거나 터치하면 재생합니다.
+
+Press X or tap the box above.
+X를 누르거나 위의 상자를 터치하세요.
+
+Press Y or tap the heart on a station to keep it here.
+Y를 누르거나 방송국의 하트를 터치하면 여기에 저장됩니다.
+
+Purple
+보라색
+
+Put JPEG or PNG images in %s/Backgrounds first.
+먼저 %s/Backgrounds 폴더에 JPEG 또는 PNG 이미지를 넣으세요.
+
+Rain
+비
+
+Random station
+랜덤 방송국
+
+Recent
+최근
+
+Reconnecting…
+다시 연결하는 중…
+
+Red
+빨간색
+
+Removed %s from favorites
+%s: 즐겨찾기에서 제거했습니다
+
+Resume the last station
+마지막 방송국 이어 듣기
+
+Search
+검색
+
+Search by station name
+방송국 이름으로 검색
+
+Search stations
+방송국 검색
+
+Settings
+설정
+
+Sky blue
+하늘색
+
+Sleep timer
+슬립 타이머
+
+Sleep timer: the radio stopped.
+슬립 타이머: 라디오를 정지했습니다.
+
+Snow
+눈
+
+Somewhere unexpected
+뜻밖의 어딘가
+
+Somewhere unexpected: %s…
+뜻밖의 어딘가: %s…
+
+Sort: %s
+정렬: %s
+
+Start in
+시작 탭
+
+Stations around the world
+세계의 방송국
+
+Stations: Radio Browser (radio-browser.info), a community directory.
+방송국: Radio Browser (radio-browser.info), 커뮤니티 디렉터리.
+
+Stopped
+정지됨
+
+Stops in %d min
+%d분 후 정지
+
+Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.
+설정한 시간이 지나면 라디오를 정지합니다. 라디오를 들으며 잠들 때 사용하세요. KaiRadio를 닫을 때까지 유지됩니다.
+
+That country's stations can't be had right now: try again.
+지금은 이 국가의 방송국을 불러올 수 없습니다. 다시 시도하세요.
+
+That image couldn't be opened (too big, or not a JPEG or PNG).
+이미지를 열 수 없었습니다 (너무 크거나 JPEG 또는 PNG가 아닙니다).
+
+That search is too long.
+검색어가 너무 깁니다.
+
+The answer is too large
+응답이 너무 큽니다
+
+The background image couldn't be opened.
+배경 이미지를 열 수 없었습니다.
+
+The clock at the top right.
+오른쪽 위에 표시되는 시계입니다.
+
+The countries are still loading.
+아직 국가를 불러오는 중입니다.
+
+The directory can't be reached.
+디렉터리에 연결할 수 없습니다.
+
+The directory sent an answer KaiRadio can't read.
+디렉터리가 KaiRadio에서 읽을 수 없는 응답을 보냈습니다.
+
+The keyboard couldn't open.
+키보드를 열 수 없었습니다.
+
+The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
+KaiRadio의 표시 언어입니다. KaiRadio 옆 lang 폴더에 파일을 넣어 언어를 추가할 수 있습니다.
+
+The most played stations
+가장 많이 재생된 방송국
+
+The server answered %ld
+서버 응답: %ld
+
+The settings couldn't be saved on the card.
+설정을 SD 카드에 저장할 수 없었습니다.
+
+The station directory can't be reached.
+방송국 디렉터리에 연결할 수 없습니다.
+
+The station ended the broadcast.
+방송국이 방송을 종료했습니다.
+
+The station sent nothing.
+방송국에서 아무것도 보내지 않았습니다.
+
+The station stopped answering.
+방송국이 응답을 멈췄습니다.
+
+The station's audio stopped.
+방송국의 오디오가 멈췄습니다.
+
+The station's HLS playlist can't be read.
+방송국의 HLS 재생목록을 읽을 수 없습니다.
+
+The station's playlist has no stream in it.
+방송국의 재생목록에 스트림이 없습니다.
+
+The station's playlist is empty.
+방송국의 재생목록이 비어 있습니다.
+
+The station's playlists lead in circles.
+방송국의 재생목록이 순환 참조되고 있습니다.
+
+The station's stream couldn't be read.
+방송국의 스트림을 읽을 수 없었습니다.
+
+The stations you play show up here.
+재생한 방송국이 여기에 표시됩니다.
+
+The tab KaiRadio opens on. Automatic: Favorites if you have some, else World.
+KaiRadio를 열 때 표시할 탭입니다. 자동: 즐겨찾기가 있으면 즐겨찾기, 없으면 세계.
+
+The weather there can't be had now.
+지금은 현지 날씨를 가져올 수 없습니다.
+
+The World tab as a globe you turn with a finger or the stick, or as a flat map.
+세계 탭을 손가락이나 스틱으로 돌리는 지구본 또는 평면 지도로 표시합니다.
+
+This station's audio format isn't supported.
+이 방송국의 오디오 형식은 지원하지 않습니다.
+
+This station's HLS format (fMP4 by byte range) isn't supported.
+이 방송국의 HLS 형식(바이트 범위 fMP4)은 지원하지 않습니다.
+
+This station's stream is encrypted.
+이 방송국의 스트림은 암호화되어 있습니다.
+
+Thunderstorm
+뇌우
+
+Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0).
+시간대와 날씨: Open-Meteo (open-meteo.com, CC BY 4.0).
+
+Try again
+다시 시도
+
+Try another name.
+다른 이름으로 검색하세요.
+
+Turn the globe with a finger; the stick picks countries.
+손가락으로 지구본을 돌리고, 스틱으로 국가를 선택합니다.
+
+Turn the screen off
+화면 끄기
+
+Version, credits and licenses.
+버전, 크레딧, 라이선스입니다.
+
+While a station plays and nothing is pressed. Any button or touch turns it back on.
+방송을 재생하는 중 조작이 없으면 화면을 끕니다. 아무 버튼이나 누르거나 화면을 터치하면 다시 켜집니다.
+
+World
+세계
+
+World map: Natural Earth (public domain). Flags: flag-icons (MIT).
+세계 지도: Natural Earth (퍼블릭 도메인). 국기: flag-icons (MIT).
+
+World view
+세계 보기
+
+Z to A
+Z-A순

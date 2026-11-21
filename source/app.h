@@ -128,7 +128,7 @@ typedef struct {
     TouchTracker touch;
     Kinetic kinetic;   // A list following a finger, or gliding on after it.
     bool swallow_tap;  // A press stopped a glide: its tap doesn't open anything.
-    char toast[224];
+    char toast[512];
     uint64_t toast_until_ns;
     bool quit;
 } App;
@@ -174,6 +174,10 @@ void appOpenMenu(App *app);
 void appOpenSettings(App *app);
 void appHandleOverlay(App *app, uint64_t pressed, uint64_t now_ns);
 // Steps a setting's value by delta (left -1, right +1) and saves the settings.
+// Finds the languages (English, those in the app, config/lang's files) and uses the one chosen.
+void appStartLanguages(App *app);
+// Uses app->config.language (English if it's gone), and names it for Settings.
+void appUseLanguage(App *app);
 void appChangeSetting(App *app, int row, int delta, uint64_t now_ns);
 // A on a row: About opens, the others step forward.
 void appActivateSetting(App *app, int row, uint64_t now_ns);

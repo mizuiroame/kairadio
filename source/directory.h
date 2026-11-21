@@ -37,7 +37,7 @@ typedef enum {
 typedef struct {
     DirectoryState state;
     unsigned generation;  // Changes with each request.
-    char error[128];
+    char error[256];      // In the language in use.
 } DirectoryStatus;
 
 bool directoryInit(void);

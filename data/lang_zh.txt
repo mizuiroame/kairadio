@@ -1,0 +1,556 @@
+# KaiRadio 简体中文。
+# 每行英文后面是其译文，每对之间空一行。
+# %d、%s 等占位符保持原样，顺序不变。详见 source/lang.h。
+language = 简体中文
+
+%d station
+%d个电台
+
+%d stations
+%d个电台
+
+%s there
+当地时间%s
+
+%s · %d station
+%s · %d个电台
+
+%s · %d stations
+%s · %d个电台
+
+%s · on the air
+%s · 正在播出
+
+%zu favorite
+%zu个收藏
+
+%zu favorites
+%zu个收藏
+
+12-hour (9:47 PM)
+12小时制（9:47 PM）
+
+24-hour (21:47)
+24小时制（21:47）
+
+[<>] change  [A] change or open  [B] close
+[<>] 更改  [A] 更改/打开  [B] 关闭
+
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[<>^v] 国家  [A] 打开  [Y] 随机电台  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 退出
+
+[A] choose  [B] close  [+] exit
+[A] 选择  [B] 关闭  [+] 退出
+
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
+[A] 打开  [Y] 排序  [<>] 名称、流派、国家、语言  [ZL][ZR] 标签  [+] 退出
+
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
+[A] 播放  [Y] 收藏  [B] 返回  [<>] 搜索方式  [L][R] 换台  [+] 退出
+
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[A] 播放  [Y] 收藏  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 退出
+
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
+[A] 播放/停止  [Y] 收藏  [L][R] 换台  [B] 返回  [ZL][ZR] 标签  [+] 退出
+
+[B] back
+[B] 返回
+
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
+[X] 输入名称  [A] 播放  [Y] 收藏  [<>] 搜索方式  [L][R] 换台  [+] 退出
+
+A to Z
+A到Z
+
+About KaiRadio
+关于KaiRadio
+
+Accent color
+强调色
+
+Add to favorites
+添加到收藏
+
+Added %s to favorites
+已将%s添加到收藏
+
+After %d min playing
+播放%d分钟后
+
+Asking for the time and weather there…
+正在查询当地时间和天气…
+
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
+音频：FFmpeg（LGPL 2.1）。另使用cJSON、stb和libcurl。
+
+Automatic
+自动
+
+Back
+返回
+
+Background
+背景
+
+Background blur
+背景模糊
+
+Buffering…
+正在缓冲…
+
+Can't play
+无法播放
+
+Clear
+晴
+
+Clock
+时钟
+
+Cloudy
+阴
+
+Connecting…
+正在连接…
+
+Countries sorted A to Z
+国家已按A到Z排序
+
+Countries sorted with the fewest stations first
+国家已按电台数从少到多排序
+
+Countries sorted with the most stations first
+国家已按电台数从多到少排序
+
+Countries sorted Z to A
+国家已按Z到A排序
+
+Country
+国家
+
+Display
+显示
+
+Drizzle
+毛毛雨
+
+Exit KaiRadio
+退出KaiRadio
+
+Favorite
+已收藏
+
+Favorites
+收藏
+
+Fewest stations
+电台最少
+
+Find a station by its name.
+按名称查找电台。
+
+Flat map
+平面地图
+
+Fog
+雾
+
+From radio-browser.info
+来自radio-browser.info
+
+From radio-browser.info  ·  Weather by open-meteo.com
+来自radio-browser.info  ·  天气来自open-meteo.com
+
+From station logo
+取自电台标志
+
+Genre
+流派
+
+Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1).
+流派图标：Lucide（ISC）。字体：Noto Sans（SIL OFL 1.1）。
+
+Genres sorted A to Z
+流派已按A到Z排序
+
+Genres sorted with the fewest stations first
+流派已按电台数从少到多排序
+
+Genres sorted with the most stations first
+流派已按电台数从多到少排序
+
+Genres sorted Z to A
+流派已按Z到A排序
+
+Globe
+地球仪
+
+Go back and pick another one.
+请返回并选择其他电台。
+
+Green
+绿色
+
+High
+高
+
+Highlights, buttons and the map's pick. From station logo follows the station playing.
+用于高亮、按钮和地图上的选择。“取自电台标志”会随正在播放的电台变化。
+
+How soft the background image is.
+背景图片的模糊程度。
+
+Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
+适用于kaiHEN的Switch 2自制网络电台，延续KaiPlayer的风格。
+
+JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
+使用KaiRadio旁Backgrounds文件夹中的JPEG或PNG图片，并会调暗以便看清文字。
+
+KaiRadio couldn't start the download.
+KaiRadio无法开始下载。
+
+KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
+KaiRadio是基于MIT许可证的开源软件。版权所有 (c) 2026 Mizuiro。
+
+Language
+语言
+
+Languages sorted A to Z
+语言已按A到Z排序
+
+Languages sorted with the fewest stations first
+语言已按电台数从少到多排序
+
+Languages sorted with the most stations first
+语言已按电台数从多到少排序
+
+Languages sorted Z to A
+语言已按Z到A排序
+
+Lighting up the world…
+正在点亮世界…
+
+Live
+直播中
+
+LIVE
+直播
+
+Loading countries…
+正在载入国家…
+
+Loading genres…
+正在载入流派…
+
+Loading languages…
+正在载入语言…
+
+Loading stations…
+正在载入电台…
+
+Low
+低
+
+Medium
+中
+
+Most stations
+电台最多
+
+Name
+名称
+
+Never
+永不
+
+No favorites yet.
+还没有收藏。
+
+No stations found.
+未找到电台。
+
+No stations here right now.
+这里暂时没有电台。
+
+None
+无
+
+Not affiliated with Nintendo, Radio Browser or any station.
+与Nintendo、Radio Browser或任何电台均无关。
+
+Nothing is playing.
+未在播放。
+
+Nothing played yet.
+尚未播放任何电台。
+
+Now Playing
+正在播放
+
+Off
+关
+
+On
+开
+
+Open
+打开
+
+Open a country to see its stations.
+打开一个国家即可查看其电台。
+
+Open its stations
+查看电台
+
+Orange
+橙色
+
+Out of memory
+内存不足
+
+Out of memory.
+内存不足。
+
+Partly cloudy
+多云
+
+Pick a station
+选择电台
+
+Pick a station in Popular, Search or Favorites.
+请在热门、搜索或收藏中选择电台。
+
+Pick one to see its stations
+选择一项即可查看其电台
+
+Pink
+粉色
+
+Playback
+播放
+
+Played lately
+最近播放
+
+Plays the last station again when KaiRadio opens.
+打开KaiRadio时重新播放上次的电台。
+
+Popular
+热门
+
+Press A or tap one to play it.
+按A或轻触电台即可播放。
+
+Press X or tap the box above.
+按X或轻触上方的输入框。
+
+Press Y or tap the heart on a station to keep it here.
+按Y或轻触电台上的心形图标，即可收藏到这里。
+
+Purple
+紫色
+
+Put JPEG or PNG images in %s/Backgrounds first.
+请先将JPEG或PNG图片放入%s/Backgrounds。
+
+Rain
+雨
+
+Random station
+随机电台
+
+Recent
+最近
+
+Reconnecting…
+正在重新连接…
+
+Red
+红色
+
+Removed %s from favorites
+已将%s从收藏中移除
+
+Resume the last station
+继续播放上次的电台
+
+Search
+搜索
+
+Search by station name
+按电台名称搜索
+
+Search stations
+搜索电台
+
+Settings
+设置
+
+Sky blue
+天蓝色
+
+Sleep timer
+睡眠定时
+
+Sleep timer: the radio stopped.
+睡眠定时：电台已停止。
+
+Snow
+雪
+
+Somewhere unexpected
+意想不到的地方
+
+Somewhere unexpected: %s…
+意想不到的地方：%s…
+
+Sort: %s
+排序：%s
+
+Start in
+启动时打开
+
+Stations around the world
+世界各地的电台
+
+Stations: Radio Browser (radio-browser.info), a community directory.
+电台：Radio Browser（radio-browser.info），社区维护的电台目录。
+
+Stopped
+已停止
+
+Stops in %d min
+%d分钟后停止
+
+Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.
+在设定时间后停止播放，方便伴着电台入睡。设置会保留到KaiRadio关闭。
+
+That country's stations can't be had right now: try again.
+暂时无法获取该国家的电台：请重试。
+
+That image couldn't be opened (too big, or not a JPEG or PNG).
+无法打开该图片（过大，或不是JPEG或PNG）。
+
+That search is too long.
+搜索内容过长。
+
+The answer is too large
+响应内容过大
+
+The background image couldn't be opened.
+无法打开背景图片。
+
+The clock at the top right.
+右上角的时钟。
+
+The countries are still loading.
+国家仍在载入中。
+
+The directory can't be reached.
+无法连接电台目录。
+
+The directory sent an answer KaiRadio can't read.
+电台目录返回了KaiRadio无法读取的响应。
+
+The keyboard couldn't open.
+无法打开键盘。
+
+The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
+KaiRadio的显示语言。可在KaiRadio旁的lang文件夹中添加文件以增加语言。
+
+The most played stations
+播放最多的电台
+
+The server answered %ld
+服务器返回了%ld
+
+The settings couldn't be saved on the card.
+无法将设置保存到SD卡。
+
+The station directory can't be reached.
+无法连接电台目录。
+
+The station ended the broadcast.
+电台已结束播出。
+
+The station sent nothing.
+电台没有发送任何内容。
+
+The station stopped answering.
+电台已停止响应。
+
+The station's audio stopped.
+电台音频已中断。
+
+The station's HLS playlist can't be read.
+无法读取电台的HLS播放列表。
+
+The station's playlist has no stream in it.
+电台的播放列表中没有音频流。
+
+The station's playlist is empty.
+电台的播放列表为空。
+
+The station's playlists lead in circles.
+电台的播放列表相互循环引用。
+
+The station's stream couldn't be read.
+无法读取电台的音频流。
+
+The stations you play show up here.
+播放过的电台会显示在这里。
+
+The tab KaiRadio opens on. Automatic: Favorites if you have some, else World.
+KaiRadio启动时打开的标签。自动：有收藏时打开收藏，否则打开世界。
+
+The weather there can't be had now.
+暂时无法获取当地天气。
+
+The World tab as a globe you turn with a finger or the stick, or as a flat map.
+世界标签的显示方式：可用手指或摇杆转动的地球仪，或平面地图。
+
+This station's audio format isn't supported.
+不支持此电台的音频格式。
+
+This station's HLS format (fMP4 by byte range) isn't supported.
+不支持此电台的HLS格式（按字节范围分段的fMP4）。
+
+This station's stream is encrypted.
+此电台的音频流已加密。
+
+Thunderstorm
+雷雨
+
+Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0).
+时区和天气：Open-Meteo（open-meteo.com，CC BY 4.0）。
+
+Try again
+重试
+
+Try another name.
+请尝试其他名称。
+
+Turn the globe with a finger; the stick picks countries.
+用手指转动地球仪；用摇杆选择国家。
+
+Turn the screen off
+关闭屏幕
+
+Version, credits and licenses.
+版本、致谢和许可证。
+
+While a station plays and nothing is pressed. Any button or touch turns it back on.
+在播放电台且无操作时关闭。按任意按钮或触摸屏幕即可重新开启。
+
+World
+世界
+
+World map: Natural Earth (public domain). Flags: flag-icons (MIT).
+世界地图：Natural Earth（公有领域）。国旗：flag-icons（MIT）。
+
+World view
+世界视图
+
+Z to A
+Z到A

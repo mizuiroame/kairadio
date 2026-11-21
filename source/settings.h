@@ -6,6 +6,7 @@
 
 typedef enum {
     // Display.
+    SETTING_LANGUAGE,  // The language KaiRadio is shown in (languages.h).
     SETTING_ACCENT,
     SETTING_BACKGROUND,
     SETTING_BLUR,

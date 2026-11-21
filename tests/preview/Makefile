@@ -7,12 +7,18 @@ OUT     := build
 CFLAGS  := -std=gnu11 -O1 -g -Wall -Wextra -DKAIRADIO_VERSION=\"preview\" -I$(SRC) -I../../third_party -I$(OUT)
 UI_SRC  := categories.c gfx.c font.c ui.c ui_now.c ui_common.c ui_buttons.c ui_hit.c util.c stations.c link.c app.c library.c \
            touch.c kinetic.c globe.c weather.c image_impl.c ui_map.c worldmap.c map_countries.c ui_flag.c flags.c flags_index.c categoryicons.c icons.c icons_index.c \
-           ui_settings.c app_settings.c config.c settings.c theme.c background.c
+           ui_settings.c app_settings.c config.c settings.c theme.c background.c lang.c
 
 .PHONY: run clean
 
+# Every language in data/ too, each in build/<id>: what no longer fits shows.
+# For Japanese, Chinese and Korean, KAIRADIO_CJK_FONT names a font with them
+# (font_system_host.c); without one, their text draws as boxes.
+LANGS   := $(patsubst ../../data/lang_%.txt,%,$(wildcard ../../data/lang_*.txt))
+
 run: $(OUT)/preview
 	./$(OUT)/preview $(OUT)
+	@for l in $(LANGS); do mkdir -p $(OUT)/$$l && KAI_LANG_FILE=../../data/lang_$$l.txt ./$(OUT)/preview $(OUT)/$$l || exit 1; done
 
 $(OUT)/font_regular_ttf.c: ../../data/font_regular.ttf embed.py
 	python3 embed.py $< $(OUT) font_regular_ttf

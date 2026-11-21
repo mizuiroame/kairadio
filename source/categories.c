@@ -6,6 +6,7 @@
 #include <strings.h>
 
 #include "cJSON.h"
+#include "lang.h"
 
 static const char *stringField(const cJSON *item, const char *key)
 {
@@ -91,8 +92,9 @@ void categorySort(CategoryList *list, CategorySort sort)
 
 const char *categorySortLabel(CategorySort sort)
 {
-    static const char *const LABELS[SORT_COUNT] = {"Most stations", "Fewest stations", "A to Z", "Z to A"};
-    return sort < SORT_COUNT ? LABELS[sort] : "";
+    static const char *const LABELS[SORT_COUNT] = {N_("Most stations"), N_("Fewest stations"), N_("A to Z"),
+                                                     N_("Z to A")};
+    return sort < SORT_COUNT ? T(LABELS[sort]) : "";
 }
 
 void categoryLabel(const Category *c, char *out, size_t size)

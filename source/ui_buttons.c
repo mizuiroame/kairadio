@@ -109,7 +109,7 @@ static bool readKey(const char **p, char key[KEY_MAX])
 // Measures or draws one help item (badges then label); returns its width.
 static int helpItem(const char *item, size_t len, int x, float cy, bool draw)
 {
-    char text[128], key[KEY_MAX];
+    char text[256], key[KEY_MAX];
     snprintf(text, sizeof(text), "%.*s", (int)len, item);
     const char *p = text;
     int w = 0;

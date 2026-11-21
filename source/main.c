@@ -16,6 +16,7 @@
 #include "font.h"
 #include "gfx.h"
 #include "input.h"
+#include "lang.h"
 #include "logos.h"
 #include "net.h"
 #include "radio.h"
@@ -103,7 +104,7 @@ static void syncWithRadio(App *app, RadioState *last_state, char *last_error, si
     if (strcmp(status.error, last_error) != 0) {
         snprintf(last_error, size, "%s", status.error);
         if (status.error[0])
-            appToast(app, status.error, now);
+            appToast(app, T(status.error), now);
     }
 }
 
@@ -215,10 +216,11 @@ int main(int argc, char **argv)
     screenInit();
     static App app;
     appInit(&app, g_folder);
+    appStartLanguages(&app);  // Before anything is said on screen.
     appSetView(&app, app.view);
     if (app.config.background[0] &&
         !backgroundLoad(g_folder, app.config.background, app.config.background_blur))
-        appToast(&app, "The background image couldn't be opened.", nowNs());
+        appToast(&app, T("The background image couldn't be opened."), nowNs());
     // Settings > Resume: the last station played, with Recent for previous and next.
     if (app.config.resume && app.library.recent.count > 0)
         appPlayFrom(&app, &app.library.recent, 0);

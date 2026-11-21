@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+#include "lang.h"
+
 #define RGB(r, g, b) ((uint32_t)(0xFF000000u | ((uint32_t)(b) << 16) | ((uint32_t)(g) << 8) | (uint32_t)(r)))
 #define MIN_SATURATION 0.55f
 #define MIN_VALUE 0.88f
@@ -9,7 +11,7 @@
 #define LOGO_MIN_SHARE 50          // Of 1000: fewer colorful pixels than this, and the logo has no color.
 
 static const char *const NAMES[THEME_ACCENT_COUNT] = {
-    "Sky blue", "Pink", "Green", "Purple", "Orange", "Red", "From station logo",
+    N_("Sky blue"), N_("Pink"), N_("Green"), N_("Purple"), N_("Orange"), N_("Red"), N_("From station logo"),
 };
 static const uint32_t COLORS[THEME_ACCENT_COUNT - 1] = {
     RGB(0x4F, 0xC3, 0xF7), RGB(0xFF, 0x6B, 0x9A), RGB(0x3D, 0xD6, 0x8C),
@@ -18,7 +20,7 @@ static const uint32_t COLORS[THEME_ACCENT_COUNT - 1] = {
 
 const char *themeAccentName(int accent)
 {
-    return accent >= 0 && accent < THEME_ACCENT_COUNT ? NAMES[accent] : "";
+    return accent >= 0 && accent < THEME_ACCENT_COUNT ? T(NAMES[accent]) : "";
 }
 
 static float maxf(float a, float b)

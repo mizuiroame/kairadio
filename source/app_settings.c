@@ -2,9 +2,12 @@
 // setting does when it changes.
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "app.h"
 #include "buttons.h"
+#include "lang.h"
+#include "languages.h"
 #include "radio.h"
 #include "settings.h"
 #include "theme.h"
@@ -20,7 +23,7 @@ void appOpenMenu(App *app)
 void appOpenSettings(App *app)
 {
     app->overlay = OVERLAY_SETTINGS;
-    app->settings_cursor = SETTING_ACCENT;
+    app->settings_cursor = SETTING_LANGUAGE;
     // The images there are now: a new one shows the next time Settings opens.
     app->background_count = backgroundList(app->config_folder, app->backgrounds, BACKGROUND_MAX_IMAGES);
 }
@@ -28,7 +31,7 @@ void appOpenSettings(App *app)
 static void save(App *app, uint64_t now_ns)
 {
     if (!configSave(&app->config, app->config_folder))
-        appToast(app, "The settings couldn't be saved on the card.", now_ns);
+        appToast(app, T("The settings couldn't be saved on the card."), now_ns);
 }
 
 // The background now chosen, 0 for none and i + 1 for backgrounds[i].
@@ -50,7 +53,7 @@ static void changeBackground(App *app, int delta, uint64_t now_ns)
     int choices = (int)app->background_count + 1;
     if (choices == 1) {
         char message[sizeof(app->toast)];
-        snprintf(message, sizeof(message), "Put JPEG or PNG images in %s/Backgrounds first.", app->config_folder);
+        snprintf(message, sizeof(message), T("Put JPEG or PNG images in %s/Backgrounds first."), app->config_folder);
         appToast(app, message, now_ns);
         return;
     }
@@ -58,13 +61,36 @@ static void changeBackground(App *app, int delta, uint64_t now_ns)
     const char *name = index == 0 ? "" : app->backgrounds[index - 1];
     snprintf(app->config.background, sizeof(app->config.background), "%s", name);
     if (!backgroundLoad(app->config_folder, name, app->config.background_blur))
-        appToast(app, "That image couldn't be opened (too big, or not a JPEG or PNG).", now_ns);
+        appToast(app, T("That image couldn't be opened (too big, or not a JPEG or PNG)."), now_ns);
+}
+
+void appUseLanguage(App *app)
+{
+    if (!languageUse(app->config.language))
+        snprintf(app->config.language, sizeof(app->config.language), "%s", "en");  // Gone: English.
+    snprintf(app->config.language_name, sizeof(app->config.language_name), "%s",
+             languageName(languageIndex(app->config.language)));
+}
+
+void appStartLanguages(App *app)
+{
+    char folder[sizeof(app->config_folder) + 8];
+    snprintf(folder, sizeof(folder), "%s/lang", app->config_folder);
+    mkdir(folder, 0777);  // Where to put more languages' files, there to be seen.
+    languagesFind(folder);
+    appUseLanguage(app);
 }
 
 void appChangeSetting(App *app, int row, int delta, uint64_t now_ns)
 {
     Config *c = &app->config;
     switch (row) {
+    case SETTING_LANGUAGE: {  // Through the languages found: English, those in the app, config/lang's files.
+        int count = languagesCount();
+        snprintf(c->language, sizeof(c->language), "%s", languageId(wrap(languageIndex(c->language), delta, count)));
+        appUseLanguage(app);
+        break;
+    }
     case SETTING_ACCENT: c->accent = wrap(c->accent, delta, THEME_ACCENT_COUNT); break;
     case SETTING_BACKGROUND: changeBackground(app, delta, now_ns); break;
     case SETTING_BLUR:
@@ -97,26 +123,27 @@ void appSettingValue(const App *app, int row, uint64_t now_ns, char *out, size_t
 {
     const Config *c = &app->config;
     switch (row) {
+    case SETTING_LANGUAGE: snprintf(out, size, "%s", c->language_name[0] ? c->language_name : "English"); break;
     case SETTING_ACCENT: snprintf(out, size, "%s", themeAccentName(c->accent)); break;
-    case SETTING_BACKGROUND: snprintf(out, size, "%s", c->background[0] ? c->background : "None"); break;
+    case SETTING_BACKGROUND: snprintf(out, size, "%s", c->background[0] ? c->background : T("None")); break;
     case SETTING_BLUR: snprintf(out, size, "%s", backgroundBlurName(c->background_blur)); break;
-    case SETTING_CLOCK: snprintf(out, size, "%s", c->clock_24h ? "24-hour (21:47)" : "12-hour (9:47 PM)"); break;
-    case SETTING_WORLD: snprintf(out, size, "%s", c->world_globe ? "Globe" : "Flat map"); break;
+    case SETTING_CLOCK: snprintf(out, size, "%s", c->clock_24h ? T("24-hour (21:47)") : T("12-hour (9:47 PM)")); break;
+    case SETTING_WORLD: snprintf(out, size, "%s", c->world_globe ? T("Globe") : T("Flat map")); break;
     case SETTING_SLEEP:
         if (!app->sleep_until_ns || now_ns >= app->sleep_until_ns)
-            snprintf(out, size, "Off");
+            snprintf(out, size, "%s", T("Off"));
         else
-            snprintf(out, size, "Stops in %d min",
+            snprintf(out, size, T("Stops in %d min"),
                      (int)((app->sleep_until_ns - now_ns + NS_PER_MINUTE - 1) / NS_PER_MINUTE));
         break;
     case SETTING_SCREEN_OFF:
         if (c->screen_off_minutes)
-            snprintf(out, size, "After %d min playing", c->screen_off_minutes);
+            snprintf(out, size, T("After %d min playing"), c->screen_off_minutes);
         else
-            snprintf(out, size, "Never");
+            snprintf(out, size, "%s", T("Never"));
         break;
     case SETTING_START: snprintf(out, size, "%s", settingsStartName(c->start_view)); break;
-    case SETTING_RESUME: snprintf(out, size, "%s", c->resume ? "On" : "Off"); break;
+    case SETTING_RESUME: snprintf(out, size, "%s", c->resume ? T("On") : T("Off")); break;
     default: out[0] = '\0'; break;
     }
 }
@@ -128,7 +155,7 @@ void appCheckSleep(App *app, uint64_t now_ns)
     app->sleep_until_ns = 0;
     app->sleep_minutes = 0;
     radioStop();
-    appToast(app, "Sleep timer: the radio stopped.", now_ns);
+    appToast(app, T("Sleep timer: the radio stopped."), now_ns);
 }
 
 static void handleMenu(App *app, uint64_t pressed)

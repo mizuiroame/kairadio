@@ -1,0 +1,556 @@
+# KaiRadio em português (Brasil).
+# Cada linha em inglês vem seguida da sua tradução, com uma linha em branco
+# entre os pares. %d, %s e similares ficam iguais e na mesma ordem. Veja source/lang.h.
+language = Português (Brasil)
+
+%d station
+%d estação
+
+%d stations
+%d estações
+
+%s there
+%s lá
+
+%s · %d station
+%s · %d estação
+
+%s · %d stations
+%s · %d estações
+
+%s · on the air
+%s · no ar
+
+%zu favorite
+%zu favorita
+
+%zu favorites
+%zu favoritas
+
+12-hour (9:47 PM)
+12 horas (9:47 PM)
+
+24-hour (21:47)
+24 horas (21:47)
+
+[<>] change  [A] change or open  [B] close
+[<>] mudar  [A] mudar ou abrir  [B] fechar
+
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[<>^v] país  [A] abrir  [Y] estação aleatória  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] sair
+
+[A] choose  [B] close  [+] exit
+[A] escolher  [B] fechar  [+] sair
+
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
+[A] abrir  [Y] ordenar  [<>] nome, gênero, país, idioma  [ZL][ZR] abas  [+] sair
+
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
+[A] tocar  [Y] favoritar  [B] voltar  [<>] buscar por  [L][R] estação  [+] sair
+
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
+[A] tocar  [Y] favoritar  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] sair
+
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
+[A] tocar/parar  [Y] favoritar  [L][R] estação  [B] voltar  [ZL][ZR] abas  [+] sair
+
+[B] back
+[B] voltar
+
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
+[X] digitar nome  [A] tocar  [Y] favoritar  [<>] buscar por  [L][R] estação  [+] sair
+
+A to Z
+A a Z
+
+About KaiRadio
+Sobre o KaiRadio
+
+Accent color
+Cor de destaque
+
+Add to favorites
+Adicionar aos favoritos
+
+Added %s to favorites
+%s adicionada aos favoritos
+
+After %d min playing
+Após %d min tocando
+
+Asking for the time and weather there…
+Consultando a hora e o clima de lá…
+
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
+Áudio: FFmpeg (LGPL 2.1). Também cJSON, stb e libcurl.
+
+Automatic
+Automático
+
+Back
+Voltar
+
+Background
+Fundo
+
+Background blur
+Desfoque do fundo
+
+Buffering…
+Carregando o buffer…
+
+Can't play
+Não foi possível tocar
+
+Clear
+Céu limpo
+
+Clock
+Relógio
+
+Cloudy
+Nublado
+
+Connecting…
+Conectando…
+
+Countries sorted A to Z
+Países em ordem de A a Z
+
+Countries sorted with the fewest stations first
+Países com menos estações primeiro
+
+Countries sorted with the most stations first
+Países com mais estações primeiro
+
+Countries sorted Z to A
+Países em ordem de Z a A
+
+Country
+País
+
+Display
+Tela
+
+Drizzle
+Garoa
+
+Exit KaiRadio
+Sair do KaiRadio
+
+Favorite
+Favorita
+
+Favorites
+Favoritos
+
+Fewest stations
+Menos estações
+
+Find a station by its name.
+Encontre uma estação pelo nome.
+
+Flat map
+Mapa plano
+
+Fog
+Neblina
+
+From radio-browser.info
+Do radio-browser.info
+
+From radio-browser.info  ·  Weather by open-meteo.com
+Do radio-browser.info  ·  Clima por open-meteo.com
+
+From station logo
+Do logo da estação
+
+Genre
+Gênero
+
+Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1).
+Ícones de gênero: Lucide (ISC). Fontes: Noto Sans (SIL OFL 1.1).
+
+Genres sorted A to Z
+Gêneros em ordem de A a Z
+
+Genres sorted with the fewest stations first
+Gêneros com menos estações primeiro
+
+Genres sorted with the most stations first
+Gêneros com mais estações primeiro
+
+Genres sorted Z to A
+Gêneros em ordem de Z a A
+
+Globe
+Globo
+
+Go back and pick another one.
+Volte e escolha outra.
+
+Green
+Verde
+
+High
+Alto
+
+Highlights, buttons and the map's pick. From station logo follows the station playing.
+Destaques, botões e a seleção do mapa. Do logo da estação segue a estação que está tocando.
+
+How soft the background image is.
+O quanto a imagem de fundo fica suave.
+
+Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
+Rádio pela internet para Switch 2 homebrew (kaiHEN), no espírito do KaiPlayer.
+
+JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
+Imagens JPEG ou PNG na pasta Backgrounds ao lado do KaiRadio, escurecidas para o texto continuar legível.
+
+KaiRadio couldn't start the download.
+O KaiRadio não conseguiu iniciar o download.
+
+KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
+O KaiRadio é de código aberto sob a licença MIT. Copyright (c) 2026 Mizuiro.
+
+Language
+Idioma
+
+Languages sorted A to Z
+Idiomas em ordem de A a Z
+
+Languages sorted with the fewest stations first
+Idiomas com menos estações primeiro
+
+Languages sorted with the most stations first
+Idiomas com mais estações primeiro
+
+Languages sorted Z to A
+Idiomas em ordem de Z a A
+
+Lighting up the world…
+Iluminando o mundo…
+
+Live
+Ao vivo
+
+LIVE
+AO VIVO
+
+Loading countries…
+Carregando países…
+
+Loading genres…
+Carregando gêneros…
+
+Loading languages…
+Carregando idiomas…
+
+Loading stations…
+Carregando estações…
+
+Low
+Baixo
+
+Medium
+Médio
+
+Most stations
+Mais estações
+
+Name
+Nome
+
+Never
+Nunca
+
+No favorites yet.
+Ainda não há favoritos.
+
+No stations found.
+Nenhuma estação encontrada.
+
+No stations here right now.
+Nenhuma estação aqui agora.
+
+None
+Nenhum
+
+Not affiliated with Nintendo, Radio Browser or any station.
+Sem vínculo com a Nintendo, o Radio Browser ou qualquer estação.
+
+Nothing is playing.
+Nada está tocando.
+
+Nothing played yet.
+Nada tocado ainda.
+
+Now Playing
+Tocando agora
+
+Off
+Não
+
+On
+Sim
+
+Open
+Abrir
+
+Open a country to see its stations.
+Abra um país para ver as estações dele.
+
+Open its stations
+Abrir as estações
+
+Orange
+Laranja
+
+Out of memory
+Sem memória
+
+Out of memory.
+Sem memória.
+
+Partly cloudy
+Parcialmente nublado
+
+Pick a station
+Escolha uma estação
+
+Pick a station in Popular, Search or Favorites.
+Escolha uma estação em Populares, Buscar ou Favoritos.
+
+Pick one to see its stations
+Escolha um para ver as estações
+
+Pink
+Rosa
+
+Playback
+Reprodução
+
+Played lately
+Tocadas recentemente
+
+Plays the last station again when KaiRadio opens.
+Toca de novo a última estação quando o KaiRadio abre.
+
+Popular
+Populares
+
+Press A or tap one to play it.
+Aperte A ou toque em uma para tocar.
+
+Press X or tap the box above.
+Aperte X ou toque na caixa acima.
+
+Press Y or tap the heart on a station to keep it here.
+Aperte Y ou toque no coração de uma estação para guardá-la aqui.
+
+Purple
+Roxo
+
+Put JPEG or PNG images in %s/Backgrounds first.
+Primeiro coloque imagens JPEG ou PNG em %s/Backgrounds.
+
+Rain
+Chuva
+
+Random station
+Estação aleatória
+
+Recent
+Recentes
+
+Reconnecting…
+Reconectando…
+
+Red
+Vermelho
+
+Removed %s from favorites
+%s removida dos favoritos
+
+Resume the last station
+Retomar a última estação
+
+Search
+Buscar
+
+Search by station name
+Buscar pelo nome da estação
+
+Search stations
+Buscar estações
+
+Settings
+Configurações
+
+Sky blue
+Azul-celeste
+
+Sleep timer
+Timer de sono
+
+Sleep timer: the radio stopped.
+Timer de sono: o rádio parou.
+
+Snow
+Neve
+
+Somewhere unexpected
+Algum lugar inesperado
+
+Somewhere unexpected: %s…
+Algum lugar inesperado: %s…
+
+Sort: %s
+Ordem: %s
+
+Start in
+Iniciar em
+
+Stations around the world
+Estações pelo mundo
+
+Stations: Radio Browser (radio-browser.info), a community directory.
+Estações: Radio Browser (radio-browser.info), um diretório comunitário.
+
+Stopped
+Parado
+
+Stops in %d min
+Para em %d min
+
+Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes.
+Para o rádio depois desse tempo, para você dormir ouvindo. Vale até o KaiRadio fechar.
+
+That country's stations can't be had right now: try again.
+Não é possível obter as estações desse país agora: tente de novo.
+
+That image couldn't be opened (too big, or not a JPEG or PNG).
+Não foi possível abrir essa imagem (grande demais, ou não é JPEG nem PNG).
+
+That search is too long.
+Essa busca é longa demais.
+
+The answer is too large
+A resposta é grande demais
+
+The background image couldn't be opened.
+Não foi possível abrir a imagem de fundo.
+
+The clock at the top right.
+O relógio no canto superior direito.
+
+The countries are still loading.
+Os países ainda estão carregando.
+
+The directory can't be reached.
+Não é possível acessar o diretório.
+
+The directory sent an answer KaiRadio can't read.
+O diretório enviou uma resposta que o KaiRadio não consegue ler.
+
+The keyboard couldn't open.
+Não foi possível abrir o teclado.
+
+The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
+O idioma em que o KaiRadio aparece. Outros podem ser adicionados como arquivos na pasta lang ao lado do KaiRadio.
+
+The most played stations
+As estações mais tocadas
+
+The server answered %ld
+O servidor respondeu %ld
+
+The settings couldn't be saved on the card.
+Não foi possível salvar as configurações no cartão.
+
+The station directory can't be reached.
+Não é possível acessar o diretório de estações.
+
+The station ended the broadcast.
+A estação encerrou a transmissão.
+
+The station sent nothing.
+A estação não enviou nada.
+
+The station stopped answering.
+A estação parou de responder.
+
+The station's audio stopped.
+O áudio da estação parou.
+
+The station's HLS playlist can't be read.
+Não é possível ler a playlist HLS da estação.
+
+The station's playlist has no stream in it.
+A playlist da estação não tem nenhuma transmissão.
+
+The station's playlist is empty.
+A playlist da estação está vazia.
+
+The station's playlists lead in circles.
+As playlists da estação andam em círculos.
+
+The station's stream couldn't be read.
+Não foi possível ler a transmissão da estação.
+
+The stations you play show up here.
+As estações que você tocar aparecem aqui.
+
+The tab KaiRadio opens on. Automatic: Favorites if you have some, else World.
+A aba em que o KaiRadio abre. Automático: Favoritos se você tiver algum, senão Mundo.
+
+The weather there can't be had now.
+Não é possível obter o clima de lá agora.
+
+The World tab as a globe you turn with a finger or the stick, or as a flat map.
+A aba Mundo como um globo que você gira com o dedo ou o analógico, ou como um mapa plano.
+
+This station's audio format isn't supported.
+O formato de áudio desta estação não é compatível.
+
+This station's HLS format (fMP4 by byte range) isn't supported.
+O formato HLS desta estação (fMP4 por intervalo de bytes) não é compatível.
+
+This station's stream is encrypted.
+A transmissão desta estação é criptografada.
+
+Thunderstorm
+Tempestade
+
+Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0).
+Fusos horários e clima: Open-Meteo (open-meteo.com, CC BY 4.0).
+
+Try again
+Tentar de novo
+
+Try another name.
+Tente outro nome.
+
+Turn the globe with a finger; the stick picks countries.
+Gire o globo com o dedo; o analógico escolhe os países.
+
+Turn the screen off
+Desligar a tela
+
+Version, credits and licenses.
+Versão, créditos e licenças.
+
+While a station plays and nothing is pressed. Any button or touch turns it back on.
+Enquanto uma estação toca e nada é apertado. Qualquer botão ou toque liga de novo.
+
+World
+Mundo
+
+World map: Natural Earth (public domain). Flags: flag-icons (MIT).
+Mapa-múndi: Natural Earth (domínio público). Bandeiras: flag-icons (MIT).
+
+World view
+Vista do mundo
+
+Z to A
+Z a A

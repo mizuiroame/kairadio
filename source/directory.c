@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "cJSON.h"
+#include "lang.h"
 #include "net.h"
 #include "util.h"
 
@@ -134,16 +135,16 @@ static void runQuery(DirectoryQuery query, const char *text, unsigned generation
     char path[512];
     StationList list = {0};
     CategoryList categories = {0};
-    char error[128] = "";
+    char error[sizeof(g_status.error)] = "";
     NetResponse r;
     if (!directoryPath(query, text, path, sizeof(path))) {
-        snprintf(error, sizeof(error), "That search is too long.");
+        snprintf(error, sizeof(error), "%s", T("That search is too long."));
     } else if (!fetch(path, &r)) {
-        snprintf(error, sizeof(error), "%s", r.error[0] ? r.error : "The directory can't be reached.");
+        snprintf(error, sizeof(error), "%s", r.error[0] ? r.error : T("The directory can't be reached."));
     } else {
         bool read = directoryListsCategories(query) ? categoriesParse(r.data, &categories) : stationsParse(r.data, &list);
         if (!read)
-            snprintf(error, sizeof(error), "The directory sent an answer KaiRadio can't read.");
+            snprintf(error, sizeof(error), "%s", T("The directory sent an answer KaiRadio can't read."));
         netResponseFree(&r);
     }
 
