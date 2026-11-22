@@ -174,7 +174,7 @@ static void drawAbout(void)
         N_("World map: Natural Earth (public domain). Flags: flag-icons (MIT)."),
         N_("Time zones and weather: Open-Meteo (open-meteo.com, CC BY 4.0)."),
         N_("Genre icons: Lucide (ISC). Fonts: Noto Sans (SIL OFL 1.1)."),
-        N_("Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl."),
+        N_("Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa."),
         "",
         N_("KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro."),
         "github.com/mizuiroame/kairadio",

@@ -40,8 +40,12 @@ The screenshots show made-up stations.
 - Plays **MP3**, **AAC** and **HE-AAC**, **Ogg Vorbis**, **Opus** and **FLAC**
   streams, `.pls` and `.m3u` playlists and **HLS** stations. Reconnects on its
   own. [More](docs/playback.md#streams-it-plays)
-- **Settings**: accent color, your own background, clock, sleep timer, screen
-  off while playing, and more. [More](docs/settings.md)
+- **In nine languages**: English, Spanish, French, Italian, Portuguese, German,
+  Japanese, Chinese and Korean, and more can be added as files.
+  [More](docs/languages.md)
+- **Settings** in three pages, Playback, Display and About: sleep timer,
+  screen off while playing, language, accent color, your own background,
+  clock, and more. [More](docs/settings.md)
 - Drawn on the GPU, sharp in handheld and docked. **Touch and buttons** for
   every control. [Controls](docs/controls.md)
 
@@ -74,6 +78,7 @@ card: OunceShell's FTP server with an FTP client such as
   station stutters
 - [Settings and files](docs/settings.md): every setting, backgrounds, where
   KaiRadio keeps its files
+- [Languages](docs/languages.md): choosing one, and translating KaiRadio
 - [Controls](docs/controls.md): buttons and touch
 - [Building](docs/building.md)
 - [Legal notice and licenses](docs/legal.md)
@@ -81,5 +86,6 @@ card: OunceShell's FTP server with an FTP client such as
 ## License
 
 KaiRadio is released under the [MIT License](LICENSE). It uses FFmpeg under
-the LGPL 2.1, and other open-source libraries, data and icons. The full list
+the LGPL 2.1, and other open-source libraries (curl, zlib, Mesa through
+OunceVK, cJSON, stb), data and icons. The full list
 is in [docs/legal.md](docs/legal.md#licenses).

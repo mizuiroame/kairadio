@@ -33,8 +33,8 @@ language = 日本語
 24-hour (21:47)
 24時間制（21:47）
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[<>^v] 国  [A] 開く  [Y] ランダム選局  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] 終了
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] 国  [A] 開く  [Y] ランダム選局  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] メニュー
 
 [^v] choose  [<>][A] change  [B] back
 [^v] 選ぶ  [<>][A] 変更  [B] 戻る
@@ -48,23 +48,23 @@ language = 日本語
 [A] choose  [B] close  [+] exit
 [A] 決定  [B] 閉じる  [+] 終了
 
-[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
-[A] 開く  [Y] 並べ替え  [<>] 名前、ジャンル、国、言語  [ZL][ZR] タブ  [+] 終了
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu
+[A] 開く  [Y] 並べ替え  [<>] 名前、ジャンル、国、言語  [ZL][ZR] タブ  [+] メニュー
 
-[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
-[A] 再生  [Y] お気に入り  [B] 戻る  [<>] 検索方法  [L][R] 選局  [+] 終了
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu
+[A] 再生  [Y] お気に入り  [B] 戻る  [<>] 検索方法  [L][R] 選局  [+] メニュー
 
-[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[A] 再生  [Y] お気に入り  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] 終了
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[A] 再生  [Y] お気に入り  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] メニュー
 
-[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
-[A] 再生/停止  [Y] お気に入り  [L][R] 選局  [B] 戻る  [ZL][ZR] タブ  [+] 終了
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 再生/停止  [Y] お気に入り  [L][R] 選局  [B] 戻る  [ZL][ZR] タブ  [+] メニュー
 
 [A][B] back
 [A][B] 戻る
 
-[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
-[X] 名前を入力  [A] 再生  [Y] お気に入り  [<>] 検索方法  [L][R] 選局  [+] 終了
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu
+[X] 名前を入力  [A] 再生  [Y] お気に入り  [<>] 検索方法  [L][R] 選局  [+] メニュー
 
 A to Z
 A→Z
@@ -87,8 +87,8 @@ After %d min playing
 Asking for the time and weather there…
 現地の時刻と天気を問い合わせています…
 
-Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
-音声: FFmpeg（LGPL 2.1）。ほかに cJSON、stb、libcurl を使用しています。
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
+音声: FFmpeg（LGPL 2.1）。ほかに cJSON、stb、libcurl、zlib、Mesa を使用しています。
 
 Automatic
 自動
@@ -219,8 +219,8 @@ How soft the background image is.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 KaiPlayer の流れをくむ、Switch 2 自作ソフト（kaiHEN）用のインターネットラジオです。
 
-JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
-KaiRadio と同じ場所の Backgrounds フォルダーにある JPEG か PNG の画像です。文字が読みやすいように暗くして表示します。
+JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
+KaiRadio の config フォルダー内の Backgrounds フォルダーにある JPEG か PNG の画像です。文字が読みやすいように暗くして表示します。
 
 KaiRadio couldn't start the download.
 KaiRadio はダウンロードを開始できませんでした。
@@ -477,8 +477,8 @@ The directory sent an answer KaiRadio can't read.
 The keyboard couldn't open.
 キーボードを開けませんでした。
 
-The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
-KaiRadio の表示言語です。KaiRadio と同じ場所の lang フォルダーにファイルを入れると、言語を追加できます。
+The language KaiRadio is shown in. More can be added as files in the lang folder of KaiRadio's config folder.
+KaiRadio の表示言語です。KaiRadio の config フォルダー内の lang フォルダーにファイルを入れると、言語を追加できます。
 
 The most played stations
 よく再生されている局

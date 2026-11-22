@@ -33,8 +33,8 @@ language = Deutsch
 24-hour (21:47)
 24 Stunden (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[<>^v] Land  [A] Öffnen  [Y] Zufallssender  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Beenden
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] Land  [A] Öffnen  [Y] Zufallssender  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Menü
 
 [^v] choose  [<>][A] change  [B] back
 [^v] Wählen  [<>][A] Ändern  [B] Zurück
@@ -48,23 +48,23 @@ language = Deutsch
 [A] choose  [B] close  [+] exit
 [A] Wählen  [B] Schließen  [+] Beenden
 
-[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
-[A] Öffnen  [Y] Sortieren  [<>] Name, Genre, Land, Sprache  [ZL][ZR] Tabs  [+] Beenden
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu
+[A] Öffnen  [Y] Sortieren  [<>] Name, Genre, Land, Sprache  [ZL][ZR] Tabs  [+] Menü
 
-[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
-[A] Abspielen  [Y] Favorit  [B] Zurück  [<>] Suchen nach  [L][R] Sender  [+] Beenden
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu
+[A] Abspielen  [Y] Favorit  [B] Zurück  [<>] Suchen nach  [L][R] Sender  [+] Menü
 
-[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[A] Abspielen  [Y] Favorit  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Beenden
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[A] Abspielen  [Y] Favorit  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Menü
 
-[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
-[A] Start/Stopp  [Y] Favorit  [L][R] Sender  [B] Zurück  [ZL][ZR] Tabs  [+] Beenden
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu
+[A] Start/Stopp  [Y] Favorit  [L][R] Sender  [B] Zurück  [ZL][ZR] Tabs  [+] Menü
 
 [A][B] back
 [A][B] Zurück
 
-[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
-[X] Name eingeben  [A] Abspielen  [Y] Favorit  [<>] Suchen nach  [L][R] Sender  [+] Beenden
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu
+[X] Name eingeben  [A] Abspielen  [Y] Favorit  [<>] Suchen nach  [L][R] Sender  [+] Menü
 
 A to Z
 A bis Z
@@ -87,8 +87,8 @@ Nach %d min Wiedergabe
 Asking for the time and weather there…
 Frage nach Uhrzeit und Wetter dort…
 
-Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
-Audio: FFmpeg (LGPL 2.1). Außerdem cJSON, stb und libcurl.
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
+Audio: FFmpeg (LGPL 2.1). Außerdem cJSON, stb, libcurl, zlib und Mesa.
 
 Automatic
 Automatisch
@@ -219,8 +219,8 @@ Wie weich das Hintergrundbild ist.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 Internetradio für Switch-2-Homebrew (kaiHEN), im Geist von KaiPlayer.
 
-JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
-JPEG- oder PNG-Bilder im Ordner Backgrounds neben KaiRadio, abgedunkelt, damit Text lesbar bleibt.
+JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
+JPEG- oder PNG-Bilder im Ordner Backgrounds im config-Ordner von KaiRadio, abgedunkelt, damit Text lesbar bleibt.
 
 KaiRadio couldn't start the download.
 KaiRadio konnte den Download nicht starten.
@@ -477,8 +477,8 @@ Das Verzeichnis hat eine Antwort geschickt, die KaiRadio nicht lesen kann.
 The keyboard couldn't open.
 Die Tastatur konnte nicht geöffnet werden.
 
-The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
-Die Sprache von KaiRadio. Weitere lassen sich als Dateien im Ordner lang neben KaiRadio hinzufügen.
+The language KaiRadio is shown in. More can be added as files in the lang folder of KaiRadio's config folder.
+Die Sprache von KaiRadio. Weitere lassen sich als Dateien im Ordner lang im config-Ordner von KaiRadio hinzufügen.
 
 The most played stations
 Die meistgespielten Sender

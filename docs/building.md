@@ -16,6 +16,9 @@ docker build -t kairadio-devkit ffmpeg   # once: the devkit plus FFmpeg (LGPL)
 SHA-256) with only the demuxers, parsers and audio decoders radio needs, and
 fails if the build would include GPL or non-free parts.
 
+`python tools/lang_check.py data/lang_es.txt` checks a translation against
+the texts in the code (see [Languages](languages.md)).
+
 The world map is drawn from Natural Earth by `tools/make_map.py`. The
 vendored code, fonts and data are listed in
 [third_party/VERSIONS.md](../third_party/VERSIONS.md).

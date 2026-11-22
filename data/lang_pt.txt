@@ -33,8 +33,8 @@ language = Português (Brasil)
 24-hour (21:47)
 24 horas (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[<>^v] país  [A] abrir  [Y] estação aleatória  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] sair
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] país  [A] abrir  [Y] estação aleatória  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] menu
 
 [^v] choose  [<>][A] change  [B] back
 [^v] escolher  [<>][A] mudar  [B] voltar
@@ -48,23 +48,23 @@ language = Português (Brasil)
 [A] choose  [B] close  [+] exit
 [A] escolher  [B] fechar  [+] sair
 
-[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
-[A] abrir  [Y] ordenar  [<>] nome, gênero, país, idioma  [ZL][ZR] abas  [+] sair
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu
+[A] abrir  [Y] ordenar  [<>] nome, gênero, país, idioma  [ZL][ZR] abas  [+] menu
 
-[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
-[A] tocar  [Y] favoritar  [B] voltar  [<>] buscar por  [L][R] estação  [+] sair
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu
+[A] tocar  [Y] favoritar  [B] voltar  [<>] buscar por  [L][R] estação  [+] menu
 
-[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[A] tocar  [Y] favoritar  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] sair
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[A] tocar  [Y] favoritar  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] menu
 
-[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
-[A] tocar/parar  [Y] favoritar  [L][R] estação  [B] voltar  [ZL][ZR] abas  [+] sair
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu
+[A] tocar/parar  [Y] favoritar  [L][R] estação  [B] voltar  [ZL][ZR] abas  [+] menu
 
 [A][B] back
 [A][B] voltar
 
-[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
-[X] digitar nome  [A] tocar  [Y] favoritar  [<>] buscar por  [L][R] estação  [+] sair
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu
+[X] digitar nome  [A] tocar  [Y] favoritar  [<>] buscar por  [L][R] estação  [+] menu
 
 A to Z
 A a Z
@@ -87,8 +87,8 @@ Após %d min tocando
 Asking for the time and weather there…
 Consultando a hora e o clima de lá…
 
-Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
-Áudio: FFmpeg (LGPL 2.1). Também cJSON, stb e libcurl.
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
+Áudio: FFmpeg (LGPL 2.1). Também cJSON, stb, libcurl, zlib e Mesa.
 
 Automatic
 Automático
@@ -219,8 +219,8 @@ O quanto a imagem de fundo fica suave.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 Rádio pela internet para Switch 2 homebrew (kaiHEN), no espírito do KaiPlayer.
 
-JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
-Imagens JPEG ou PNG na pasta Backgrounds ao lado do KaiRadio, escurecidas para o texto continuar legível.
+JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
+Imagens JPEG ou PNG na pasta Backgrounds da pasta config do KaiRadio, escurecidas para o texto continuar legível.
 
 KaiRadio couldn't start the download.
 O KaiRadio não conseguiu iniciar o download.
@@ -477,8 +477,8 @@ O diretório enviou uma resposta que o KaiRadio não consegue ler.
 The keyboard couldn't open.
 Não foi possível abrir o teclado.
 
-The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
-O idioma em que o KaiRadio aparece. Outros podem ser adicionados como arquivos na pasta lang ao lado do KaiRadio.
+The language KaiRadio is shown in. More can be added as files in the lang folder of KaiRadio's config folder.
+O idioma em que o KaiRadio aparece. Outros podem ser adicionados como arquivos na pasta lang da pasta config do KaiRadio.
 
 The most played stations
 As estações mais tocadas

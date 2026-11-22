@@ -33,8 +33,8 @@ language = 简体中文
 24-hour (21:47)
 24小时制（21:47）
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[<>^v] 国家  [A] 打开  [Y] 随机电台  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 退出
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] 国家  [A] 打开  [Y] 随机电台  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 菜单
 
 [^v] choose  [<>][A] change  [B] back
 [^v] 选择  [<>][A] 更改  [B] 返回
@@ -48,23 +48,23 @@ language = 简体中文
 [A] choose  [B] close  [+] exit
 [A] 选择  [B] 关闭  [+] 退出
 
-[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
-[A] 打开  [Y] 排序  [<>] 名称、流派、国家、语言  [ZL][ZR] 标签  [+] 退出
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu
+[A] 打开  [Y] 排序  [<>] 名称、流派、国家、语言  [ZL][ZR] 标签  [+] 菜单
 
-[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
-[A] 播放  [Y] 收藏  [B] 返回  [<>] 搜索方式  [L][R] 换台  [+] 退出
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu
+[A] 播放  [Y] 收藏  [B] 返回  [<>] 搜索方式  [L][R] 换台  [+] 菜单
 
-[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[A] 播放  [Y] 收藏  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 退出
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[A] 播放  [Y] 收藏  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 菜单
 
-[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
-[A] 播放/停止  [Y] 收藏  [L][R] 换台  [B] 返回  [ZL][ZR] 标签  [+] 退出
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 播放/停止  [Y] 收藏  [L][R] 换台  [B] 返回  [ZL][ZR] 标签  [+] 菜单
 
 [A][B] back
 [A][B] 返回
 
-[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
-[X] 输入名称  [A] 播放  [Y] 收藏  [<>] 搜索方式  [L][R] 换台  [+] 退出
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu
+[X] 输入名称  [A] 播放  [Y] 收藏  [<>] 搜索方式  [L][R] 换台  [+] 菜单
 
 A to Z
 A到Z
@@ -87,8 +87,8 @@ After %d min playing
 Asking for the time and weather there…
 正在查询当地时间和天气…
 
-Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
-音频：FFmpeg（LGPL 2.1）。另使用cJSON、stb和libcurl。
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
+音频：FFmpeg（LGPL 2.1）。另使用cJSON、stb、libcurl、zlib和Mesa。
 
 Automatic
 自动
@@ -219,8 +219,8 @@ How soft the background image is.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 适用于kaiHEN的Switch 2自制网络电台，延续KaiPlayer的风格。
 
-JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
-使用KaiRadio旁Backgrounds文件夹中的JPEG或PNG图片，并会调暗以便看清文字。
+JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
+使用KaiRadio的config文件夹中Backgrounds文件夹里的JPEG或PNG图片，并会调暗以便看清文字。
 
 KaiRadio couldn't start the download.
 KaiRadio无法开始下载。
@@ -477,8 +477,8 @@ The directory sent an answer KaiRadio can't read.
 The keyboard couldn't open.
 无法打开键盘。
 
-The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
-KaiRadio的显示语言。可在KaiRadio旁的lang文件夹中添加文件以增加语言。
+The language KaiRadio is shown in. More can be added as files in the lang folder of KaiRadio's config folder.
+KaiRadio的显示语言。可在KaiRadio的config文件夹中的lang文件夹里添加文件以增加语言。
 
 The most played stations
 播放最多的电台

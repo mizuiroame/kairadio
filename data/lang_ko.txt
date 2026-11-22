@@ -33,8 +33,8 @@ language = 한국어
 24-hour (21:47)
 24시간제 (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[<>^v] 국가  [A] 열기  [Y] 랜덤 방송국  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 종료
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] 국가  [A] 열기  [Y] 랜덤 방송국  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 메뉴
 
 [^v] choose  [<>][A] change  [B] back
 [^v] 선택  [<>][A] 변경  [B] 뒤로
@@ -48,23 +48,23 @@ language = 한국어
 [A] choose  [B] close  [+] exit
 [A] 선택  [B] 닫기  [+] 종료
 
-[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
-[A] 열기  [Y] 정렬  [<>] 이름, 장르, 국가, 언어  [ZL][ZR] 탭  [+] 종료
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu
+[A] 열기  [Y] 정렬  [<>] 이름, 장르, 국가, 언어  [ZL][ZR] 탭  [+] 메뉴
 
-[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
-[A] 재생  [Y] 즐겨찾기  [B] 뒤로  [<>] 검색 기준  [L][R] 방송국  [+] 종료
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu
+[A] 재생  [Y] 즐겨찾기  [B] 뒤로  [<>] 검색 기준  [L][R] 방송국  [+] 메뉴
 
-[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[A] 재생  [Y] 즐겨찾기  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 종료
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[A] 재생  [Y] 즐겨찾기  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 메뉴
 
-[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
-[A] 재생/정지  [Y] 즐겨찾기  [L][R] 방송국  [B] 뒤로  [ZL][ZR] 탭  [+] 종료
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 재생/정지  [Y] 즐겨찾기  [L][R] 방송국  [B] 뒤로  [ZL][ZR] 탭  [+] 메뉴
 
 [A][B] back
 [A][B] 뒤로
 
-[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
-[X] 이름 입력  [A] 재생  [Y] 즐겨찾기  [<>] 검색 기준  [L][R] 방송국  [+] 종료
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu
+[X] 이름 입력  [A] 재생  [Y] 즐겨찾기  [<>] 검색 기준  [L][R] 방송국  [+] 메뉴
 
 A to Z
 A-Z순
@@ -87,8 +87,8 @@ After %d min playing
 Asking for the time and weather there…
 현지 시각과 날씨를 확인하는 중…
 
-Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
-오디오: FFmpeg (LGPL 2.1). 그 외 cJSON, stb, libcurl.
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
+오디오: FFmpeg (LGPL 2.1). 그 외 cJSON, stb, libcurl, zlib, Mesa.
 
 Automatic
 자동
@@ -219,8 +219,8 @@ How soft the background image is.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 KaiPlayer를 닮은 Switch 2 홈브루(kaiHEN)용 인터넷 라디오입니다.
 
-JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
-KaiRadio 옆 Backgrounds 폴더의 JPEG 또는 PNG 이미지입니다. 글자가 잘 보이도록 어둡게 표시합니다.
+JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
+KaiRadio config 폴더 안 Backgrounds 폴더의 JPEG 또는 PNG 이미지입니다. 글자가 잘 보이도록 어둡게 표시합니다.
 
 KaiRadio couldn't start the download.
 KaiRadio가 다운로드를 시작할 수 없었습니다.
@@ -477,8 +477,8 @@ The directory sent an answer KaiRadio can't read.
 The keyboard couldn't open.
 키보드를 열 수 없었습니다.
 
-The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
-KaiRadio의 표시 언어입니다. KaiRadio 옆 lang 폴더에 파일을 넣어 언어를 추가할 수 있습니다.
+The language KaiRadio is shown in. More can be added as files in the lang folder of KaiRadio's config folder.
+KaiRadio의 표시 언어입니다. KaiRadio config 폴더 안 lang 폴더에 파일을 넣어 언어를 추가할 수 있습니다.
 
 The most played stations
 가장 많이 재생된 방송국

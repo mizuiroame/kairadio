@@ -33,8 +33,8 @@ language = Español (Latinoamérica)
 24-hour (21:47)
 24 horas (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[<>^v] país  [A] abrir  [Y] estación al azar  [X] en reproducción  [L][R] estación  [-] reproducir/parar  [+] salir
+[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] país  [A] abrir  [Y] estación al azar  [X] en reproducción  [L][R] estación  [-] reproducir/parar  [+] menú
 
 [^v] choose  [<>][A] change  [B] back
 [^v] elegir  [<>][A] cambiar  [B] atrás
@@ -48,23 +48,23 @@ language = Español (Latinoamérica)
 [A] choose  [B] close  [+] exit
 [A] elegir  [B] cerrar  [+] salir
 
-[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit
-[A] abrir  [Y] ordenar  [<>] nombre, género, país, idioma  [ZL][ZR] pestañas  [+] salir
+[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu
+[A] abrir  [Y] ordenar  [<>] nombre, género, país, idioma  [ZL][ZR] pestañas  [+] menú
 
-[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit
-[A] reproducir  [Y] favorito  [B] atrás  [<>] buscar por  [L][R] estación  [+] salir
+[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu
+[A] reproducir  [Y] favorito  [B] atrás  [<>] buscar por  [L][R] estación  [+] menú
 
-[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit
-[A] reproducir  [Y] favorito  [X] en reproducción  [L][R] estación  [-] reproducir/parar  [+] salir
+[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[A] reproducir  [Y] favorito  [X] en reproducción  [L][R] estación  [-] reproducir/parar  [+] menú
 
-[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit
-[A] reproducir/parar  [Y] favorito  [L][R] estación  [B] atrás  [ZL][ZR] pestañas  [+] salir
+[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu
+[A] reproducir/parar  [Y] favorito  [L][R] estación  [B] atrás  [ZL][ZR] pestañas  [+] menú
 
 [A][B] back
 [A][B] atrás
 
-[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit
-[X] escribir un nombre  [A] reproducir  [Y] favorito  [<>] buscar por  [L][R] estación  [+] salir
+[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu
+[X] escribir un nombre  [A] reproducir  [Y] favorito  [<>] buscar por  [L][R] estación  [+] menú
 
 A to Z
 A a Z
@@ -87,8 +87,8 @@ Tras %d min de reproducción
 Asking for the time and weather there…
 Consultando la hora y el clima de allá…
 
-Audio: FFmpeg (LGPL 2.1). Also cJSON, stb and libcurl.
-Audio: FFmpeg (LGPL 2.1). También cJSON, stb y libcurl.
+Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
+Audio: FFmpeg (LGPL 2.1). También cJSON, stb, libcurl, zlib y Mesa.
 
 Automatic
 Automático
@@ -219,8 +219,8 @@ Qué tan suave se ve la imagen de fondo.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 Radio por internet homebrew para Switch 2 (kaiHEN), con el espíritu de KaiPlayer.
 
-JPEG or PNG images in the Backgrounds folder next to KaiRadio, darkened so text stays readable.
-Imágenes JPEG o PNG de la carpeta Backgrounds junto a KaiRadio, oscurecidas para que el texto se lea bien.
+JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
+Imágenes JPEG o PNG de la carpeta Backgrounds de la carpeta config de KaiRadio, oscurecidas para que el texto se lea bien.
 
 KaiRadio couldn't start the download.
 KaiRadio no pudo iniciar la descarga.
@@ -477,8 +477,8 @@ El directorio envió una respuesta que KaiRadio no puede leer.
 The keyboard couldn't open.
 No se pudo abrir el teclado.
 
-The language KaiRadio is shown in. More can be added as files in the lang folder next to KaiRadio.
-El idioma en que se muestra KaiRadio. Se pueden agregar más como archivos en la carpeta lang junto a KaiRadio.
+The language KaiRadio is shown in. More can be added as files in the lang folder of KaiRadio's config folder.
+El idioma en que se muestra KaiRadio. Se pueden agregar más como archivos en la carpeta lang de la carpeta config de KaiRadio.
 
 The most played stations
 Las estaciones más escuchadas

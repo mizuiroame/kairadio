@@ -49,8 +49,9 @@ These come from outside this folder and are linked statically:
 |---------|---------|------------|---------|
 | FFmpeg (libavformat, libavcodec, libswresample, libavutil) | 7.1 | Built by `ffmpeg/Dockerfile` from ffmpeg.org's release tarball, only the parts radio needs | LGPL 2.1 (`FFmpeg-LGPL-2.1.txt`) |
 | libcurl | 7.69.1 | devkitPro's `switch-curl` package | curl license (`curl-LICENSE.txt`) |
-| zlib | 1.3.1 | devkitPro's `switch-zlib` package | zlib license |
-| libounce (libnx fork) | - | ounce-devkit | ISC |
+| zlib | 1.3.1 | devkitPro's `switch-zlib` package | zlib license (`zlib-LICENSE.txt`) |
+| OunceVK (Mesa's NVK and Zink: EGL and OpenGL ES), `libEGL.a` and `libouncevk-gl.a` | commit `114e9298fc0e` | ounce-devkit 20261115b | MIT (`Mesa-MIT.txt`, `Mesa-license.rst`) |
+| libounce (libnx fork) | commit `d1718bb7076f` | ounce-devkit 20261115b | ISC (`libounce-ISC.txt`, `libnx-ISC.txt`) |
 
 Under the LGPL, you may change FFmpeg and relink KaiRadio with your version:
 the whole source and the scripts that build it are in this repository.

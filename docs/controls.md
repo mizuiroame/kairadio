@@ -18,7 +18,11 @@ on the GPU, sharp in handheld and docked.
 | **↑** / **↓** | Move in the list; in World, the country that way |
 | **B** | Back (out of Now Playing, or out of a genre, country or language, to the map if opened from it) |
 | **−** | Play or stop |
-| **+** | Menu: Settings, or exit (press **+** again to exit) |
+| **+** | The menu: Settings, Exit KaiRadio (**+** again asks to exit, and **+** once more exits) |
+
+In Settings, **↑** / **↓** choose a row, **A** or **▶** opens a page, **◀** /
+**▶** or **A** change a setting, and **B** goes back to the main page (or
+closes Settings from it). **+** closes Settings.
 
 ## Touch
 
@@ -33,7 +37,9 @@ Tap:
   change it;
 - the bar at the bottom for Now Playing;
 - the title at the top left to open the menu, and the **×** before it to
-  exit.
+  exit;
+- an item in the menu or in Settings, either side of a setting's value to
+  change it, **Back** to go back a page, and outside the panel to close it.
 
 Drag the globe to turn it, and a list to scroll it: a quick flick keeps it
 gliding, and a touch stops it.

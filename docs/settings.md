@@ -4,7 +4,8 @@
 
 ## Settings
 
-Open them with **+** > Settings. **Playback** has:
+Open them with **+** > Settings. They open on a main page with three
+pages: Playback, Display and About. **Playback** has:
 
 - a sleep timer,
 - playing the last station again when KaiRadio opens,
@@ -12,7 +13,7 @@ Open them with **+** > Settings. **Playback** has:
 
 **Display** has:
 
-- the language,
+- the language (see [Languages](languages.md)),
 - the accent color (or one taken from the station's logo),
 - a background image of your own, with as much blur as you like,
 - a 12- or 24-hour clock,
@@ -22,12 +23,15 @@ Open them with **+** > Settings. **Playback** has:
 **About** shows the version, credits and licenses.
 
 Backgrounds are the JPEG or PNG images you put in the `Backgrounds` folder of
-KaiRadio's folder.
+KaiRadio's `config` folder (for example
+`sdmc:/switch/kairadio/config/Backgrounds/`). A new image shows the next time
+Settings opens.
 
 ## Where KaiRadio keeps its files
 
-Favorites, recent stations, settings, backgrounds and the audio log are kept
-in a `config` folder next to `KaiRadio.nro`, in its own folder:
+Favorites, recent stations, settings, backgrounds, added languages (`lang`)
+and the audio log are kept in a `config` folder next to `KaiRadio.nro`, in its
+own folder:
 
 | Where `KaiRadio.nro` is | Its files |
 |-------------------------|-----------|

@@ -36,7 +36,9 @@ This notice is not legal advice.
 
 KaiRadio is released under the [MIT License](../LICENSE). FFmpeg is released
 under the LGPL 2.1; the other bundled libraries are listed in
-[third_party/VERSIONS.md](../third_party/VERSIONS.md). The world map is drawn
+[third_party/VERSIONS.md](../third_party/VERSIONS.md). Japanese, Chinese and
+Korean text is drawn with the console's own fonts, which aren't part of
+KaiRadio. The world map is drawn
 from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
 `tools/make_map.py`; the flags come from
 [flag-icons](https://github.com/lipis/flag-icons) (MIT) and the genre icons
@@ -49,8 +51,9 @@ from [Lucide](https://lucide.dev/) (ISC). Weather data by
 | [curl](https://curl.se/) | The network | [curl](../third_party/curl-LICENSE.txt) |
 | [cJSON](https://github.com/DaveGamble/cJSON) | Reading JSON | [MIT](../third_party/cJSON-LICENSE.txt) |
 | [stb](https://github.com/nothings/stb) | Images and fonts | Public domain or MIT |
-| zlib | Compression | zlib |
-| libounce (libnx fork) | Switch 2 system library | ISC |
+| [zlib](https://zlib.net/) | Compression | [zlib](../third_party/zlib-LICENSE.txt) |
+| [OunceVK](https://github.com/ouncebrew/ouncevk) (Mesa) | Drawing on the GPU (EGL and OpenGL ES) | [MIT](../third_party/Mesa-MIT.txt) ([Mesa's notes](../third_party/Mesa-license.rst)) |
+| libounce (libnx fork) | Switch 2 system library | ISC ([libounce](../third_party/libounce-ISC.txt), [libnx](../third_party/libnx-ISC.txt)) |
 | Noto Sans | KaiRadio's font | [OFL](../third_party/NotoSans-OFL.txt) |
 | [flag-icons](https://github.com/lipis/flag-icons) | Flags | [MIT](../third_party/flag-icons-LICENSE.txt) |
 | [Lucide](https://lucide.dev/) | Genre icons | [ISC](../third_party/lucide-LICENSE.txt) (some icons MIT, from Feather) |

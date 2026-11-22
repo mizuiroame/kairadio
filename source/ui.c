@@ -581,17 +581,17 @@ static const char *footerHelp(const App *app)
     switch (app->view) {
     case VIEW_WORLD:
         return T("[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  "
-                 "[+] exit");
+                 "[+] menu");
     case VIEW_NOW_PLAYING:
-        return T("[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] exit");
+        return T("[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu");
     case VIEW_SEARCH:
         if (appBrowsingCategories(app))
-            return T("[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] exit");
+            return T("[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu");
         if (app->category_open)
-            return T("[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] exit");
-        return T("[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] exit");
+            return T("[A] play  [Y] favorite  [B] back  [<>] search by  [L][R] station  [+] menu");
+        return T("[X] type a name  [A] play  [Y] favorite  [<>] search by  [L][R] station  [+] menu");
     default:
-        return T("[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] exit");
+        return T("[A] play  [Y] favorite  [X] now playing  [L][R] station  [-] play/stop  [+] menu");
     }
 }
 
