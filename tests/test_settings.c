@@ -74,8 +74,17 @@ static void testPages(void)
     static const SettingRow PLAYBACK[] = {SETTING_SLEEP, SETTING_RESUME, SETTING_SCREEN_OFF};
     static const SettingRow DISPLAY[] = {SETTING_LANGUAGE, SETTING_ACCENT, SETTING_BACKGROUND, SETTING_BLUR,
                                          SETTING_CLOCK, SETTING_WORLD, SETTING_START};
+    // About: the credits, and updates (no page of their own).
+    static const SettingRow ABOUT[] = {SETTING_CREDITS, SETTING_UPDATE_AUTO, SETTING_UPDATE_NOW};
     CHECK(pageIs(SETTINGS_PAGE_MAIN, MAIN, 3) && pageIs(SETTINGS_PAGE_PLAYBACK, PLAYBACK, 3));
-    CHECK(pageIs(SETTINGS_PAGE_DISPLAY, DISPLAY, 7));
+    CHECK(pageIs(SETTINGS_PAGE_DISPLAY, DISPLAY, 7) && pageIs(SETTINGS_PAGE_ABOUT, ABOUT, 3));
+    // The daily check is a choice (arrows); the credits and "Look for an update" are actions.
+    CHECK(settingsRowEditable(SETTING_UPDATE_AUTO) && !settingsRowEditable(SETTING_UPDATE_NOW) &&
+          !settingsRowEditable(SETTING_CREDITS) && !settingsRowEditable(SETTING_ABOUT) &&
+          settingsRowEditable(SETTING_START));
+    SettingsPage opened;
+    CHECK(settingOpensPage(SETTING_ABOUT, &opened) && opened == SETTINGS_PAGE_ABOUT);
+    CHECK(settingPageOpener(SETTINGS_PAGE_ABOUT) == SETTING_ABOUT);
     SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
     CHECK(settingsPageRows(SETTINGS_PAGE_COUNT, rows) == 0);
 
@@ -91,7 +100,7 @@ static void testPages(void)
     SettingsPage page = SETTINGS_PAGE_MAIN;
     CHECK(settingOpensPage(SETTING_OPEN_DISPLAY, &page) && page == SETTINGS_PAGE_DISPLAY);
     CHECK(settingOpensPage(SETTING_OPEN_PLAYBACK, &page) && page == SETTINGS_PAGE_PLAYBACK);
-    CHECK(!settingOpensPage(SETTING_ABOUT, &page) && !settingOpensPage(SETTING_CLOCK, &page));
+    CHECK(!settingOpensPage(SETTING_CREDITS, &page) && !settingOpensPage(SETTING_CLOCK, &page));  // The panel, not a page.
     CHECK(settingPageOpener(SETTINGS_PAGE_DISPLAY) == SETTING_OPEN_DISPLAY);
     CHECK(settingPageOpener(SETTINGS_PAGE_PLAYBACK) == SETTING_OPEN_PLAYBACK);
     CHECK(strcmp(settingsPageTitle(SETTINGS_PAGE_MAIN), "Settings") == 0);

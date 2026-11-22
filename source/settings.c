@@ -9,7 +9,7 @@ static const char *const ROW_LABELS[SETTING_COUNT] = {
     N_("Playback"), N_("Display"), N_("About"),
     N_("Sleep timer"), N_("Resume the last station"), N_("Screen off while playing"),
     N_("Language"), N_("Accent color"), N_("Background"), N_("Background blur"), N_("Clock"), N_("World view"),
-    N_("Start in"),
+    N_("Start in"), N_("Credits and licenses"), N_("Check once a day"), N_("Look for an update"),
 };
 // Each page's rows, ended by SETTING_COUNT.
 static const SettingRow PAGE_ROWS[SETTINGS_PAGE_COUNT][SETTINGS_PAGE_MAX_ROWS] = {
@@ -17,8 +17,10 @@ static const SettingRow PAGE_ROWS[SETTINGS_PAGE_COUNT][SETTINGS_PAGE_MAX_ROWS] =
     {SETTING_SLEEP, SETTING_RESUME, SETTING_SCREEN_OFF, SETTING_COUNT},
     {SETTING_LANGUAGE, SETTING_ACCENT, SETTING_BACKGROUND, SETTING_BLUR, SETTING_CLOCK, SETTING_WORLD, SETTING_START,
      SETTING_COUNT},
+    {SETTING_CREDITS, SETTING_UPDATE_AUTO, SETTING_UPDATE_NOW, SETTING_COUNT},
 };
-static const char *const PAGE_TITLES[SETTINGS_PAGE_COUNT] = {N_("Settings"), N_("Playback"), N_("Display")};
+static const char *const PAGE_TITLES[SETTINGS_PAGE_COUNT] = {N_("Settings"), N_("Playback"), N_("Display"),
+                                                              N_("About")};
 
 int settingsPageRows(SettingsPage page, SettingRow rows[SETTINGS_PAGE_MAX_ROWS])
 {
@@ -42,13 +44,16 @@ bool settingOpensPage(SettingRow row, SettingsPage *page)
     switch (row) {
     case SETTING_OPEN_PLAYBACK: *page = SETTINGS_PAGE_PLAYBACK; return true;
     case SETTING_OPEN_DISPLAY: *page = SETTINGS_PAGE_DISPLAY; return true;
+    case SETTING_ABOUT: *page = SETTINGS_PAGE_ABOUT; return true;
     default: return false;
     }
 }
 
 SettingRow settingPageOpener(SettingsPage page)
 {
-    return page == SETTINGS_PAGE_DISPLAY ? SETTING_OPEN_DISPLAY : SETTING_OPEN_PLAYBACK;
+    return page == SETTINGS_PAGE_DISPLAY   ? SETTING_OPEN_DISPLAY
+           : page == SETTINGS_PAGE_ABOUT   ? SETTING_ABOUT
+                                           : SETTING_OPEN_PLAYBACK;
 }
 
 const char *settingsRowLabel(SettingRow row)
@@ -61,7 +66,7 @@ const char *settingsRowHelp(SettingRow row)
     static const char *const HELP[SETTING_COUNT] = {
         N_("The sleep timer, the last station when KaiRadio opens, and the screen while a station plays."),
         N_("Language, colors, background, clock, the World tab and the tab KaiRadio opens on."),
-        N_("Version, credits and licenses."),
+        N_("Version, credits and licenses, and updates."),
         N_("Stops the radio after this long, for falling asleep to it. Kept until KaiRadio closes."),
         N_("Plays the last station again when KaiRadio opens."),
         N_("While a station plays and nothing is pressed. Any button or touch turns it back on."),
@@ -72,13 +77,19 @@ const char *settingsRowHelp(SettingRow row)
         N_("The clock at the top right."),
         N_("The World tab as a globe you turn with a finger or the stick, or as a flat map."),
         N_("The tab KaiRadio opens on. Automatic: Favorites if you have some, else World."),
+        N_("Who made KaiRadio and what it's built with, and their licenses."),
+        N_("Once a day KaiRadio asks GitHub for its latest version, and says when there's a new one. From "
+           "Brewstore, Brewstore updates it."),
+        N_("Asks GitHub now. With a new version found, and KaiRadio not from Brewstore, A downloads it, checks "
+           "it and puts it in place for the next start."),
     };
     return row >= 0 && row < SETTING_COUNT ? T(HELP[row]) : "";
 }
 
 bool settingsRowEditable(SettingRow row)
 {
-    return row >= SETTING_SLEEP && row < SETTING_COUNT;
+    // Choices: the Playback and Display rows, and the daily check. Pages and actions aren't.
+    return (row >= SETTING_SLEEP && row <= SETTING_START) || row == SETTING_UPDATE_AUTO;
 }
 
 static int clampSleep(long minutes)

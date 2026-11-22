@@ -104,7 +104,7 @@ static void syncWithRadio(App *app, RadioState *last_state, char *last_error, si
     if (strcmp(status.error, last_error) != 0) {
         snprintf(last_error, size, "%s", status.error);
         if (status.error[0])
-            appToast(app, T(status.error), now);
+            appNotify(app, NOTICE_ERROR, T(status.error), now);
     }
 }
 
@@ -217,15 +217,17 @@ int main(int argc, char **argv)
     static App app;
     appInit(&app, g_folder);
     appStartLanguages(&app);  // Before anything is said on screen.
+    appStartUpdates(&app, argc > 0 ? argv[0] : NULL);
     appSetView(&app, app.view);
     if (app.config.background[0] &&
         !backgroundLoad(g_folder, app.config.background, app.config.background_blur))
-        appToast(&app, T("The background image couldn't be opened."), nowNs());
+        appNotify(&app, NOTICE_ERROR, T("The background image couldn't be opened."), nowNs());
     // Settings > Resume: the last station played, with Recent for previous and next.
     if (app.config.resume && app.library.recent.count > 0)
         appPlayFrom(&app, &app.library.recent, 0);
 
     runLoop(&app);
+    appStopUpdates();  // A download stops; its part is removed.
 
     appletSetMediaPlaybackState(false);
     screenExit();

@@ -9,6 +9,21 @@ language = Português (Brasil)
 %d stations
 %d estações
 
+%s installed: open KaiRadio again
+%s instalada: abra o KaiRadio de novo
+
+%s is out
+Saiu a %s
+
+%s is out, in Brewstore
+Saiu a %s, no Brewstore
+
+%s is out: A installs it
+Saiu a %s: A instala
+
+%s is out: A looks again
+Saiu a %s: A procura de novo
+
 %s there
 %s lá
 
@@ -84,8 +99,14 @@ Added %s to favorites
 After %d min playing
 Após %d min tocando
 
+Already on it.
+Já está em andamento.
+
 Asking for the time and weather there…
 Consultando a hora e o clima de lá…
+
+Asks GitHub now. With a new version found, and KaiRadio not from Brewstore, A downloads it, checks it and puts it in place for the next start.
+Pergunta ao GitHub agora. Se houver uma versão nova e o KaiRadio não vier do Brewstore, A baixa, verifica e deixa pronta para a próxima abertura.
 
 Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
 Áudio: FFmpeg (LGPL 2.1). Também cJSON, stb, libcurl, zlib e Mesa.
@@ -111,17 +132,26 @@ Não foi possível tocar
 Cancel
 Cancelar
 
+Check once a day
+Procurar uma vez por dia
+
 Clear
 Céu limpo
 
 Clock
 Relógio
 
+Close KaiRadio and open it again to use the new version.
+Feche o KaiRadio e abra de novo para usar a versão nova.
+
 Cloudy
 Nublado
 
 Connecting…
 Conectando…
+
+Couldn't look: A tries again
+Não foi possível procurar: A tenta de novo
 
 Countries sorted A to Z
 Países em ordem de A a Z
@@ -138,8 +168,14 @@ Países em ordem de Z a A
 Country
 País
 
+Credits and licenses
+Créditos e licenças
+
 Display
 Tela
+
+Downloading %s... %d%%
+Baixando a %s... %d%%
 
 Drizzle
 Garoa
@@ -198,6 +234,12 @@ Gêneros com mais estações primeiro
 Genres sorted Z to A
 Gêneros em ordem de Z a A
 
+GitHub couldn't be reached.
+Não foi possível acessar o GitHub.
+
+GitHub's answer about the latest version couldn't be used.
+Não foi possível usar a resposta do GitHub sobre a versão mais recente.
+
 Globe
 Globo
 
@@ -219,14 +261,32 @@ O quanto a imagem de fundo fica suave.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 Rádio pela internet para Switch 2 homebrew (kaiHEN), no espírito do KaiPlayer.
 
+It couldn't be written to the card.
+Não foi possível gravar no cartão.
+
 JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
 Imagens JPEG ou PNG na pasta Backgrounds da pasta config do KaiRadio, escurecidas para o texto continuar legível.
+
+KaiRadio %s is installed: it runs from the next start.
+KaiRadio %s está instalada: vale a partir da próxima abertura.
+
+KaiRadio %s is out, on its GitHub page.
+Saiu o KaiRadio %s, na página do GitHub.
+
+KaiRadio %s is out: Settings > About installs it.
+Saiu o KaiRadio %s: Configurações > Sobre instala.
+
+KaiRadio %s is out: update it in Brewstore.
+Saiu o KaiRadio %s: atualize no Brewstore.
 
 KaiRadio couldn't start the download.
 O KaiRadio não conseguiu iniciar o download.
 
 KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
 O KaiRadio é de código aberto sob a licença MIT. Copyright (c) 2026 Mizuiro.
+
+KaiRadio is up to date.
+O KaiRadio está atualizado.
 
 Language
 Idioma
@@ -267,6 +327,12 @@ Carregando idiomas…
 Loading stations…
 Carregando estações…
 
+Look for an update
+Procurar atualização
+
+Looking...
+Procurando...
+
 Low
 Baixo
 
@@ -297,6 +363,9 @@ Nenhum
 Not affiliated with Nintendo, Radio Browser or any station.
 Sem vínculo com a Nintendo, o Radio Browser ou qualquer estação.
 
+Not installed: A tries again
+Não instalada: A tenta de novo
+
 Nothing is playing.
 Nada está tocando.
 
@@ -311,6 +380,9 @@ Não
 
 On
 Sim
+
+Once a day KaiRadio asks GitHub for its latest version, and says when there's a new one. From Brewstore, Brewstore updates it.
+Uma vez por dia o KaiRadio pergunta ao GitHub pela versão mais recente e avisa se houver uma nova. Se veio do Brewstore, o Brewstore atualiza.
 
 Open
 Abrir
@@ -474,6 +546,9 @@ Não é possível acessar o diretório.
 The directory sent an answer KaiRadio can't read.
 O diretório enviou uma resposta que o KaiRadio não consegue ler.
 
+The download didn't match GitHub's checksum: nothing was changed.
+O download não bateu com o checksum do GitHub: nada foi alterado.
+
 The keyboard couldn't open.
 Não foi possível abrir o teclado.
 
@@ -482,6 +557,15 @@ O idioma em que o KaiRadio aparece. Outros podem ser adicionados como arquivos n
 
 The most played stations
 As estações mais tocadas
+
+The network can't be used.
+Não é possível usar a rede.
+
+The new version couldn't be downloaded.
+Não foi possível baixar a versão nova.
+
+The new version couldn't be written to the card: nothing was changed.
+Não foi possível gravar a versão nova no cartão: nada foi alterado.
 
 The server answered %ld
 O servidor respondeu %ld
@@ -534,6 +618,9 @@ Não é possível obter o clima de lá agora.
 The World tab as a globe you turn with a finger or the stick, or as a flat map.
 A aba Mundo como um globo que você gira com o dedo ou o analógico, ou como um mapa plano.
 
+This is %s: A looks now
+Esta é a %s: A procura agora
+
 This station's audio format isn't supported.
 O formato de áudio desta estação não é compatível.
 
@@ -558,11 +645,20 @@ Tente outro nome.
 Turn the globe with a finger; the stick picks countries.
 Gire o globo com o dedo; o analógico escolhe os países.
 
-Version, credits and licenses.
-Versão, créditos e licenças.
+Up to date
+Atualizado
+
+Update it in Brewstore.
+Atualize no Brewstore.
+
+Version, credits and licenses, and updates.
+Versão, créditos e licenças, e atualizações.
 
 While a station plays and nothing is pressed. Any button or touch turns it back on.
 Enquanto uma estação toca e nada é apertado. Qualquer botão ou toque liga de novo.
+
+Who made KaiRadio and what it's built with, and their licenses.
+Quem fez o KaiRadio, com o que é feito e as licenças.
 
 World
 Mundo

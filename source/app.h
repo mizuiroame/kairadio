@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "notice.h"
 #include "background.h"
 #include "globe.h"
 #include "kinetic.h"
@@ -133,13 +134,16 @@ typedef struct {
     uint64_t sleep_until_ns;     // When it stops the radio; 0 for never.
     bool screen_off;             // Turned off after a while idle; any input turns it on.
     uint64_t last_input_ns;
+    unsigned update_seen;        // The update status's serial already said on screen.
+    bool update_manual;          // Settings asked: say "up to date" and failures too.
 
     SysInfo sys;
     TouchTracker touch;
     Kinetic kinetic;   // A list following a finger, or gliding on after it.
     bool swallow_tap;  // A press stopped a glide: its tap doesn't open anything.
-    char toast[512];
-    uint64_t toast_until_ns;
+    Notices notices;             // Messages, shown one at a time in a bubble at the top.
+    const Notice *notice;        // The one to draw this frame (NULL for none),
+    float notice_slide;          // and how far it has slid in (0 to 1).
     bool quit;
 } App;
 
@@ -156,7 +160,9 @@ bool appFailed(const App *app);
 void appInit(App *app, const char *config_folder);
 void appFree(App *app);
 
-// Shows a short message in the player bar.
+// A short message in the notice bubble at the top: something to know, done, or failed.
+void appNotify(App *app, NoticeKind kind, const char *message, uint64_t now_ns);
+// The same, as something to know.
 void appToast(App *app, const char *message, uint64_t now_ns);
 // Somewhere unexpected: a random country (on the globe, with a few stations),
 // the globe turned to it, and one of its stations playing.
@@ -164,6 +170,18 @@ void appRandomStation(App *app, uint64_t now_ns);
 
 // Once per frame, before drawing: takes directory answers.
 void appUpdate(App *app, uint64_t now_ns);
+
+// app_update.c: Settings > Updates. Start: the daily look, if due (nro_path: argv[0]).
+void appStartUpdates(App *app, const char *nro_path);
+void appStopUpdates(void);
+// Once per frame: what the look or the install found, said on screen.
+void appUpdatesTick(App *app, uint64_t now_ns);
+// A on "Look for an update": looks, or installs the version found.
+void appUpdatesActivate(App *app, uint64_t now_ns);
+// The daily look on or off.
+void appUpdatesToggle(App *app, uint64_t now_ns);
+// What the Updates rows show.
+void appUpdatesValue(const App *app, int row, char *out, size_t size);
 
 // Buttons pressed this frame (with auto-repeat), and touch input.
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns);

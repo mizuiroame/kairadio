@@ -20,7 +20,6 @@
 #define RANDOM_MIN_STATIONS 5       // A random country has at least this many stations.
 #define WEATHER_SETTLE_NS 600000000ull  // A country picked this long gets its weather asked for (not each one passed).
 
-#define TOAST_NS 3000000000ull
 
 static const DirectoryQuery CATEGORY_LISTS[SEARCH_MODES] = {DIR_SEARCH, DIR_GENRES, DIR_COUNTRIES, DIR_LANGUAGES};
 
@@ -103,10 +102,14 @@ void appFree(App *app)
     libraryFree(&app->library);
 }
 
+void appNotify(App *app, NoticeKind kind, const char *message, uint64_t now_ns)
+{
+    noticePush(&app->notices, kind, message, now_ns);
+}
+
 void appToast(App *app, const char *message, uint64_t now_ns)
 {
-    snprintf(app->toast, sizeof(app->toast), "%s", message);
-    app->toast_until_ns = now_ns + TOAST_NS;
+    appNotify(app, NOTICE_INFO, message, now_ns);
 }
 
 static void ask(App *app, Target target, DirectoryQuery query, const char *text)
@@ -283,7 +286,7 @@ void appRandomStation(App *app, uint64_t now_ns)
         }
     }
     turnGlobeToPick(app, now_ns);
-    char label[CATEGORY_NAME_MAX], line[sizeof(app->toast)];
+    char label[CATEGORY_NAME_MAX], line[NOTICE_TEXT_MAX];
     categoryLabel(&countries->items[app->map_cursor], label, sizeof(label));
     snprintf(line, sizeof(line), T("Somewhere unexpected: %s\xE2\x80\xA6"), label);
     appToast(app, line, now_ns);
@@ -294,13 +297,13 @@ void appRandomStation(App *app, uint64_t now_ns)
 static void playRandom(App *app, uint64_t now_ns)
 {
     if (app->random_results.count == 0) {
-        appToast(app, T("That country's stations can't be had right now: try again."), now_ns);
+        appNotify(app, NOTICE_ERROR, T("That country's stations can't be had right now: try again."), now_ns);
         return;
     }
     size_t index = nextRandom(app, now_ns) % app->random_results.count;
     playFrom(app, &app->random_results, index);
     const Station *s = &app->random_results.items[index];
-    char line[sizeof(app->toast)];
+    char line[NOTICE_TEXT_MAX];
     if (s->country[0])
         snprintf(line, sizeof(line), "%.120s \xC2\xB7 %.80s", s->name, s->country);
     else
@@ -310,6 +313,8 @@ static void playRandom(App *app, uint64_t now_ns)
 
 void appUpdate(App *app, uint64_t now_ns)
 {
+    appUpdatesTick(app, now_ns);
+    app->notice = noticeShown(&app->notices, now_ns, &app->notice_slide);
     directoryGetStatus(&app->directory);
     if (!app->waiting_active || app->directory.generation != app->waiting)
         return;
@@ -338,7 +343,7 @@ void appUpdate(App *app, uint64_t now_ns)
     } else if (app->directory.state == DIR_FAILED) {
         app->waiting_active = false;
         if (app->waiting_target == TARGET_RANDOM)
-            appToast(app, T("The station directory can't be reached."), now_ns);
+            appNotify(app, NOTICE_ERROR, T("The station directory can't be reached."), now_ns);
         // Ask again next time rather than keep an empty list.
         if (app->waiting_target == TARGET_CATEGORIES)
             app->categories_asked[app->waiting_mode] = false;
@@ -403,10 +408,10 @@ static void togglePlay(App *app)
 static void toggleFavorite(App *app, const Station *station, uint64_t now_ns)
 {
     bool now = libraryToggleFavorite(&app->library, station);
-    char message[sizeof(app->toast)];
+    char message[NOTICE_TEXT_MAX];
     snprintf(message, sizeof(message), now ? T("Added %s to favorites") : T("Removed %s from favorites"),
              station->name);
-    appToast(app, message, now_ns);
+    appNotify(app, NOTICE_DONE, message, now_ns);
     // The Favorites list changed under its cursor.
     size_t count = app->library.favorites.count;
     if (app->cursor[VIEW_FAVORITES] >= count)
@@ -435,7 +440,7 @@ static void typeSearch(App *app, uint64_t now_ns)
     char text[SEARCH_MAX];
     SystemKeyboardResult r = systemKeyboardInput(T("Search stations"), app->query, text, sizeof(text), SEARCH_MAX - 1);
     if (r == SYSTEM_KEYBOARD_UNAVAILABLE) {
-        appToast(app, T("The keyboard couldn't open."), now_ns);
+        appNotify(app, NOTICE_ERROR, T("The keyboard couldn't open."), now_ns);
         return;
     }
     if (r != SYSTEM_KEYBOARD_OK || !text[0])
@@ -645,6 +650,7 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         return false;
     const StationList *list = listOf(app, app->view);
     switch (hit->kind) {
+    case HIT_NOTICE: noticeDismiss(&app->notices, now_ns); break;
     case HIT_TAB:
         appSetView(app, (View)hit->arg);
         break;

@@ -9,7 +9,7 @@ typedef enum {
     // The main page.
     SETTING_OPEN_PLAYBACK,  // Opens the Playback page.
     SETTING_OPEN_DISPLAY,   // Opens the Display page.
-    SETTING_ABOUT,          // Opens About; shows the version.
+    SETTING_ABOUT,          // Opens the About page; shows the version.
     // Playback.
     SETTING_SLEEP,
     SETTING_RESUME,
@@ -22,6 +22,10 @@ typedef enum {
     SETTING_CLOCK,
     SETTING_WORLD,  // The World tab as a globe or a flat map.
     SETTING_START,
+    // About.
+    SETTING_CREDITS,       // Credits and licenses (the About panel).
+    SETTING_UPDATE_AUTO,   // Looks for a new version once a day.
+    SETTING_UPDATE_NOW,    // Looks now, or installs the one found.
     SETTING_COUNT,
 } SettingRow;
 
@@ -30,6 +34,7 @@ typedef enum {
     SETTINGS_PAGE_MAIN,
     SETTINGS_PAGE_PLAYBACK,
     SETTINGS_PAGE_DISPLAY,
+    SETTINGS_PAGE_ABOUT,
     SETTINGS_PAGE_COUNT,
 } SettingsPage;
 

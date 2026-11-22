@@ -15,6 +15,7 @@
 #include "ui_flag.h"
 #include "ui_hit.h"
 #include "ui_map.h"
+#include "ui_notice.h"
 #include "ui_now.h"
 #include "ui_settings.h"
 #include "theme.h"
@@ -499,7 +500,7 @@ static void drawWorld(const App *app, uint64_t now_ns)
 
 // --- The player bar ---
 
-static void drawMiniPlayer(const App *app, const RadioStatus *radio, uint64_t now_ns)
+static void drawMiniPlayer(const App *app, const RadioStatus *radio)
 {
     gfxFillRect(0, MINI_Y, GFX_WIDTH, MINI_H, COLOR_SURFACE);
     gfxFillRect(0, MINI_Y, GFX_WIDTH, 3, COLOR_FAINT);
@@ -514,14 +515,12 @@ static void drawMiniPlayer(const App *app, const RadioStatus *radio, uint64_t no
     int text_w = BAR_PREV_X - 48 - text_x;
     fontDrawClipped(FONT_BOLD, 22, text_x, MINI_Y + 16, text_w, has ? radio->station.name : T("Pick a station"),
                     has ? COLOR_TEXT : COLOR_DIM);
-    bool toast = app->toast[0] && now_ns < app->toast_until_ns;
-    const char *second = toast                              ? app->toast
-                         : radio->state == RADIO_FAILED      ? T(radio->error)
-                         : radio->state == RADIO_PLAYING && radio->title[0] ? radio->title
+    // What plays, or its state: messages and why it failed are said in the notice bubble.
+    const char *second = radio->state == RADIO_PLAYING && radio->title[0] ? radio->title
                          : has                               ? radioStateLabel(radio->state)
                          : app->view == VIEW_WORLD           ? T("Open a country to see its stations.")
                                                              : T("Press A or tap one to play it.");
-    Color second_color = toast || radio->state == RADIO_FAILED ? COLOR_ERROR : COLOR_DIM;
+    Color second_color = radio->state == RADIO_FAILED ? COLOR_ERROR : COLOR_DIM;
     fontDrawClipped(FONT_REGULAR, 19, text_x, MINI_Y + 50, text_w, second, second_color);
 
     bool active = radio->state != RADIO_STOPPED && radio->state != RADIO_FAILED;
@@ -629,11 +628,12 @@ void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
             drawWorld(app, now_ns);
         else
             drawList(app, radio, now_ns);
-        drawMiniPlayer(app, radio, now_ns);
+        drawMiniPlayer(app, radio);
     }
     if (!background)
         gfxFillRect(0, FOOTER_Y, GFX_WIDTH, GFX_HEIGHT - FOOTER_Y, COLOR_BG);
     uiDrawOverlay(app, now_ns);
     uiDrawHelp(MARGIN, FOOTER_Y + 28.0f, GFX_WIDTH - 2 * MARGIN, footerHelp(app));
+    uiDrawNotice(app->notice, app->notice_slide);  // Last: over everything, and its tap first.
     logosEndFrame();
 }

@@ -32,6 +32,7 @@ typedef enum {
     HIT_SETTING_STEP, // arg: SettingRow * 2, + 1 for the right half: steps it back or forward.
     HIT_SETTINGS_BACK,  // The Back button on a Settings page: back to the main one.
     HIT_OVERLAY_OUT,  // Outside a panel: closes it (About back to Settings).
+    HIT_NOTICE,       // The notice bubble at the top: a tap sends it away.
 } HitKind;
 
 typedef struct {

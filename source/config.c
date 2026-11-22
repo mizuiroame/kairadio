@@ -24,6 +24,7 @@ void configDefaults(Config *c)
     c->clock_24h = true;
     c->start_view = START_AUTO;
     c->world_globe = true;
+    c->update_check = true;
 }
 
 static void applyLine(Config *c, char *line)
@@ -50,6 +51,12 @@ static void applyLine(Config *c, char *line)
         c->resume = strcmp(value, "1") == 0;
     else if (strcmp(key, "world_globe") == 0)
         c->world_globe = strcmp(value, "0") != 0;
+    else if (strcmp(key, "update_check") == 0)
+        c->update_check = strcmp(value, "0") != 0;
+    else if (strcmp(key, "update_checked") == 0)
+        c->update_checked = strtoll(value, NULL, 10);
+    else if (strcmp(key, "update_tag") == 0 && strlen(value) < sizeof(c->update_tag) && !strpbrk(value, "/\\"))
+        strcpy(c->update_tag, value);
     else if (strcmp(key, "language") == 0 && strlen(value) < sizeof(c->language) && !strpbrk(value, "/\\"))
         strcpy(c->language, value);  // An id, or a name in the lang folder: never a path.
 }
@@ -93,6 +100,9 @@ bool configSave(const Config *c, const char *folder)
     fprintf(f, "accent=%d\nbackground_blur=%d\nclock24=%d\nscreen_off=%d\nstart_view=%d\nresume=%d\n", c->accent,
             c->background_blur, c->clock_24h ? 1 : 0, c->screen_off_minutes, c->start_view, c->resume ? 1 : 0);
     fprintf(f, "world_globe=%d\n", c->world_globe ? 1 : 0);
+    fprintf(f, "update_check=%d\nupdate_checked=%lld\n", c->update_check ? 1 : 0, (long long)c->update_checked);
+    if (c->update_tag[0] && !strpbrk(c->update_tag, "\r\n"))
+        fprintf(f, "update_tag=%s\n", c->update_tag);
     if (c->language[0] && !strpbrk(c->language, "\r\n"))
         fprintf(f, "language=%s\n", c->language);
     // A line break or a slash in the name would make another setting, or leave the folder.

@@ -69,7 +69,7 @@ void appSettingsBack(App *app)
 static void save(App *app, uint64_t now_ns)
 {
     if (!configSave(&app->config, app->config_folder))
-        appToast(app, T("The settings couldn't be saved on the card."), now_ns);
+        appNotify(app, NOTICE_ERROR, T("The settings couldn't be saved on the card."), now_ns);
 }
 
 // The background now chosen, 0 for none and i + 1 for backgrounds[i].
@@ -90,7 +90,7 @@ static void changeBackground(App *app, int delta, uint64_t now_ns)
 {
     int choices = (int)app->background_count + 1;
     if (choices == 1) {
-        char message[sizeof(app->toast)];
+        char message[NOTICE_TEXT_MAX];
         snprintf(message, sizeof(message), T("Put JPEG or PNG images in %s/Backgrounds first."), app->config_folder);
         appToast(app, message, now_ns);
         return;
@@ -99,7 +99,7 @@ static void changeBackground(App *app, int delta, uint64_t now_ns)
     const char *name = index == 0 ? "" : app->backgrounds[index - 1];
     snprintf(app->config.background, sizeof(app->config.background), "%s", name);
     if (!backgroundLoad(app->config_folder, name, app->config.background_blur))
-        appToast(app, T("That image couldn't be opened (too big, or not a JPEG or PNG)."), now_ns);
+        appNotify(app, NOTICE_ERROR, T("That image couldn't be opened (too big, or not a JPEG or PNG)."), now_ns);
 }
 
 void appUseLanguage(App *app)
@@ -144,6 +144,7 @@ void appChangeSetting(App *app, int row, int delta, uint64_t now_ns)
     case SETTING_SCREEN_OFF: c->screen_off_minutes = settingsScreenOffStep(c->screen_off_minutes, delta); break;
     case SETTING_START: c->start_view = wrap(c->start_view, delta, START_COUNT); break;
     case SETTING_RESUME: c->resume = !c->resume; break;
+    case SETTING_UPDATE_AUTO: appUpdatesToggle(app, now_ns); return;  // Saved there.
     default: return;
     }
     save(app, now_ns);
@@ -154,8 +155,10 @@ void appActivateSetting(App *app, int row, uint64_t now_ns)
     SettingsPage page;
     if (settingOpensPage(row, &page))
         openPage(app, page);
-    else if (row == SETTING_ABOUT)
+    else if (row == SETTING_CREDITS)
         app->overlay = OVERLAY_ABOUT;
+    else if (row == SETTING_UPDATE_NOW)
+        appUpdatesActivate(app, now_ns);
     else
         appChangeSetting(app, row, 1, now_ns);
 }
@@ -186,6 +189,8 @@ void appSettingValue(const App *app, int row, uint64_t now_ns, char *out, size_t
     case SETTING_START: snprintf(out, size, "%s", settingsStartName(c->start_view)); break;
     case SETTING_RESUME: snprintf(out, size, "%s", c->resume ? T("On") : T("Off")); break;
     case SETTING_ABOUT: snprintf(out, size, "KaiRadio %s", KAIRADIO_VERSION); break;
+    case SETTING_UPDATE_AUTO:
+    case SETTING_UPDATE_NOW: appUpdatesValue(app, row, out, size); break;
     default: out[0] = '\0'; break;
     }
 }

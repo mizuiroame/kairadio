@@ -159,3 +159,11 @@ bool languageUse(const char *id)
     (void)id;
     return true;
 }
+
+// The update check: nothing asked, nothing found.
+#include "updatefetch.h"
+void updateFetchInit(const char *nro_path) { (void)nro_path; }
+bool updateFetchCheck(void) { g_stub_calls++; return true; }
+bool updateFetchInstall(void) { g_stub_calls++; return true; }
+void updateFetchStatus(UpdateStatus *out) { memset(out, 0, sizeof(*out)); }
+void updateFetchExit(void) {}

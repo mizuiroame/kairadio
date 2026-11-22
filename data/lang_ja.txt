@@ -9,6 +9,21 @@ language = 日本語
 %d stations
 %d局
 
+%s installed: open KaiRadio again
+%s をインストールしました：KaiRadioを開き直してください
+
+%s is out
+%s が出ました
+
+%s is out, in Brewstore
+%s が出ました（Brewstore）
+
+%s is out: A installs it
+%s が出ました：Aでインストール
+
+%s is out: A looks again
+%s が出ました：Aでもう一度確認
+
 %s there
 現地 %s
 
@@ -84,8 +99,14 @@ Added %s to favorites
 After %d min playing
 再生して%d分後
 
+Already on it.
+すでに実行中です。
+
 Asking for the time and weather there…
 現地の時刻と天気を問い合わせています…
+
+Asks GitHub now. With a new version found, and KaiRadio not from Brewstore, A downloads it, checks it and puts it in place for the next start.
+今すぐGitHubに確認します。新しいバージョンがあり、KaiRadioがBrewstore以外から入れたものなら、Aでダウンロードして確認し、次回の起動から使えるようにします。
 
 Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
 音声: FFmpeg（LGPL 2.1）。ほかに cJSON、stb、libcurl、zlib、Mesa を使用しています。
@@ -111,17 +132,26 @@ Can't play
 Cancel
 キャンセル
 
+Check once a day
+1日1回確認
+
 Clear
 晴れ
 
 Clock
 時計
 
+Close KaiRadio and open it again to use the new version.
+新しいバージョンを使うには、KaiRadioを閉じてもう一度開いてください。
+
 Cloudy
 曇り
 
 Connecting…
 接続しています…
+
+Couldn't look: A tries again
+確認できませんでした：Aで再試行
 
 Countries sorted A to Z
 国をA→Zの順に並べ替えました
@@ -138,8 +168,14 @@ Countries sorted Z to A
 Country
 国
 
+Credits and licenses
+クレジットとライセンス
+
 Display
 画面
+
+Downloading %s... %d%%
+%s をダウンロード中... %d%%
 
 Drizzle
 霧雨
@@ -198,6 +234,12 @@ Genres sorted with the most stations first
 Genres sorted Z to A
 ジャンルをZ→Aの順に並べ替えました
 
+GitHub couldn't be reached.
+GitHubに接続できませんでした。
+
+GitHub's answer about the latest version couldn't be used.
+最新バージョンについてのGitHubの応答を使えませんでした。
+
 Globe
 地球儀
 
@@ -219,14 +261,32 @@ How soft the background image is.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 KaiPlayer の流れをくむ、Switch 2 自作ソフト（kaiHEN）用のインターネットラジオです。
 
+It couldn't be written to the card.
+SDカードに書き込めませんでした。
+
 JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
 KaiRadio の config フォルダー内の Backgrounds フォルダーにある JPEG か PNG の画像です。文字が読みやすいように暗くして表示します。
+
+KaiRadio %s is installed: it runs from the next start.
+KaiRadio %s をインストールしました：次回の起動から使われます。
+
+KaiRadio %s is out, on its GitHub page.
+KaiRadio %s が出ました（GitHubのページ）。
+
+KaiRadio %s is out: Settings > About installs it.
+KaiRadio %s が出ました：設定 > このアプリについて でインストールできます。
+
+KaiRadio %s is out: update it in Brewstore.
+KaiRadio %s が出ました：Brewstoreでアップデートしてください。
 
 KaiRadio couldn't start the download.
 KaiRadio はダウンロードを開始できませんでした。
 
 KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
 KaiRadio は MIT ライセンスのオープンソースソフトです。Copyright (c) 2026 Mizuiro.
+
+KaiRadio is up to date.
+KaiRadioは最新です。
 
 Language
 言語
@@ -267,6 +327,12 @@ Loading languages…
 Loading stations…
 局を読み込んでいます…
 
+Look for an update
+アップデートを確認
+
+Looking...
+確認中...
+
 Low
 低
 
@@ -297,6 +363,9 @@ None
 Not affiliated with Nintendo, Radio Browser or any station.
 Nintendo、Radio Browser、各放送局とは無関係です。
 
+Not installed: A tries again
+インストールできませんでした：Aで再試行
+
 Nothing is playing.
 再生していません。
 
@@ -311,6 +380,9 @@ Off
 
 On
 オン
+
+Once a day KaiRadio asks GitHub for its latest version, and says when there's a new one. From Brewstore, Brewstore updates it.
+KaiRadioは1日1回GitHubに最新バージョンを確認し、新しいものがあれば知らせます。Brewstoreから入れた場合はBrewstoreがアップデートします。
 
 Open
 開く
@@ -474,6 +546,9 @@ The directory can't be reached.
 The directory sent an answer KaiRadio can't read.
 ディレクトリーから KaiRadio が読み込めない応答が届きました。
 
+The download didn't match GitHub's checksum: nothing was changed.
+ダウンロードがGitHubのチェックサムと一致しませんでした：何も変更していません。
+
 The keyboard couldn't open.
 キーボードを開けませんでした。
 
@@ -482,6 +557,15 @@ KaiRadio の表示言語です。KaiRadio の config フォルダー内の lang 
 
 The most played stations
 よく再生されている局
+
+The network can't be used.
+ネットワークを使えません。
+
+The new version couldn't be downloaded.
+新しいバージョンをダウンロードできませんでした。
+
+The new version couldn't be written to the card: nothing was changed.
+新しいバージョンをSDカードに書き込めませんでした：何も変更していません。
 
 The server answered %ld
 サーバーの応答: %ld
@@ -534,6 +618,9 @@ The weather there can't be had now.
 The World tab as a globe you turn with a finger or the stick, or as a flat map.
 「世界」タブを、指やスティックで回す地球儀か、平面地図で表示します。
 
+This is %s: A looks now
+現在は %s：Aで今すぐ確認
+
 This station's audio format isn't supported.
 この局の音声フォーマットには対応していません。
 
@@ -558,11 +645,20 @@ Try another name.
 Turn the globe with a finger; the stick picks countries.
 地球儀は指で回せます。スティックで国を選べます。
 
-Version, credits and licenses.
-バージョン、クレジット、ライセンスです。
+Up to date
+最新です
+
+Update it in Brewstore.
+Brewstoreでアップデートしてください。
+
+Version, credits and licenses, and updates.
+バージョン、クレジット、ライセンス、アップデートです。
 
 While a station plays and nothing is pressed. Any button or touch turns it back on.
 局の再生中に何も操作しないときです。ボタンかタッチで画面が戻ります。
+
+Who made KaiRadio and what it's built with, and their licenses.
+KaiRadioを作った人、使っているもの、そのライセンスです。
 
 World
 世界

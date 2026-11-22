@@ -3,6 +3,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define CONFIG_BACKGROUND_MAX 128
 
@@ -27,6 +28,9 @@ typedef struct {
     bool world_globe;           // The World view as a globe (Y turns it into the flat map and back).
     char language[64];          // Its id: "en", "es", or a file in config/lang; "" is English.
     char language_name[64];     // Its name, as Settings shows it (not kept: set at start).
+    bool update_check;          // Look for a new version once a day (update.h).
+    int64_t update_checked;     // When it last looked, in seconds since 1970; 0 never.
+    char update_tag[32];        // The newer version it found then ("v1.3.0"), "" for none.
 } Config;
 
 void configDefaults(Config *c);

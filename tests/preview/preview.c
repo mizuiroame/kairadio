@@ -104,6 +104,7 @@ typedef struct {
     int menu_cursor, settings_page, settings_cursor, sleep_minutes;
     Config config;
     char toast[224];
+    uint64_t notice_length;  // A tap on the notice sends it away sooner.
 } Snapshot;
 
 static Snapshot snapshot(const App *app)
@@ -128,7 +129,8 @@ static Snapshot snapshot(const App *app)
     s.settings_cursor = app->settings_cursor;
     s.sleep_minutes = app->sleep_minutes;
     s.config = app->config;
-    snprintf(s.toast, sizeof(s.toast), "%s", app->toast);
+    snprintf(s.toast, sizeof(s.toast), "%s", app->notices.count ? app->notices.items[app->notices.count - 1].text : "");
+    s.notice_length = app->notices.count ? app->notices.items[0].length_ns : 0;
     return s;
 }
 
@@ -429,7 +431,8 @@ int main(int argc, char **argv)
     // The + menu and its exit question, Settings' pages (pink, with the sleep
     // timer on) and About, over Popular; and the way through them.
     appSetView(&app, VIEW_POPULAR);
-    app.toast[0] = '\0';  // The sort's message from earlier: not part of these shots.
+    app.notices = (Notices){0};  // The sort's message from earlier: not part of these shots.
+    app.notice = NULL;
     appOpenMenu(&app);
     render(dir, "menu", &app);
     appHandleOverlay(&app, HidNpadButton_Plus, 0);
@@ -468,15 +471,49 @@ int main(int argc, char **argv)
     appHandleOverlay(&app, HidNpadButton_B, 0);
     appHandleOverlay(&app, HidNpadButton_Down, 0);
     appHandleOverlay(&app, HidNpadButton_A, 0);
-    expect(app.overlay == OVERLAY_ABOUT, "A on About opens it");
+    expect(app.overlay == OVERLAY_SETTINGS && app.settings_page == SETTINGS_PAGE_ABOUT &&
+               app.settings_cursor == SETTING_CREDITS,
+           "A on About opens its page");
+    app.settings_cursor = SETTING_UPDATE_NOW;
+    render(dir, "settings_about", &app);
+    app.settings_cursor = SETTING_CREDITS;
+    appHandleOverlay(&app, HidNpadButton_A, 0);
+    expect(app.overlay == OVERLAY_ABOUT, "A on Credits and licenses opens the panel");
     render(dir, "about", &app);
     appHandleOverlay(&app, HidNpadButton_B, 0);
-    expect(app.overlay == OVERLAY_SETTINGS && app.settings_cursor == SETTING_ABOUT, "B goes back from About");
+    expect(app.overlay == OVERLAY_SETTINGS && app.settings_cursor == SETTING_CREDITS, "B goes back from the panel");
+    appHandleOverlay(&app, HidNpadButton_B, 0);
+    expect(app.settings_page == SETTINGS_PAGE_MAIN && app.settings_cursor == SETTING_ABOUT,
+           "B goes back to the main page, on About");
     appHandleOverlay(&app, HidNpadButton_B, 0);
     expect(app.overlay == OVERLAY_NONE, "B on the main page closes Settings");
     app.config.accent = 0;
     app.sleep_minutes = 0;
     app.sleep_until_ns = 0;
+
+    // Notices: a bubble at the top, over the view (and over Settings).
+    // Each starts when first shown (at 1 s), and is drawn fully in a second later.
+    noticePush(&app.notices, NOTICE_INFO, T("KaiRadio 1.3.0 is out: Settings > About installs it."), 1);
+    noticeShown(&app.notices, 1000000000ull, &app.notice_slide);
+    app.notice = noticeShown(&app.notices, 2000000000ull, &app.notice_slide);
+    render(dir, "notice_info", &app);
+    expect(tapTarget(&app, HIT_NOTICE, 0), "a tap reaches the notice");
+    app.notice = noticeShown(&app.notices, 1000000000ull + NOTICE_SLIDE_NS / 2, &app.notice_slide);
+    render(dir, "notice_leaving", &app);  // The tap sent it away: half slid out.
+    app.notices = (Notices){0};
+    noticePush(&app.notices, NOTICE_ERROR, T("The download didn't match GitHub's checksum: nothing was changed."), 1);
+    noticeShown(&app.notices, 1000000000ull, &app.notice_slide);
+    app.notice = noticeShown(&app.notices, 2000000000ull, &app.notice_slide);
+    render(dir, "notice_error", &app);
+    app.notices = (Notices){0};
+    noticePush(&app.notices, NOTICE_DONE, T("KaiRadio is up to date."), 1);
+    noticeShown(&app.notices, 1000000000ull, &app.notice_slide);
+    app.notice = noticeShown(&app.notices, 2000000000ull, &app.notice_slide);
+    appOpenSettings(&app);
+    render(dir, "notice_done_settings", &app);
+    app.overlay = OVERLAY_NONE;
+    app.notices = (Notices){0};
+    app.notice = NULL;
 
     appFree(&app);
     fontExit();

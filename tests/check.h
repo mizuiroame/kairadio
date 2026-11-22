@@ -35,3 +35,6 @@ void testKinetic(void);
 void testGlobe(void);
 void testWeather(void);
 void testLang(void);
+void testUpdate(void);
+void testUpdateRelease(void);
+void testNotice(void);

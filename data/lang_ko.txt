@@ -9,6 +9,21 @@ language = 한국어
 %d stations
 방송국 %d개
 
+%s installed: open KaiRadio again
+%s 설치됨: KaiRadio를 다시 여세요
+
+%s is out
+%s 출시됨
+
+%s is out, in Brewstore
+%s 출시됨, Brewstore에서
+
+%s is out: A installs it
+%s 출시됨: A로 설치
+
+%s is out: A looks again
+%s 출시됨: A로 다시 확인
+
 %s there
 현지 시각 %s
 
@@ -84,8 +99,14 @@ Added %s to favorites
 After %d min playing
 재생 %d분 후
 
+Already on it.
+이미 진행 중입니다.
+
 Asking for the time and weather there…
 현지 시각과 날씨를 확인하는 중…
+
+Asks GitHub now. With a new version found, and KaiRadio not from Brewstore, A downloads it, checks it and puts it in place for the next start.
+지금 GitHub에 확인합니다. 새 버전이 있고 KaiRadio를 Brewstore에서 설치하지 않았다면, A로 내려받아 확인한 뒤 다음 실행부터 쓰도록 바꿉니다.
 
 Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
 오디오: FFmpeg (LGPL 2.1). 그 외 cJSON, stb, libcurl, zlib, Mesa.
@@ -111,17 +132,26 @@ Can't play
 Cancel
 취소
 
+Check once a day
+하루에 한 번 확인
+
 Clear
 맑음
 
 Clock
 시계
 
+Close KaiRadio and open it again to use the new version.
+새 버전을 쓰려면 KaiRadio를 닫고 다시 여세요.
+
 Cloudy
 흐림
 
 Connecting…
 연결하는 중…
+
+Couldn't look: A tries again
+확인하지 못했습니다: A로 다시 시도
 
 Countries sorted A to Z
 국가를 A-Z순으로 정렬했습니다
@@ -138,8 +168,14 @@ Countries sorted Z to A
 Country
 국가
 
+Credits and licenses
+크레딧과 라이선스
+
 Display
 표시
+
+Downloading %s... %d%%
+%s 내려받는 중... %d%%
 
 Drizzle
 이슬비
@@ -198,6 +234,12 @@ Genres sorted with the most stations first
 Genres sorted Z to A
 장르를 Z-A순으로 정렬했습니다
 
+GitHub couldn't be reached.
+GitHub에 연결할 수 없었습니다.
+
+GitHub's answer about the latest version couldn't be used.
+최신 버전에 대한 GitHub의 응답을 쓸 수 없었습니다.
+
 Globe
 지구본
 
@@ -219,14 +261,32 @@ How soft the background image is.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 KaiPlayer를 닮은 Switch 2 홈브루(kaiHEN)용 인터넷 라디오입니다.
 
+It couldn't be written to the card.
+SD 카드에 쓸 수 없었습니다.
+
 JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
 KaiRadio config 폴더 안 Backgrounds 폴더의 JPEG 또는 PNG 이미지입니다. 글자가 잘 보이도록 어둡게 표시합니다.
+
+KaiRadio %s is installed: it runs from the next start.
+KaiRadio %s 설치됨: 다음 실행부터 쓰입니다.
+
+KaiRadio %s is out, on its GitHub page.
+KaiRadio %s 출시됨, GitHub 페이지에서.
+
+KaiRadio %s is out: Settings > About installs it.
+KaiRadio %s 출시됨: 설정 > 정보에서 설치합니다.
+
+KaiRadio %s is out: update it in Brewstore.
+KaiRadio %s 출시됨: Brewstore에서 업데이트하세요.
 
 KaiRadio couldn't start the download.
 KaiRadio가 다운로드를 시작할 수 없었습니다.
 
 KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
 KaiRadio는 MIT 라이선스의 오픈 소스입니다. Copyright (c) 2026 Mizuiro.
+
+KaiRadio is up to date.
+KaiRadio는 최신입니다.
 
 Language
 언어
@@ -267,6 +327,12 @@ Loading languages…
 Loading stations…
 방송국을 불러오는 중…
 
+Look for an update
+업데이트 확인
+
+Looking...
+확인 중...
+
 Low
 낮음
 
@@ -297,6 +363,9 @@ None
 Not affiliated with Nintendo, Radio Browser or any station.
 Nintendo, Radio Browser 및 각 방송국과 제휴하지 않은 소프트웨어입니다.
 
+Not installed: A tries again
+설치하지 못했습니다: A로 다시 시도
+
 Nothing is playing.
 재생 중인 방송이 없습니다.
 
@@ -311,6 +380,9 @@ Off
 
 On
 켬
+
+Once a day KaiRadio asks GitHub for its latest version, and says when there's a new one. From Brewstore, Brewstore updates it.
+KaiRadio는 하루에 한 번 GitHub에 최신 버전을 확인하고, 새 버전이 있으면 알려 줍니다. Brewstore에서 설치했다면 Brewstore가 업데이트합니다.
 
 Open
 열기
@@ -474,6 +546,9 @@ The directory can't be reached.
 The directory sent an answer KaiRadio can't read.
 디렉터리가 KaiRadio에서 읽을 수 없는 응답을 보냈습니다.
 
+The download didn't match GitHub's checksum: nothing was changed.
+내려받은 파일이 GitHub의 체크섬과 맞지 않습니다: 아무것도 바꾸지 않았습니다.
+
 The keyboard couldn't open.
 키보드를 열 수 없었습니다.
 
@@ -482,6 +557,15 @@ KaiRadio의 표시 언어입니다. KaiRadio config 폴더 안 lang 폴더에 �
 
 The most played stations
 가장 많이 재생된 방송국
+
+The network can't be used.
+네트워크를 쓸 수 없습니다.
+
+The new version couldn't be downloaded.
+새 버전을 내려받을 수 없었습니다.
+
+The new version couldn't be written to the card: nothing was changed.
+새 버전을 SD 카드에 쓸 수 없었습니다: 아무것도 바꾸지 않았습니다.
 
 The server answered %ld
 서버 응답: %ld
@@ -534,6 +618,9 @@ The weather there can't be had now.
 The World tab as a globe you turn with a finger or the stick, or as a flat map.
 세계 탭을 손가락이나 스틱으로 돌리는 지구본 또는 평면 지도로 표시합니다.
 
+This is %s: A looks now
+현재 %s: A로 지금 확인
+
 This station's audio format isn't supported.
 이 방송국의 오디오 형식은 지원하지 않습니다.
 
@@ -558,11 +645,20 @@ Try another name.
 Turn the globe with a finger; the stick picks countries.
 손가락으로 지구본을 돌리고, 스틱으로 국가를 선택합니다.
 
-Version, credits and licenses.
-버전, 크레딧, 라이선스입니다.
+Up to date
+최신
+
+Update it in Brewstore.
+Brewstore에서 업데이트하세요.
+
+Version, credits and licenses, and updates.
+버전, 크레딧, 라이선스, 업데이트입니다.
 
 While a station plays and nothing is pressed. Any button or touch turns it back on.
 방송을 재생하는 중 조작이 없으면 화면을 끕니다. 아무 버튼이나 누르거나 화면을 터치하면 다시 켜집니다.
+
+Who made KaiRadio and what it's built with, and their licenses.
+KaiRadio를 만든 사람, 사용한 것들과 그 라이선스입니다.
 
 World
 세계

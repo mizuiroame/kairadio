@@ -9,6 +9,21 @@ language = 简体中文
 %d stations
 %d个电台
 
+%s installed: open KaiRadio again
+%s 已安装：请重新打开 KaiRadio
+
+%s is out
+%s 已发布
+
+%s is out, in Brewstore
+%s 已发布，在 Brewstore 中
+
+%s is out: A installs it
+%s 已发布：按 A 安装
+
+%s is out: A looks again
+%s 已发布：按 A 重新检查
+
 %s there
 当地时间%s
 
@@ -84,8 +99,14 @@ Added %s to favorites
 After %d min playing
 播放%d分钟后
 
+Already on it.
+已在进行中。
+
 Asking for the time and weather there…
 正在查询当地时间和天气…
+
+Asks GitHub now. With a new version found, and KaiRadio not from Brewstore, A downloads it, checks it and puts it in place for the next start.
+立即询问 GitHub。如果有新版本，且 KaiRadio 不是从 Brewstore 安装的，按 A 下载、校验，并在下次启动时使用。
 
 Audio: FFmpeg (LGPL 2.1). Also cJSON, stb, libcurl, zlib and Mesa.
 音频：FFmpeg（LGPL 2.1）。另使用cJSON、stb、libcurl、zlib和Mesa。
@@ -111,17 +132,26 @@ Can't play
 Cancel
 取消
 
+Check once a day
+每天检查一次
+
 Clear
 晴
 
 Clock
 时钟
 
+Close KaiRadio and open it again to use the new version.
+关闭 KaiRadio 后重新打开即可使用新版本。
+
 Cloudy
 阴
 
 Connecting…
 正在连接…
+
+Couldn't look: A tries again
+无法检查：按 A 重试
 
 Countries sorted A to Z
 国家已按A到Z排序
@@ -138,8 +168,14 @@ Countries sorted Z to A
 Country
 国家
 
+Credits and licenses
+致谢和许可证
+
 Display
 显示
+
+Downloading %s... %d%%
+正在下载 %s... %d%%
 
 Drizzle
 毛毛雨
@@ -198,6 +234,12 @@ Genres sorted with the most stations first
 Genres sorted Z to A
 流派已按Z到A排序
 
+GitHub couldn't be reached.
+无法连接到 GitHub。
+
+GitHub's answer about the latest version couldn't be used.
+无法使用 GitHub 关于最新版本的回复。
+
 Globe
 地球仪
 
@@ -219,14 +261,32 @@ How soft the background image is.
 Internet radio for Switch 2 homebrew (kaiHEN), in the spirit of KaiPlayer.
 适用于kaiHEN的Switch 2自制网络电台，延续KaiPlayer的风格。
 
+It couldn't be written to the card.
+无法写入SD卡。
+
 JPEG or PNG images in the Backgrounds folder of KaiRadio's config folder, darkened so text stays readable.
 使用KaiRadio的config文件夹中Backgrounds文件夹里的JPEG或PNG图片，并会调暗以便看清文字。
+
+KaiRadio %s is installed: it runs from the next start.
+KaiRadio %s 已安装：下次启动时生效。
+
+KaiRadio %s is out, on its GitHub page.
+KaiRadio %s 已发布，见其 GitHub 页面。
+
+KaiRadio %s is out: Settings > About installs it.
+KaiRadio %s 已发布：在“设置 > 关于”中安装。
+
+KaiRadio %s is out: update it in Brewstore.
+KaiRadio %s 已发布：请在 Brewstore 中更新。
 
 KaiRadio couldn't start the download.
 KaiRadio无法开始下载。
 
 KaiRadio is open source under the MIT License. Copyright (c) 2026 Mizuiro.
 KaiRadio是基于MIT许可证的开源软件。版权所有 (c) 2026 Mizuiro。
+
+KaiRadio is up to date.
+KaiRadio 已是最新版本。
 
 Language
 语言
@@ -267,6 +327,12 @@ Loading languages…
 Loading stations…
 正在载入电台…
 
+Look for an update
+检查更新
+
+Looking...
+正在检查...
+
 Low
 低
 
@@ -297,6 +363,9 @@ None
 Not affiliated with Nintendo, Radio Browser or any station.
 与Nintendo、Radio Browser或任何电台均无关。
 
+Not installed: A tries again
+未安装：按 A 重试
+
 Nothing is playing.
 未在播放。
 
@@ -311,6 +380,9 @@ Off
 
 On
 开
+
+Once a day KaiRadio asks GitHub for its latest version, and says when there's a new one. From Brewstore, Brewstore updates it.
+KaiRadio 每天向 GitHub 查询一次最新版本，有新版本时会提示。若从 Brewstore 安装，则由 Brewstore 更新。
 
 Open
 打开
@@ -474,6 +546,9 @@ The directory can't be reached.
 The directory sent an answer KaiRadio can't read.
 电台目录返回了KaiRadio无法读取的响应。
 
+The download didn't match GitHub's checksum: nothing was changed.
+下载内容与 GitHub 的校验和不符：未做任何更改。
+
 The keyboard couldn't open.
 无法打开键盘。
 
@@ -482,6 +557,15 @@ KaiRadio的显示语言。可在KaiRadio的config文件夹中的lang文件夹里
 
 The most played stations
 播放最多的电台
+
+The network can't be used.
+无法使用网络。
+
+The new version couldn't be downloaded.
+无法下载新版本。
+
+The new version couldn't be written to the card: nothing was changed.
+无法将新版本写入SD卡：未做任何更改。
 
 The server answered %ld
 服务器返回了%ld
@@ -534,6 +618,9 @@ The weather there can't be had now.
 The World tab as a globe you turn with a finger or the stick, or as a flat map.
 世界标签的显示方式：可用手指或摇杆转动的地球仪，或平面地图。
 
+This is %s: A looks now
+当前为 %s：按 A 立即检查
+
 This station's audio format isn't supported.
 不支持此电台的音频格式。
 
@@ -558,11 +645,20 @@ Try another name.
 Turn the globe with a finger; the stick picks countries.
 用手指转动地球仪；用摇杆选择国家。
 
-Version, credits and licenses.
-版本、致谢和许可证。
+Up to date
+已是最新
+
+Update it in Brewstore.
+请在 Brewstore 中更新。
+
+Version, credits and licenses, and updates.
+版本、致谢、许可证和更新。
 
 While a station plays and nothing is pressed. Any button or touch turns it back on.
 在播放电台且无操作时关闭。按任意按钮或触摸屏幕即可重新开启。
+
+Who made KaiRadio and what it's built with, and their licenses.
+KaiRadio 的作者、所用的组件及其许可证。
 
 World
 世界
