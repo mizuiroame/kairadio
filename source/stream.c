@@ -178,6 +178,11 @@ static CURLcode perform(const char *url, Request *r, char *error, size_t error_s
     char curl_error[CURL_ERROR_SIZE] = "";
     struct curl_slist *headers = r->audio_only ? NULL : curl_slist_append(NULL, "Icy-MetaData: 1");
     curl_easy_setopt(curl, CURLOPT_URL, url);
+    // Station addresses come from anyone: only http and https, never file:, ftp: or others.
+    curl_easy_setopt(curl, CURLOPT_PROTOCOLS, (long)(CURLPROTO_HTTP | CURLPROTO_HTTPS));
+    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, (long)(CURLPROTO_HTTP | CURLPROTO_HTTPS));
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, NET_USER_AGENT);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

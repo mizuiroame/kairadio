@@ -8,6 +8,10 @@
 
 #include "link.h"
 
+#define HLS_SEGMENTS_MAX 256       // The newest segments of a list that are kept.
+#define HLS_SEQUENCE_MAX 1000000000L // Larger media sequence numbers count as 0.
+#define HLS_TARGET_MAX_S 60.0       // Longest wait between rereads of a live list.
+
 typedef struct {
     char url[LINK_URL_MAX];
     long sequence;  // Media sequence number.

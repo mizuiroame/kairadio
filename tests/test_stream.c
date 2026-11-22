@@ -90,6 +90,12 @@ void testIcy(void)
     CHECK(strcmp(small, "Caf") == 0);
     icyToUtf8("a\tb", 3, small, sizeof(small));
     CHECK(strcmp(small, "a b") == 0);
+    // A surrogate or an overlong form isn't UTF-8: it is read as Latin-1 instead.
+    char wide[16];
+    icyToUtf8("\xED\xA0\x80", 3, wide, sizeof(wide));
+    CHECK(strcmp(wide, "\xC3\xAD\xC2\xA0\xC2\x80") == 0);
+    icyToUtf8("\xE0\x80\x80", 3, wide, sizeof(wide));
+    CHECK((unsigned char)wide[0] == 0xC3 && (unsigned char)wide[1] == 0xA0);
 }
 
 void testLinks(void)
@@ -219,6 +225,25 @@ void testHls(void)
         CHECK(hlsFirstSegment(&p, 50) == 0);   // Fell behind: the oldest listed.
     }
     hlsFree(&p);
+
+    // A hostile list of 100,000 tiny lines keeps only the newest segments, and absurd numbers are tamed.
+    {
+        size_t lines = 100000, size = lines * 2 + 128;
+        char *big = malloc(size);
+        if (big) {
+            char *w = big + sprintf(big, "#EXTM3U\n#EXT-X-TARGETDURATION:inf\n#EXT-X-MEDIA-SEQUENCE:99999999999999\n");
+            for (size_t i = 0; i < lines; i++) {
+                *w++ = 'a';
+                *w++ = '\n';
+            }
+            *w = '\0';
+            CHECK(hlsParse(big, "http://h/live/x", 1, &p));
+            CHECK(p.count == HLS_SEGMENTS_MAX && p.target_duration == HLS_TARGET_MAX_S);
+            CHECK(p.count > 0 && p.segments[p.count - 1].sequence == (long)lines - 1);
+            hlsFree(&p);
+            free(big);
+        }
+    }
 
     // fMP4: the init segment, resolved like the segments, comes first.
     CHECK(hlsParse("#EXTM3U\n#EXT-X-MAP:URI=\"init.mp4\"\n#EXTINF:2,\na.m4s\n#EXT-X-ENDLIST\n", "http://h/live/x", 1,

@@ -75,6 +75,11 @@ static size_t utf8Sequence(const unsigned char *s, size_t len)
     for (size_t i = 1; i < n; i++)
         if ((s[i] & 0xC0) != 0x80)
             return 0;
+    // No overlong forms (E0 80..9F, F0 80..8F), surrogates (ED A0..BF) or code points past
+    // U+10FFFF (F4 90..BF).
+    if ((s[0] == 0xE0 && s[1] < 0xA0) || (s[0] == 0xED && s[1] >= 0xA0) || (s[0] == 0xF0 && s[1] < 0x90) ||
+        (s[0] == 0xF4 && s[1] >= 0x90))
+        return 0;
     return n;
 }
 

@@ -89,6 +89,36 @@ bool directoryPath(DirectoryQuery query, const char *text, char *out, size_t siz
     return n > 0 && (size_t)n < size;
 }
 
+bool directoryServerNameOk(const char *name)
+{
+    static const char SUFFIX[] = ".api.radio-browser.info";
+    size_t len = name ? strlen(name) : 0, suffix = sizeof(SUFFIX) - 1;
+    if (len <= suffix || len > 100 || strcmp(name + len - suffix, SUFFIX) != 0)
+        return false;
+    for (size_t i = 0; i < len; i++) {
+        char ch = name[i];
+        bool ok = (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-' ||
+                  ch == '.';
+        if (!ok)
+            return false;
+    }
+    return name[0] != '.' && name[0] != '-';
+}
+
+bool directoryUuidOk(const char *uuid)
+{
+    size_t len = uuid ? strlen(uuid) : 0;
+    if (len == 0 || len > 64)
+        return false;
+    for (size_t i = 0; i < len; i++) {
+        char ch = uuid[i];
+        bool ok = (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F') || ch == '-';
+        if (!ok)
+            return false;
+    }
+    return true;
+}
+
 // Picks one of the directory's servers at random, as it asks clients to.
 static void chooseServer(void)
 {
@@ -99,7 +129,8 @@ static void chooseServer(void)
         if (count > 0) {
             const cJSON *pick = cJSON_GetArrayItem(root, rand() % count);
             const cJSON *name = cJSON_GetObjectItemCaseSensitive(pick, "name");
-            if (cJSON_IsString(name) && strlen(name->valuestring) < sizeof(g_server))
+            if (cJSON_IsString(name) && strlen(name->valuestring) < sizeof(g_server) &&
+                directoryServerNameOk(name->valuestring))
                 snprintf(g_server, sizeof(g_server), "%s", name->valuestring);
         }
         cJSON_Delete(root);
@@ -166,6 +197,8 @@ static void runQuery(DirectoryQuery query, const char *text, unsigned generation
 
 static void sendClick(const char *uuid)
 {
+    if (!directoryUuidOk(uuid))
+        return;
     char path[128];
     snprintf(path, sizeof(path), "/json/url/%s", uuid);
     NetResponse r;

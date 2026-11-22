@@ -106,6 +106,21 @@ void testStations(void)
 void testDirectory(void)
 {
     char path[512];
+    // Server names from /json/servers stay inside the directory's own domain.
+    CHECK(directoryServerNameOk("de1.api.radio-browser.info"));
+    CHECK(directoryServerNameOk("at1.api.radio-browser.info"));
+    CHECK(!directoryServerNameOk("evil.example"));
+    CHECK(!directoryServerNameOk("api.radio-browser.info.evil.example"));
+    CHECK(!directoryServerNameOk("x@de1.api.radio-browser.info"));
+    CHECK(!directoryServerNameOk("evil.example/.api.radio-browser.info"));
+    CHECK(!directoryServerNameOk(".api.radio-browser.info"));
+    CHECK(!directoryServerNameOk(""));
+    // Station ids go into a path only when they are a plain UUID.
+    CHECK(directoryUuidOk("9617a958-0601-11e8-ae97-52543be04c81"));
+    CHECK(!directoryUuidOk("../stations/byname/x"));
+    CHECK(!directoryUuidOk("abc?x=1"));
+    CHECK(!directoryUuidOk("abc#x"));
+    CHECK(!directoryUuidOk(""));
     CHECK(directoryPath(DIR_POPULAR, NULL, path, sizeof(path)) &&
           strcmp(path, "/json/stations/topclick/150?hidebroken=true") == 0);
     CHECK(directoryPath(DIR_SEARCH, "jazz & blues", path, sizeof(path)) &&

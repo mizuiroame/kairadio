@@ -47,6 +47,11 @@ static bool attribute(const char *list, size_t len, const char *name, char *out,
 
 static bool addSegment(HlsPlaylist *p, const char *url, long sequence, size_t *capacity)
 {
+    if (p->count == HLS_SEGMENTS_MAX) {
+        // A live list only needs its newest segments; a huge one can't use up memory.
+        memmove(p->segments, p->segments + 1, (p->count - 1) * sizeof(HlsSegment));
+        p->count--;
+    }
     if (p->count == *capacity) {
         size_t grown = *capacity ? *capacity * 2 : 16;
         HlsSegment *items = realloc(p->segments, grown * sizeof(HlsSegment));
@@ -112,9 +117,13 @@ bool hlsParse(const char *body, const char *base, long max_bandwidth, HlsPlaylis
                 next_bandwidth = attribute(line + 18, len - 18, "BANDWIDTH", value, sizeof(value)) ? atol(value) : 0;
                 out->master = true;
             } else if (startsWith(line, len, "#EXT-X-MEDIA-SEQUENCE:")) {
-                sequence = atol(line + 22);
+                sequence = strtol(line + 22, NULL, 10);
+                if (sequence < 0 || sequence > HLS_SEQUENCE_MAX)
+                    sequence = 0;  // Room to count on without overflowing.
             } else if (startsWith(line, len, "#EXT-X-TARGETDURATION:")) {
-                out->target_duration = atof(line + 22);
+                double seconds = atof(line + 22);
+                // Only a sane wait between rereads: "inf" or 1e300 would never wake up.
+                out->target_duration = seconds >= 0 && seconds <= HLS_TARGET_MAX_S ? seconds : HLS_TARGET_MAX_S;
             } else if (startsWith(line, len, "#EXT-X-ENDLIST")) {
                 out->ended = true;
             } else if (startsWith(line, len, "#EXT-X-MAP:")) {

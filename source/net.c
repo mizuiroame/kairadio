@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <curl/curl.h>
 #ifdef __SWITCH__
@@ -80,6 +81,13 @@ bool netGet(const char *url, size_t max_bytes, const volatile bool *cancel, NetR
     char error[CURL_ERROR_SIZE] = "";
     Sink sink = {out, max_bytes, false};
     curl_easy_setopt(curl, CURLOPT_URL, url);
+    // Only http and https (logos may be http). An https address (directory, weather) may not
+    // be redirected to plain http.
+    long redirects = strncasecmp(url, "https://", 8) == 0 ? CURLPROTO_HTTPS : CURLPROTO_HTTP | CURLPROTO_HTTPS;
+    curl_easy_setopt(curl, CURLOPT_PROTOCOLS, (long)(CURLPROTO_HTTP | CURLPROTO_HTTPS));
+    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, redirects);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, NET_USER_AGENT);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, MAX_REDIRECTS);

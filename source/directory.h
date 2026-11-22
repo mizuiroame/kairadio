@@ -56,3 +56,9 @@ void directoryCountClick(const char *uuid);
 
 // The path and query of a request ("/json/stations/..."). Pure; for tests.
 bool directoryPath(DirectoryQuery query, const char *text, char *out, size_t size);
+// True for a directory server name such as "de1.api.radio-browser.info": letters, digits, '-'
+// and '.', ending in ".api.radio-browser.info". The list of servers comes over the network,
+// so a name outside the directory's own domain is not used. Pure; for tests.
+bool directoryServerNameOk(const char *name);
+// True for a station id made of hex digits and '-' (a UUID), so it can go into a path as is.
+bool directoryUuidOk(const char *uuid);
