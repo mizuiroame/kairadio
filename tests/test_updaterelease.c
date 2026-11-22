@@ -5,10 +5,11 @@
 #include "check.h"
 #include "updaterelease.h"
 
-// The shape of GitHub's answer (trimmed), with fields in its order.
+// The shape of GitHub's answer (trimmed). extra adds "draft" or "prerelease" (each key once:
+// JSON readers differ on a key given twice).
 #define RELEASE(tag, extra, asset_name, url, digest, size)                                                    \
     "{\"url\":\"https://api.github.com/repos/mizuiroame/kairadio/releases/1\",\"tag_name\":\"" tag "\","       \
-    "\"name\":\"KaiRadio\"" extra ",\"draft\":false,\"prerelease\":false,\"assets\":["                        \
+    "\"name\":\"KaiRadio\"" extra ",\"assets\":["                        \
     "{\"name\":\"notes.txt\",\"size\":10,\"digest\":null,\"browser_download_url\":\"https://example.com/x\"}," \
     "{\"name\":\"" asset_name "\",\"content_type\":\"application/octet-stream\",\"size\":" size              \
     ",\"digest\":\"" digest "\",\"browser_download_url\":\"" url "\"}],\"body\":\"What's new...\"}"

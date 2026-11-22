@@ -17,9 +17,9 @@
 #define NOTICE_LINE_H 28
 #define NOTICE_TOP (HEADER_H + 10)  // Under the header, as a phone's notification under its status bar.
 #define NOTICE_RADIUS 22
-#define COLOR_DONE GFX_RGB(0x5C, 0xD6, 0x8A)
-#define COLOR_SHADOW GFX_RGB(0x06, 0x06, 0x08)
-#define COLOR_EDGE GFX_RGB(0x3A, 0x3A, 0x44)
+#define NOTICE_DONE_COLOR GFX_RGB(0x5C, 0xD6, 0x8A)
+#define NOTICE_SHADOW_COLOR GFX_RGB(0x06, 0x06, 0x08)
+#define NOTICE_EDGE_COLOR GFX_RGB(0x3A, 0x3A, 0x44)
 
 // Splits text into at most two lines of max_w: the first ends at the last space
 // that fits; the second holds the rest (clipped when drawn). True if two.
@@ -49,7 +49,7 @@ static bool wrap(const char *text, int max_w, char *first, char *second, size_t 
 
 static void drawIcon(NoticeKind kind, int cx, int cy)
 {
-    Color color = kind == NOTICE_ERROR ? COLOR_ERROR : kind == NOTICE_DONE ? COLOR_DONE : COLOR_ACCENT;
+    Color color = kind == NOTICE_ERROR ? COLOR_ERROR : kind == NOTICE_DONE ? NOTICE_DONE_COLOR : COLOR_ACCENT;
     gfxFillCircle(cx, cy, NOTICE_ICON / 2, color);
     if (kind == NOTICE_DONE) {  // A tick.
         gfxLine((float)cx - 7, (float)cy + 1, (float)cx - 2, (float)cy + 6, 3.5f, COLOR_BG);
@@ -82,8 +82,8 @@ void uiDrawNotice(const Notice *n, float slide)
     int x = (GFX_WIDTH - w) / 2;
     int y = (int)((float)NOTICE_TOP - (1.0f - eased) * (float)(NOTICE_TOP + h + 12));
 
-    gfxFillRoundRect(x + 2, y + 6, w, h, NOTICE_RADIUS, COLOR_SHADOW);
-    gfxFillRoundRect(x - 1, y - 1, w + 2, h + 2, NOTICE_RADIUS + 1, COLOR_EDGE);
+    gfxFillRoundRect(x + 2, y + 6, w, h, NOTICE_RADIUS, NOTICE_SHADOW_COLOR);
+    gfxFillRoundRect(x - 1, y - 1, w + 2, h + 2, NOTICE_RADIUS + 1, NOTICE_EDGE_COLOR);
     gfxFillRoundRect(x, y, w, h, NOTICE_RADIUS, COLOR_SURFACE_HI);
     drawIcon(n->kind, x + NOTICE_PAD + NOTICE_ICON / 2, y + h / 2);
     int text_x = x + NOTICE_PAD + NOTICE_ICON + NOTICE_GAP;
