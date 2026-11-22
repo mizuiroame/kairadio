@@ -20,7 +20,14 @@ pages: Playback, Display and About. **Playback** has:
 - the globe or a flat map (World view),
 - the tab to start in.
 
-**About** shows the version, credits and licenses.
+**About** shows the version, and has:
+
+- **Credits and licenses**,
+- **Check once a day**: on by default, KaiRadio asks GitHub once a day for a
+  new version and says when there is one,
+- **Look for an update**: looks now. With a new version found, if KaiRadio
+  runs from `sdmc:/switch/`, **A** downloads it, checks its SHA-256 and puts it
+  in place for the next start. From brewstore, update it there.
 
 Backgrounds are the JPEG or PNG images you put in the `Backgrounds` folder of
 KaiRadio's `config` folder (for example

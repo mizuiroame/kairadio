@@ -47,6 +47,13 @@ touches small:
   - [Open-Meteo](https://open-meteo.com/), over `https://`, for the time and
     weather beside the globe: it gets only the middle of the country picked on
     the map, not where you are.
+  - GitHub, over `https://`, at most once a day (Settings > About > Check
+    once a day turns it off) and when you choose **Look for an update**: it
+    asks this repository for its latest release. Installing one downloads
+    `KaiRadio.nro` only from this repository's release, checks its size and
+    SHA-256 against what GitHub lists for it, and only then puts it in place,
+    keeping the old one until the swap is done. From brewstore, KaiRadio only
+    says a new version is out and leaves updating to brewstore.
   - Requests say they're from KaiRadio (its version and this repository).
 - **Only http and https.** Streams, playlists and logos are limited to
   `http://` and `https://` (no `file:`, `ftp:` or other schemes, even through a
