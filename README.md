@@ -81,6 +81,8 @@ card: OunceShell's FTP server with an FTP client such as
 - [Languages](docs/languages.md): choosing one, and translating KaiRadio
 - [Controls](docs/controls.md): buttons and touch
 - [Building](docs/building.md)
+- [Security](SECURITY.md): what KaiRadio connects to and keeps, and how to
+  report a problem
 - [Legal notice and licenses](docs/legal.md)
 
 ## License
