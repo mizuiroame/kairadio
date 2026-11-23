@@ -35,6 +35,10 @@ The screenshots show made-up stations.
   **languages** to browse. [More](docs/stations.md#popular-and-search)
 - **Favorites** and **Recent**, kept on your card.
   [More](docs/stations.md#favorites-and-recent)
+- **Podcasts**: your region's top podcasts, by genre too, or find one by
+  name; subscribe, and new episodes are looked for each time KaiRadio starts.
+  An episode plays from where you left it, with a progress bar, back 15 s and
+  ahead 30 s, and a tick once heard.
 - **Now Playing**: the station's logo, the song playing and the format.
   [More](docs/playback.md#now-playing)
 - Plays **MP3**, **AAC** and **HE-AAC**, **Ogg Vorbis**, **Opus** and **FLAC**

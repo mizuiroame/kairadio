@@ -22,7 +22,8 @@ you're credited in the release notes unless you'd rather not be.
 
 In scope: KaiRadio's own code and how it uses its libraries. For instance, a
 station's stream, playlist (`.pls`, `.m3u`, HLS), logo or song titles, or an
-answer from Radio Browser or Open-Meteo, that can crash KaiRadio or make it run
+answer from Radio Browser, Open-Meteo or Apple's podcast directory, or a
+podcast's feed or episode, that can crash KaiRadio or make it run
 code, read or write files it shouldn't, or reach places on your network it
 shouldn't.
 
@@ -44,6 +45,12 @@ touches small:
     ranks stations by popularity. Nothing else about you is sent.
   - The station itself, at the stream address it published, and the host of
     its logo.
+  - Apple's podcast directory (`itunes.apple.com`), over `https://`, for the
+    Podcasts tab's top podcasts, genres and searches: it gets the words you
+    search for and the region chosen, nothing else. A podcast's feed is read
+    from the address it publishes, and its episodes from wherever the feed
+    points (often through the podcast's own trackers, as any podcast app is).
+    Your subscriptions are never sent anywhere.
   - [Open-Meteo](https://open-meteo.com/), over `https://`, for the time and
     weather beside the globe: it gets only the middle of the country picked on
     the map, not where you are.
@@ -61,7 +68,9 @@ touches small:
   Certificates are checked. Many stations only stream over plain `http://`;
   what you listen to then travels unencrypted, as with any web radio player.
 - **What's kept on the card**, in KaiRadio's folder: your settings, favorites
-  and recent stations. No account, no password, no history sent anywhere.
+  and recent stations, the podcasts you subscribed to (with their newest
+  episodes) and where you left each episode. No account, no password, no
+  history sent anywhere.
 
 ## Untrusted input
 
