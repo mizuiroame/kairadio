@@ -38,3 +38,5 @@ void testLang(void);
 void testUpdate(void);
 void testUpdateRelease(void);
 void testNotice(void);
+void testPodcast(void);
+void testPodStore(void);
