@@ -678,6 +678,6 @@ void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
         gfxFillRect(0, FOOTER_Y, GFX_WIDTH, GFX_HEIGHT - FOOTER_Y, COLOR_BG);
     uiDrawOverlay(app, now_ns);
     uiDrawHelp(MARGIN, FOOTER_Y + 28.0f, GFX_WIDTH - 2 * MARGIN, footerHelp(app, radio));
-    uiDrawNotice(app->notice, app->notice_slide);  // Last: over everything, and its tap first.
+    uiDrawNotices(app->notice_views, app->notice_count);  // Last: over everything, and its tap first.
     logosEndFrame();
 }

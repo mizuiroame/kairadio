@@ -198,8 +198,8 @@ typedef struct {
     Kinetic kinetic;   // A list following a finger, or gliding on after it.
     bool swallow_tap;  // A press stopped a glide: its tap doesn't open anything.
     Notices notices;             // Messages, shown one at a time in a bubble at the top.
-    const Notice *notice;        // The one to draw this frame (NULL for none),
-    float notice_slide;          // and how far it has slid in (0 to 1).
+    NoticeView notice_views[NOTICE_STACK + 1];  // The bubbles to draw this frame,
+    int notice_count;            // and how many.
     bool quit;
 } App;
 

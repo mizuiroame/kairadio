@@ -356,7 +356,7 @@ void appUpdate(App *app, uint64_t now_ns)
 {
     appUpdatesTick(app, now_ns);
     appPodcastsUpdate(app, now_ns);
-    app->notice = noticeShown(&app->notices, now_ns, &app->notice_slide);
+    app->notice_count = noticeVisible(&app->notices, now_ns, app->notice_views);
     askStale(app);
     directoryGetStatus(&app->directory);
     if (!app->waiting_active || app->directory.generation != app->waiting)
@@ -709,7 +709,7 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         return false;
     const StationList *list = listOf(app, app->view);
     switch (hit->kind) {
-    case HIT_NOTICE: noticeDismiss(&app->notices, now_ns); break;
+    case HIT_NOTICE: noticeDismiss(&app->notices, (uint64_t)hit->arg, now_ns); break;
     case HIT_TAB:
         appSetView(app, (View)hit->arg);
         break;
