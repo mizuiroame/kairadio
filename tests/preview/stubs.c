@@ -9,6 +9,7 @@
 #include "languages.h"
 #include "logo.h"
 #include "logos.h"
+#include "podfetch.h"
 #include "radio.h"
 #include "stubs.h"
 #include "weatherfetch.h"
@@ -24,6 +25,44 @@ void radioPlay(const Station *station)
     g_stub_radio.station = *station;
     g_stub_radio.state = RADIO_CONNECTING;
 }
+
+void radioPlayEpisode(const RadioEpisode *episode)
+{
+    g_stub_calls++;
+    g_stub_radio = (RadioStatus){0};
+    g_stub_radio.has_episode = true;
+    g_stub_radio.episode = *episode;
+    g_stub_radio.state = RADIO_CONNECTING;
+    g_stub_radio.position = episode->start;
+    g_stub_radio.duration = episode->duration;
+}
+
+void radioSeek(double seconds)
+{
+    g_stub_calls++;
+    g_stub_radio.position = seconds;
+}
+
+void radioPause(bool paused)
+{
+    g_stub_calls++;
+    g_stub_radio.paused = paused;
+}
+
+// The podcast fetcher: nothing comes from the network here.
+bool podFetchInit(void) { return true; }
+void podFetchExit(void) {}
+void podFetchSearch(const char *words) { (void)words; g_stub_calls++; }
+void podFetchChart(const char *cc, int genre) { (void)cc; (void)genre; g_stub_calls++; }
+void podFetchSearchStatus(PodSearchStatus *out) { memset(out, 0, sizeof(*out)); }
+bool podFetchTakeSearch(unsigned generation, PodcastResults *out) { (void)generation; (void)out; return false; }
+void podFetchFeed(const char *feed) { (void)feed; g_stub_calls++; }
+bool podFetchTakeFeed(char *url, size_t url_size, Feed *out, char *error, size_t error_size)
+{
+    (void)url, (void)url_size, (void)out, (void)error, (void)error_size;
+    return false;
+}
+int podFetchFeedsPending(void) { return 0; }
 
 void radioStop(void)
 {

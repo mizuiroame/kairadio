@@ -25,6 +25,9 @@ bool podFetchInit(void);
 void podFetchExit(void);
 
 void podFetchSearch(const char *words);
+// Apple's top podcasts of a country's store (cc: "mx"), of a genre (0: all):
+// answered as a search is, in the chart's order.
+void podFetchChart(const char *cc, int genre);
 void podFetchSearchStatus(PodSearchStatus *out);
 // Moves a READY search's answers to out (the caller frees them). False if
 // there are none, or they're for an older search.

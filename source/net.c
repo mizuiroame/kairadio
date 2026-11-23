@@ -14,7 +14,7 @@
 
 #define CONNECT_TIMEOUT_S 10L
 #define TRANSFER_TIMEOUT_S 30L
-#define MAX_REDIRECTS 5L
+#define MAX_REDIRECTS 10L  // Podcast episodes pass through trackers: The Daily's take 6.
 #define DOWNLOAD_STALL_S 30L  // A download with nothing coming this long has failed.
 
 bool netInit(void)

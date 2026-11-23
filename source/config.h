@@ -30,6 +30,7 @@ typedef struct {
     char language_name[64];     // Its name, as Settings shows it (not kept: set at start).
     bool update_check;          // Look for a new version once a day (update.h).
     int64_t update_checked;     // When it last looked, in seconds since 1970; 0 never.
+    char podcast_region[3];     // The country of Apple's podcast charts ("mx"), "" for the language's.
     char update_tag[32];        // The newer version it found then ("v1.3.0"), "" for none.
 } Config;
 

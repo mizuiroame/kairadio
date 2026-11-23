@@ -14,6 +14,8 @@
 #include "config.h"
 #include "directory.h"
 #include "library.h"
+#include "podcast.h"
+#include "podstore.h"
 #include "radio.h"
 #include "stations.h"
 #include "sysinfo.h"
@@ -25,9 +27,35 @@ typedef enum {
     VIEW_SEARCH,
     VIEW_FAVORITES,
     VIEW_RECENT,
+    VIEW_PODCASTS,
     VIEW_NOW_PLAYING,
     VIEW_COUNT,
 } View;
+
+// What the Podcasts tab shows. Its three modes (left and right): the
+// podcasts subscribed to, the region's top podcasts, and the genres; and
+// from them, a search's or a genre's podcasts, a podcast's episodes, or the
+// regions to choose from.
+typedef enum {
+    POD_PAGE_SUBS,
+    POD_PAGE_TOP,
+    POD_PAGE_GENRES,
+    POD_PAGE_RESULTS,
+    POD_PAGE_EPISODES,
+    POD_PAGE_REGIONS,
+    POD_PAGES,
+} PodPage;
+#define POD_MODES 3  // The first pages: Yours, Top, Genres.
+
+// What the fetcher's search or chart answers are for.
+typedef enum {
+    POD_WAIT_NONE,
+    POD_WAIT_TOP,
+    POD_WAIT_RESULTS,
+} PodWait;
+
+#define EPISODE_BACK_S 15   // L, and the button left of play: back this far.
+#define EPISODE_AHEAD_S 30  // R: ahead this far.
 
 // How Search finds stations: by name (typed), or by browsing a category.
 typedef enum {
@@ -115,8 +143,36 @@ typedef struct {
     SearchMode waiting_mode;
     bool waiting_active;
     DirectoryStatus directory;
+    // Requests a newer one replaced before they were answered: asked again
+    // when what they fill shows (leaving World while it lit up, say).
+    bool stale_popular, stale_categories[SEARCH_MODES], stale_category_results, stale_name_results;
 
     Library library;
+
+    // Podcasts (app_podcast.c).
+    PodStore pods;
+    PodPage pod_page;
+    PodPage pod_from;              // Where the episodes page goes back to,
+    PodPage pod_results_from;      // the results page,
+    PodPage pod_regions_from;      // and the regions page.
+    size_t pod_cursor[POD_PAGES];
+    char pod_query[SEARCH_MAX];
+    PodcastResults pod_results;    // A search's, or a genre's top podcasts.
+    char pod_results_title[PODCAST_TITLE_MAX];  // What they are ("Podcasts for "x"", "News").
+    int pod_genre;                 // The genre shown (an index of the genres), or -1 for a search.
+    PodcastResults pod_top;        // The region's top podcasts,
+    char pod_top_region[3];        // for this region,
+    bool pod_top_failed;           // and whether they couldn't be had.
+    PodWait pod_wait;              // What the fetcher's answer is for,
+    unsigned pod_search;           // its request,
+    bool pod_searching, pod_search_failed;  // and how the results' one went.
+    PodcastResult pod_open;        // The podcast whose episodes show.
+    Feed pod_feed;                 // Its episodes while it isn't subscribed to.
+    bool pod_loading, pod_load_failed;
+    char pod_error[256];           // Why the search or the feed failed.
+    uint64_t pod_saved_ns;         // When the playing episode's place was last kept.
+    char pod_marked[LINK_URL_MAX + PODCAST_GUID_MAX];  // The episode last marked heard by playing to its end.
+
     // The list the playing station was chosen from, for previous and next.
     StationList play_list;
     size_t play_index;
@@ -221,6 +277,53 @@ void appCheckSleep(App *app, uint64_t now_ns);
 // (in Search), from the World view.
 void appOpenMapCountry(App *app, size_t index);
 void appSetSearchMode(App *app, SearchMode mode);
+
+// app_podcast.c: the Podcasts tab, and episodes playing.
+// Start: the podcasts kept on the card, and their feeds asked for anew.
+void appPodcastsStart(App *app);
+// The playing episode's place kept; the fetcher stopped.
+void appPodcastsStop(App *app);
+// Once per frame: searches and feeds that came, and the playing episode's place.
+void appPodcastsUpdate(App *app, uint64_t now_ns);
+void appPodcastsButtons(App *app, uint64_t pressed, uint64_t now_ns);
+// A tap on one of the tab's targets (or the episode's controls). False if it isn't one.
+bool appPodcastsTap(App *app, int kind, int arg, int x, int y, uint64_t now_ns);
+// Up or down the page's list.
+void appPodMove(App *app, long delta);
+// Try again: the search, or the open podcast's feed.
+void appPodcastsRetry(App *app);
+// The episodes the episodes page lists (the subscription's, or the feed read for it).
+const Episode *appPodEpisodes(const App *app, size_t *count);
+// The open podcast's subscription, or -1.
+int appPodOpenSub(const App *app);
+// The rows the page lists now.
+size_t appPodCount(const App *app);
+// The region of the charts: the one chosen, or the language's.
+const char *appPodRegion(const App *app);
+// The genres and regions the tab offers.
+typedef struct {
+    int id;              // Apple's.
+    const char *name;    // English (shown with T()).
+    const char *icon;    // A word that picks its icon (categoryicons.h).
+} PodGenre;
+typedef struct {
+    const char *code;    // "mx".
+    const char *name;    // In its own language ("México").
+} PodRegion;
+extern const PodGenre POD_GENRES[];
+extern const size_t POD_GENRE_COUNT;
+extern const PodRegion POD_REGIONS[];
+extern const size_t POD_REGION_COUNT;
+// The name of a region's code, or the code.
+const char *appPodRegionName(const char *code);
+// True while the top podcasts of the region are asked for.
+bool appPodTopLoading(const App *app);
+// An episode playing (or paused, or ended): L, R and play act on it.
+bool appEpisodeActive(void);
+// Jumps by seconds in the episode playing.
+void appEpisodeJump(App *app, double seconds);
+// Pauses or goes on; from the start after its end; again after a failure.
+void appEpisodeToggle(App *app);
 // The next way to sort the genres, countries or languages shown, keeping the
 // one selected selected.
 void appCycleSort(App *app, uint64_t now_ns);

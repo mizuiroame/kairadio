@@ -57,6 +57,9 @@ static void applyLine(Config *c, char *line)
         c->update_checked = strtoll(value, NULL, 10);
     else if (strcmp(key, "update_tag") == 0 && strlen(value) < sizeof(c->update_tag) && !strpbrk(value, "/\\"))
         strcpy(c->update_tag, value);
+    else if (strcmp(key, "podcast_region") == 0 && strlen(value) == 2 && value[0] >= 'a' && value[0] <= 'z' &&
+             value[1] >= 'a' && value[1] <= 'z')
+        strcpy(c->podcast_region, value);
     else if (strcmp(key, "language") == 0 && strlen(value) < sizeof(c->language) && !strpbrk(value, "/\\"))
         strcpy(c->language, value);  // An id, or a name in the lang folder: never a path.
 }
@@ -103,6 +106,8 @@ bool configSave(const Config *c, const char *folder)
     fprintf(f, "update_check=%d\nupdate_checked=%lld\n", c->update_check ? 1 : 0, (long long)c->update_checked);
     if (c->update_tag[0] && !strpbrk(c->update_tag, "\r\n"))
         fprintf(f, "update_tag=%s\n", c->update_tag);
+    if (c->podcast_region[0])
+        fprintf(f, "podcast_region=%s\n", c->podcast_region);
     if (c->language[0] && !strpbrk(c->language, "\r\n"))
         fprintf(f, "language=%s\n", c->language);
     // A line break or a slash in the name would make another setting, or leave the folder.

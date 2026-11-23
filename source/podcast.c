@@ -105,6 +105,8 @@ static bool readResult(const cJSON *item, PodcastResult *r)
     const char *image = stringField(item, "artworkUrl600");
     copyUrl(image[0] ? image : stringField(item, "artworkUrl100"), r->image, sizeof(r->image));
     copyText(stringField(item, "primaryGenreName"), r->genre, sizeof(r->genre));
+    const cJSON *id = cJSON_GetObjectItemCaseSensitive(item, "collectionId");
+    r->id = cJSON_IsNumber(id) && id->valuedouble > 0 && id->valuedouble < 1e15 ? (long long)id->valuedouble : 0;
     const cJSON *count = cJSON_GetObjectItemCaseSensitive(item, "trackCount");
     r->episodes = cJSON_IsNumber(count) && count->valuedouble > 0 && count->valuedouble < 1e6 ? count->valueint : 0;
     return r->title[0] && r->feed[0];
@@ -143,6 +145,81 @@ void podcastResultsFree(PodcastResults *r)
 {
     free(r->items);
     memset(r, 0, sizeof(*r));
+}
+
+// --- Charts ---
+
+static bool isCountryCode(const char *cc)
+{
+    return cc && strlen(cc) == 2 && cc[0] >= 'a' && cc[0] <= 'z' && cc[1] >= 'a' && cc[1] <= 'z';
+}
+
+bool podcastChartUrl(const char *cc, int genre, char *out, size_t size)
+{
+    if (!isCountryCode(cc) || genre < 0 || genre > 99999)
+        return false;
+    int n = genre ? snprintf(out, size, "https://itunes.apple.com/%s/rss/toppodcasts/limit=%d/genre=%d/json", cc,
+                             PODCAST_CHART_MAX, genre)
+                  : snprintf(out, size, "https://itunes.apple.com/%s/rss/toppodcasts/limit=%d/json", cc,
+                             PODCAST_CHART_MAX);
+    return n > 0 && (size_t)n < size;
+}
+
+int podcastParseChartIds(const char *json, long long *ids, int max)
+{
+    cJSON *root = json ? cJSON_Parse(json) : NULL;
+    const cJSON *feed = cJSON_GetObjectItemCaseSensitive(root, "feed");
+    const cJSON *entries = cJSON_GetObjectItemCaseSensitive(feed, "entry");
+    int n = 0;
+    const cJSON *one = cJSON_IsObject(entries) ? entries : NULL;  // A chart of one isn't a list.
+    const cJSON *entry = one ? one : cJSON_IsArray(entries) ? entries->child : NULL;
+    for (; entry && n < max; entry = one ? NULL : entry->next) {
+        const cJSON *id = cJSON_GetObjectItemCaseSensitive(entry, "id");
+        const cJSON *attributes = cJSON_GetObjectItemCaseSensitive(id, "attributes");
+        const cJSON *value = cJSON_GetObjectItemCaseSensitive(attributes, "im:id");
+        if (!cJSON_IsString(value) || !value->valuestring)
+            continue;
+        char *end;
+        long long v = strtoll(value->valuestring, &end, 10);
+        if (*end || v <= 0 || v >= 1000000000000000LL)
+            continue;
+        bool seen = false;
+        for (int i = 0; i < n && !seen; i++)
+            seen = ids[i] == v;
+        if (!seen)
+            ids[n++] = v;
+    }
+    cJSON_Delete(root);
+    return n;
+}
+
+bool podcastLookupUrl(const long long *ids, int count, char *out, size_t size)
+{
+    int n = snprintf(out, size, "https://itunes.apple.com/lookup?entity=podcast&id=");
+    if (count <= 0 || n < 0 || (size_t)n >= size)
+        return false;
+    for (int i = 0; i < count; i++) {
+        int m = snprintf(out + n, size - (size_t)n, "%s%lld", i ? "," : "", ids[i]);
+        if (m < 0 || (size_t)(n + m) >= size)
+            return false;
+        n += m;
+    }
+    return true;
+}
+
+void podcastOrderByIds(PodcastResults *results, const long long *ids, int count)
+{
+    size_t kept = 0;
+    for (int i = 0; i < count; i++)
+        for (size_t j = kept; j < results->count; j++)
+            if (results->items[j].id == ids[i]) {
+                PodcastResult t = results->items[kept];
+                results->items[kept] = results->items[j];
+                results->items[j] = t;
+                kept++;
+                break;
+            }
+    results->count = kept;
 }
 
 // --- Feeds ---

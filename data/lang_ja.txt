@@ -671,3 +671,207 @@ World view
 
 Z to A
 Z→A
+
+%d episode
+%d エピソード
+
+%d episodes
+%d エピソード
+
+%d h %02d min
+%d時間%02d分
+
+%d min
+%d分
+
+%d min left
+残り%d分
+
+%d new
+新着%d
+
+[A] episodes  [Y] subscribe  [X] search again  [B] back  [ZL][ZR] tabs  [+] menu
+[A] エピソード  [Y] 登録  [X] もう一度検索  [B] 戻る  [ZL][ZR] タブ  [+] メニュー
+
+[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 一時停止/再生  [L] 15秒戻る  [R] 30秒進む  [B] 戻る  [ZL][ZR] タブ  [+] メニュー
+
+[A] play  [X] heard  [Y] subscribe  [B] back  [L][R] jump  [-] pause  [+] menu
+[A] 再生  [X] 聴いた  [Y] 登録  [B] 戻る  [L][R] スキップ  [-] 一時停止  [+] メニュー
+
+Find a podcast
+ポッドキャストを探す
+
+Heard
+聴いた
+
+Loading episodes…
+エピソードを読み込み中…
+
+Loading…
+読み込み中…
+
+Looking for new episodes…
+新しいエピソードを確認中…
+
+Looking for podcasts…
+ポッドキャストを検索中…
+
+New
+新着
+
+No episodes to play.
+再生できるエピソードがありません。
+
+No podcasts found.
+ポッドキャストが見つかりません。
+
+No podcasts yet.
+ポッドキャストはまだありません。
+
+Paused
+一時停止中
+
+Played to the end
+最後まで再生しました
+
+Playing
+再生中
+
+Podcasts
+ポッドキャスト
+
+Podcasts for “%s”
+「%s」のポッドキャスト
+
+Started
+再生途中
+
+Subscribe
+登録
+
+Subscribed
+登録済み
+
+Subscribed to %s
+%s を登録しました
+
+That address isn't a podcast's feed.
+そのアドレスはポッドキャストのフィードではありません。
+
+That's as many podcasts as KaiRadio keeps.
+KaiRadioが保存できるポッドキャストはこれで上限です。
+
+The podcast couldn't be read.
+ポッドキャストを読み込めませんでした。
+
+The podcast search can't be reached.
+ポッドキャスト検索に接続できません。
+
+The podcast search didn't answer as expected.
+ポッドキャスト検索の応答が想定と違いました。
+
+This episode's audio format isn't supported.
+このエピソードの音声形式には対応していません。
+
+This podcast can't be read right now.
+このポッドキャストは今は読み込めません。
+
+This podcast has nothing to listen to yet.
+このポッドキャストにはまだ聴けるものがありません。
+
+Try other words.
+別の言葉で試してください。
+
+Unsubscribed from %s
+%s の登録を解除しました
+
+[A] choose  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 選ぶ  [B] 戻る  [ZL][ZR] タブ  [+] メニュー
+
+[A] episodes  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] エピソード  [<>] 登録済み・トップ・ジャンル  [X] ポッドキャストを探す  [ZL][ZR] タブ  [+] メニュー
+
+[A] episodes  [Y] subscribe  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] エピソード  [Y] 登録  [<>] 登録済み・トップ・ジャンル  [X] ポッドキャストを探す  [ZL][ZR] タブ  [+] メニュー
+
+[A] open  [Y] region  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 開く  [Y] 地域  [<>] 登録済み・トップ・ジャンル  [X] ポッドキャストを探す  [ZL][ZR] タブ  [+] メニュー
+
+Arts
+アート
+
+Business
+ビジネス
+
+Comedy
+コメディ
+
+Education
+教育
+
+Fiction
+フィクション
+
+Genres
+ジャンル
+
+Health & Fitness
+健康とフィットネス
+
+History
+歴史
+
+Kids & Family
+キッズ&ファミリー
+
+Leisure
+レジャー
+
+Loading the top podcasts…
+トップのポッドキャストを読み込み中…
+
+Look in Top or Genres, or press X to find one.
+トップかジャンルから選ぶか、Xを押して探しましょう。
+
+Music
+音楽
+
+News
+ニュース
+
+Religion & Spirituality
+宗教とスピリチュアリティ
+
+Science
+科学
+
+Society & Culture
+社会と文化
+
+Sports
+スポーツ
+
+Technology
+テクノロジー
+
+The podcast charts can't be reached.
+ポッドキャストのランキングに接続できません。
+
+Top
+トップ
+
+True Crime
+犯罪実話
+
+Try another region.
+別の地域を試してください。
+
+TV & Film
+テレビと映画
+
+Where the top podcasts come from
+トップのポッドキャストの地域
+
+Yours
+登録済み

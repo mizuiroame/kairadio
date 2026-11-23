@@ -671,3 +671,207 @@ World view
 
 Z to A
 Z到A
+
+%d episode
+%d 集
+
+%d episodes
+%d 集
+
+%d h %02d min
+%d 小时 %02d 分钟
+
+%d min
+%d 分钟
+
+%d min left
+剩余 %d 分钟
+
+%d new
+%d 个新
+
+[A] episodes  [Y] subscribe  [X] search again  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 剧集  [Y] 订阅  [X] 重新搜索  [B] 返回  [ZL][ZR] 标签页  [+] 菜单
+
+[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 暂停/播放  [L] 后退 15 秒  [R] 前进 30 秒  [B] 返回  [ZL][ZR] 标签页  [+] 菜单
+
+[A] play  [X] heard  [Y] subscribe  [B] back  [L][R] jump  [-] pause  [+] menu
+[A] 播放  [X] 已听  [Y] 订阅  [B] 返回  [L][R] 跳转  [-] 暂停  [+] 菜单
+
+Find a podcast
+查找播客
+
+Heard
+已听
+
+Loading episodes…
+正在加载剧集…
+
+Loading…
+正在加载…
+
+Looking for new episodes…
+正在查找新剧集…
+
+Looking for podcasts…
+正在搜索播客…
+
+New
+新
+
+No episodes to play.
+没有可播放的剧集。
+
+No podcasts found.
+没有找到播客。
+
+No podcasts yet.
+还没有播客。
+
+Paused
+已暂停
+
+Played to the end
+已播放完毕
+
+Playing
+正在播放
+
+Podcasts
+播客
+
+Podcasts for “%s”
+“%s”的播客
+
+Started
+已开始
+
+Subscribe
+订阅
+
+Subscribed
+已订阅
+
+Subscribed to %s
+已订阅 %s
+
+That address isn't a podcast's feed.
+该地址不是播客的订阅源。
+
+That's as many podcasts as KaiRadio keeps.
+KaiRadio 最多只能保存这么多播客。
+
+The podcast couldn't be read.
+无法读取该播客。
+
+The podcast search can't be reached.
+无法连接播客搜索。
+
+The podcast search didn't answer as expected.
+播客搜索的回应不符合预期。
+
+This episode's audio format isn't supported.
+不支持此剧集的音频格式。
+
+This podcast can't be read right now.
+暂时无法读取此播客。
+
+This podcast has nothing to listen to yet.
+此播客还没有可收听的内容。
+
+Try other words.
+请换个词试试。
+
+Unsubscribed from %s
+已取消订阅 %s
+
+[A] choose  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 选择  [B] 返回  [ZL][ZR] 标签页  [+] 菜单
+
+[A] episodes  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 剧集  [<>] 我的、热门、类别  [X] 查找播客  [ZL][ZR] 标签页  [+] 菜单
+
+[A] episodes  [Y] subscribe  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 剧集  [Y] 订阅  [<>] 我的、热门、类别  [X] 查找播客  [ZL][ZR] 标签页  [+] 菜单
+
+[A] open  [Y] region  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 打开  [Y] 地区  [<>] 我的、热门、类别  [X] 查找播客  [ZL][ZR] 标签页  [+] 菜单
+
+Arts
+艺术
+
+Business
+商业
+
+Comedy
+喜剧
+
+Education
+教育
+
+Fiction
+小说
+
+Genres
+类别
+
+Health & Fitness
+健康与健身
+
+History
+历史
+
+Kids & Family
+儿童与家庭
+
+Leisure
+休闲
+
+Loading the top podcasts…
+正在加载热门播客…
+
+Look in Top or Genres, or press X to find one.
+在热门或类别中查看，或按 X 查找。
+
+Music
+音乐
+
+News
+新闻
+
+Religion & Spirituality
+宗教与灵修
+
+Science
+科学
+
+Society & Culture
+社会与文化
+
+Sports
+体育
+
+Technology
+科技
+
+The podcast charts can't be reached.
+无法连接播客排行榜。
+
+Top
+热门
+
+True Crime
+真实罪案
+
+Try another region.
+请换个地区试试。
+
+TV & Film
+影视
+
+Where the top podcasts come from
+热门播客所在地区
+
+Yours
+我的

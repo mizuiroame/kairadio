@@ -29,6 +29,9 @@ static volatile bool g_cancel_search;  // A newer search came.
 
 static bool g_search_pending;
 static char g_words[WORDS_MAX];
+static bool g_chart;      // The request is a chart (g_cc, g_genre), not words.
+static char g_cc[3];
+static int g_genre;
 static PodSearchStatus g_status;
 static PodcastResults g_results;
 
@@ -38,14 +41,33 @@ static char g_reading[LINK_URL_MAX];           // The one being read.
 static FeedDone *g_done, *g_done_last;          // Read, in order, not taken yet.
 static int g_done_count;
 
-static void runSearch(const char *words, unsigned generation)
+// A chart: its ids, then a lookup of them for their feeds, in the chart's order.
+static bool runChart(const char *cc, int genre, PodcastResults *found, NetResponse *r)
+{
+    char url[LINK_URL_MAX];
+    long long ids[PODCAST_CHART_MAX];
+    if (!podcastChartUrl(cc, genre, url, sizeof(url)) || !netGet(url, SEARCH_MAX_BYTES, &g_cancel_search, r))
+        return false;
+    int count = podcastParseChartIds(r->data, ids, PODCAST_CHART_MAX);
+    netResponseFree(r);
+    if (count == 0)
+        return true;  // An empty chart.
+    if (!podcastLookupUrl(ids, count, url, sizeof(url)) || !netGet(url, SEARCH_MAX_BYTES, &g_cancel_search, r) ||
+        !podcastParseSearch(r->data, found))
+        return false;
+    podcastOrderByIds(found, ids, count);
+    return true;
+}
+
+static void runSearch(const char *words, bool chart, const char *cc, int genre, unsigned generation)
 {
     char url[LINK_URL_MAX];
     NetResponse r;
     memset(&r, 0, sizeof(r));
     PodcastResults found = {0};
-    bool ok = podcastSearchUrl(words, url, sizeof(url)) && netGet(url, SEARCH_MAX_BYTES, &g_cancel_search, &r) &&
-              podcastParseSearch(r.data, &found);
+    bool ok = chart ? runChart(cc, genre, &found, &r)
+                    : podcastSearchUrl(words, url, sizeof(url)) && netGet(url, SEARCH_MAX_BYTES, &g_cancel_search, &r) &&
+                          podcastParseSearch(r.data, &found);
     pthread_mutex_lock(&g_lock);
     if (generation == g_status.generation) {
         podcastResultsFree(&g_results);
@@ -97,11 +119,14 @@ static void *worker(void *arg)
         if (g_search_pending) {
             g_search_pending = false;
             g_cancel_search = false;
-            char words[WORDS_MAX];
+            char words[WORDS_MAX], cc[3];
             snprintf(words, sizeof(words), "%s", g_words);
+            snprintf(cc, sizeof(cc), "%s", g_cc);
+            bool chart = g_chart;
+            int genre = g_genre;
             unsigned generation = g_status.generation;
             pthread_mutex_unlock(&g_lock);
-            runSearch(words, generation);
+            runSearch(words, chart, cc, genre, generation);
             pthread_mutex_lock(&g_lock);
         } else if (g_queued) {
             snprintf(g_reading, sizeof(g_reading), "%s", g_queue[0]);
@@ -154,17 +179,33 @@ void podFetchExit(void)
     g_queued = 0;
 }
 
-void podFetchSearch(const char *words)
+static void ask(void)  // With the lock held: the request set, it replaces the one before.
 {
-    pthread_mutex_lock(&g_lock);
-    snprintf(g_words, sizeof(g_words), "%s", words ? words : "");
     g_search_pending = true;
-    g_cancel_search = true;  // The worker clears it when it takes this search.
+    g_cancel_search = true;  // The worker clears it when it takes this request.
     g_status.generation++;
     g_status.state = POD_SEARCH_LOADING;
     g_status.error[0] = '\0';
     podcastResultsFree(&g_results);
     pthread_cond_signal(&g_wake);
+}
+
+void podFetchChart(const char *cc, int genre)
+{
+    pthread_mutex_lock(&g_lock);
+    g_chart = true;
+    snprintf(g_cc, sizeof(g_cc), "%s", cc ? cc : "");
+    g_genre = genre;
+    ask();
+    pthread_mutex_unlock(&g_lock);
+}
+
+void podFetchSearch(const char *words)
+{
+    pthread_mutex_lock(&g_lock);
+    g_chart = false;
+    snprintf(g_words, sizeof(g_words), "%s", words ? words : "");
+    ask();
     pthread_mutex_unlock(&g_lock);
 }
 

@@ -367,7 +367,7 @@ int podStoreTakeFeed(PodStore *s, int index, const Feed *feed, int64_t now)
         snprintf(sub->title, sizeof(sub->title), "%s", feed->title);
     if (feed->author[0])
         snprintf(sub->author, sizeof(sub->author), "%s", feed->author);
-    if (feed->image[0])
+    if (feed->image[0] && !sub->image[0])  // The search's picture is kept: it's small; a feed's may be huge.
         snprintf(sub->image, sizeof(sub->image), "%s", feed->image);
     sub->checked = now;
     return fresh;

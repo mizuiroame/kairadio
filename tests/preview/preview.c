@@ -105,6 +105,10 @@ typedef struct {
     Config config;
     char toast[224];
     uint64_t notice_length;  // A tap on the notice sends it away sooner.
+    PodPage pod_page;
+    size_t pod_cursor[POD_PAGES];
+    size_t pod_subs;
+    long pod_marks;          // The episodes' marks, summed: a tap on "heard" changes it.
 } Snapshot;
 
 static Snapshot snapshot(const App *app)
@@ -131,7 +135,217 @@ static Snapshot snapshot(const App *app)
     s.config = app->config;
     snprintf(s.toast, sizeof(s.toast), "%s", app->notices.count ? app->notices.items[app->notices.count - 1].text : "");
     s.notice_length = app->notices.count ? app->notices.items[0].length_ns : 0;
+    s.pod_page = app->pod_page;
+    memcpy(s.pod_cursor, app->pod_cursor, sizeof(s.pod_cursor));
+    s.pod_subs = app->pods.sub_count;
+    for (size_t i = 0; i < app->pods.mark_count; i++)
+        s.pod_marks += app->pods.marks[i].played * 1000003L + app->pods.marks[i].position + (long)i;
     return s;
+}
+
+static void render(const char *dir, const char *name, App *app);
+static void expect(bool ok, const char *what);
+
+// --- Podcasts (made-up names) ---
+
+static PodcastResult podcastNamed(const char *title, const char *author, const char *genre, int episodes)
+{
+    PodcastResult r;
+    memset(&r, 0, sizeof(r));
+    snprintf(r.title, sizeof(r.title), "%s", title);
+    snprintf(r.author, sizeof(r.author), "%s", author);
+    snprintf(r.genre, sizeof(r.genre), "%s", genre);
+    snprintf(r.feed, sizeof(r.feed), "https://feeds.example/%c%zu", title[0], strlen(title));
+    r.episodes = episodes;
+    return r;
+}
+
+// Episodes for a podcast: newest first, a week apart, from 2026-11-20.
+static void giveEpisodes(App *app, int sub, int count)
+{
+    static const char *const TITLES[] = {
+        "The Lighthouse Keepers of the North Atlantic",
+        "Why Bread Rises: A Kitchen Science Special",
+        "Listener Questions, Part 3",
+        "Interview: The Cartographer Who Mapped Imaginary Cities",
+        "How Night Trains Came Back",
+        "A Short History of the Paperclip",
+        "Live From the Harbor Festival",
+        "Episode 1: Hello, World",
+    };
+    Feed f = {0};
+    f.episodes = calloc((size_t)count, sizeof(Episode));
+    f.count = (size_t)count;
+    for (int i = 0; i < count; i++) {
+        Episode *e = &f.episodes[i];
+        snprintf(e->guid, sizeof(e->guid), "ep-%d", count - i);
+        snprintf(e->title, sizeof(e->title), "%s", TITLES[i % 8]);
+        snprintf(e->url, sizeof(e->url), "https://cdn.example/%d.mp3", count - i);
+        snprintf(e->type, sizeof(e->type), "%s", "audio/mpeg");
+        e->published = 1795132800 - (int64_t)i * 7 * 86400;
+        e->duration = 1800 + i * 731;
+    }
+    podStoreTakeFeed(&app->pods, sub, &f, 1795132800);
+    podcastFeedFree(&f);
+}
+
+static void podcastScenes(const char *dir, App *app)
+{
+    appSetView(app, VIEW_PODCASTS);
+    app->pod_page = POD_PAGE_SUBS;
+    render(dir, "podcasts_empty", app);
+
+    // Top: loading, then the region's top podcasts; the genres; a genre's; the regions.
+    app->pod_page = POD_PAGE_TOP;
+    app->pod_searching = true;
+    app->pod_wait = POD_WAIT_TOP;
+    snprintf(app->pod_top_region, sizeof(app->pod_top_region), "%s", appPodRegion(app));
+    render(dir, "podcasts_top_loading", app);
+    app->pod_searching = false;
+    app->pod_wait = POD_WAIT_NONE;
+    PodcastResult tops[] = {
+        podcastNamed("Midnight Case Files", "Lantern Studio", "True Crime", 310),
+        podcastNamed("The Morning Brief", "Harbor News", "News", 2200),
+        podcastNamed("Laugh Track Diaries", "Two Chairs", "Comedy", 145),
+        podcastNamed("Paperclip Histories", "Harbor Lights Audio", "History", 212),
+        podcastNamed("Science on a Napkin", "Mizu Studio", "Science", 88),
+        podcastNamed("Ninety Minutes", "Valley Radio", "Sports", 512),
+        podcastNamed("Bedtime Lighthouses", "Small Hours", "Kids & Family", 64),
+        podcastNamed("Frames Per Second", "Cinema Club", "TV & Film", 230),
+    };
+    app->pod_top.items = calloc(8, sizeof(PodcastResult));
+    memcpy(app->pod_top.items, tops, sizeof(tops));
+    app->pod_top.count = 8;
+    render(dir, "podcasts_top", app);
+    app->pod_page = POD_PAGE_GENRES;
+    app->pod_cursor[POD_PAGE_GENRES] = 2;
+    render(dir, "podcasts_genres", app);
+    appHandleButtons(app, HidNpadButton_A, 0);
+    expect(app->pod_page == POD_PAGE_RESULTS && app->pod_genre == 2 && app->pod_results_from == POD_PAGE_GENRES,
+           "A on a genre opens its top podcasts");
+    app->pod_searching = false;
+    app->pod_results.items = calloc(3, sizeof(PodcastResult));
+    memcpy(app->pod_results.items, tops, 3 * sizeof(PodcastResult));
+    app->pod_results.count = 3;
+    render(dir, "podcasts_genre", app);
+    appHandleButtons(app, HidNpadButton_B, 0);
+    expect(app->pod_page == POD_PAGE_GENRES, "B from a genre's podcasts goes back to the genres");
+    podcastResultsFree(&app->pod_results);
+    appHandleButtons(app, HidNpadButton_Y, 0);
+    expect(app->pod_page == POD_PAGE_REGIONS, "Y on the genres opens the regions");
+    render(dir, "podcasts_regions", app);
+    app->pod_cursor[POD_PAGE_REGIONS] = 2;  // España.
+    appHandleButtons(app, HidNpadButton_A, 0);
+    expect(app->pod_page == POD_PAGE_GENRES && !strcmp(appPodRegion(app), "es"), "A on a region uses it");
+    app->config.podcast_region[0] = '\0';
+    appHandleButtons(app, HidNpadButton_Left, 0);
+    expect(app->pod_page == POD_PAGE_TOP, "left goes from Genres to Top");
+    app->pod_page = POD_PAGE_SUBS;
+
+    // A search: looking, then its answers (one subscribed).
+    snprintf(app->pod_query, sizeof(app->pod_query), "%s", "history");
+    app->pod_page = POD_PAGE_RESULTS;
+    app->pod_searching = true;
+    render(dir, "podcasts_searching", app);
+    app->pod_searching = false;
+    PodcastResult found[] = {
+        podcastNamed("Paperclip Histories", "Harbor Lights Audio", "History", 212),
+        podcastNamed("The Long Afternoon", "Mizu Studio", "Society & Culture", 48),
+        podcastNamed("Maps of Nowhere", "Cartography Club", "Arts", 97),
+        podcastNamed("Small Town, Big Weather", "Valley Radio", "News", 1310),
+    };
+    app->pod_results.items = calloc(4, sizeof(PodcastResult));
+    memcpy(app->pod_results.items, found, sizeof(found));
+    app->pod_results.count = 4;
+    podStoreSubscribe(&app->pods, &found[2], 1795000000);
+    app->pod_cursor[POD_PAGE_RESULTS] = 1;
+    render(dir, "podcasts_results", app);
+    app->pod_search_failed = true;
+    snprintf(app->pod_error, sizeof(app->pod_error), "%s", "Could not resolve host: itunes.apple.com");
+    podcastResultsFree(&app->pod_results);
+    render(dir, "podcasts_search_failed", app);
+    app->pod_search_failed = false;
+
+    // Your podcasts: three, one with new episodes.
+    podStoreSubscribe(&app->pods, &found[0], 1795000000);
+    podStoreSubscribe(&app->pods, &found[3], 1795000000);
+    for (int i = 0; i < 3; i++)
+        giveEpisodes(app, i, 8);
+    app->pods.subs[1].seen = 1796000000;  // Seen after its newest: nothing new.
+    app->pods.subs[2].seen = 1796000000;
+    app->pod_page = POD_PAGE_SUBS;
+    render(dir, "podcasts", app);
+
+    // A podcast's episodes: one heard, one started, one playing.
+    PodcastResult open = found[0];
+    app->pod_open = open;
+    app->pod_page = POD_PAGE_EPISODES;
+    app->pod_from = POD_PAGE_SUBS;
+    app->pod_cursor[POD_PAGE_EPISODES] = 2;
+    podStoreSetPlayed(&app->pods, open.feed, "ep-6", true, 1795200000);
+    podStoreSetPosition(&app->pods, open.feed, "ep-5", 900, 4724, 1795200000);
+    app->pod_loading = true;
+    int index = podStoreFind(&app->pods, open.feed);
+    size_t saved = app->pods.subs[index].count;
+    app->pods.subs[index].count = 0;
+    render(dir, "podcast_loading", app);
+    app->pods.subs[index].count = saved;
+    app->pod_loading = false;
+    const Episode *e = &app->pods.subs[index].episodes[1];
+    g_stub_radio = (RadioStatus){0};
+    g_stub_radio.has_episode = true;
+    g_stub_radio.state = RADIO_PLAYING;
+    snprintf(g_stub_radio.episode.feed, sizeof(g_stub_radio.episode.feed), "%s", open.feed);
+    snprintf(g_stub_radio.episode.guid, sizeof(g_stub_radio.episode.guid), "%s", e->guid);
+    snprintf(g_stub_radio.episode.title, sizeof(g_stub_radio.episode.title), "%s", e->title);
+    snprintf(g_stub_radio.episode.podcast, sizeof(g_stub_radio.episode.podcast), "%s", open.title);
+    g_stub_radio.position = 1234;
+    g_stub_radio.duration = e->duration;
+    snprintf(g_stub_radio.codec, sizeof(g_stub_radio.codec), "%s", "MP3");
+    g_stub_radio.bitrate = 128;
+    g_stub_radio.sample_rate = 44100;
+    render(dir, "podcast_episodes", app);
+
+    // The episode in Now Playing: playing, then paused.
+    appSetView(app, VIEW_NOW_PLAYING);
+    render(dir, "now_playing_episode", app);
+    g_stub_radio.paused = true;
+    render(dir, "now_playing_episode_paused", app);
+
+    // The flow: A on a podcast opens it, B goes back, A on an episode plays it.
+    appSetView(app, VIEW_PODCASTS);
+    int paperclip = podStoreFind(&app->pods, open.feed);  // Each subscription went on top: it's not the first.
+    app->pod_page = POD_PAGE_SUBS;
+    app->pod_cursor[POD_PAGE_SUBS] = (size_t)paperclip;
+    appHandleButtons(app, HidNpadButton_A, 0);
+    expect(app->pod_page == POD_PAGE_EPISODES && !strcmp(app->pod_open.feed, open.feed),
+           "A on a podcast opens its episodes");
+    app->pod_cursor[POD_PAGE_EPISODES] = 3;
+    appHandleButtons(app, HidNpadButton_A, 0);
+    expect(g_stub_radio.has_episode && !strcmp(g_stub_radio.episode.guid, "ep-5") && g_stub_radio.episode.start == 900,
+           "A on a started episode plays it from where it was left");
+    appHandleButtons(app, HidNpadButton_B, 0);
+    expect(app->pod_page == POD_PAGE_SUBS, "B goes back to the podcasts");
+
+    // X marks an episode heard, the playing one too; closing and opening KaiRadio keeps both.
+    appHandleButtons(app, HidNpadButton_A, 0);
+    app->pod_cursor[POD_PAGE_EPISODES] = 3;  // ep-5: playing (from above).
+    appHandleButtons(app, HidNpadButton_X, 0);
+    app->pod_cursor[POD_PAGE_EPISODES] = 0;  // ep-8.
+    appHandleButtons(app, HidNpadButton_X, 0);
+    g_stub_radio.state = RADIO_PLAYING;
+    g_stub_radio.position = 1500;
+    for (int i = 1; i <= 3; i++)
+        appPodcastsUpdate(app, (uint64_t)i * 11000000000ull);  // Its place kept every 10 s while it plays.
+    appPodcastsStop(app);
+    appPodcastsStart(app);
+    int position;
+    bool heard8 = false, heard5 = false;
+    podStoreMark(&app->pods, open.feed, "ep-8", &position, &heard8);
+    podStoreMark(&app->pods, open.feed, "ep-5", &position, &heard5);
+    expect(heard8, "an episode marked heard with X is still heard after closing and opening KaiRadio");
+    expect(heard5, "the playing episode marked heard with X is still heard after closing and opening KaiRadio");
+    g_stub_radio = (RadioStatus){0};
 }
 
 // A point of the region that a tap reaches (no later region over it), or false.
@@ -288,11 +502,21 @@ int main(int argc, char **argv)
     system("rm -rf " CONFIG);
     static App app;
     appInit(&app, CONFIG);
+    appPodcastsStart(&app);  // As main.c does: the podcasts kept in CONFIG.
     app.sys = (SysInfo){true, 21, 47, true, 82, true};
 
     // World: loading, then the countries lit (about as many stations as the directory has), then one picked.
     appSetView(&app, VIEW_WORLD);
     render(dir, "world_loading", &app);
+    // Leaving the world while it lights up, and back: its countries are asked for again.
+    appSetView(&app, VIEW_POPULAR);
+    g_stub_directory.state = DIR_READY;  // Popular's answer came.
+    appUpdate(&app, 0);
+    appSetView(&app, VIEW_WORLD);
+    appUpdate(&app, 0);
+    expect(app.waiting_active && app.waiting_target == TARGET_CATEGORIES && app.waiting_mode == SEARCH_COUNTRY,
+           "back on World after leaving it while it lit up, its countries are asked for again");
+    app.popular_asked = false;  // As before, for Popular's shots below.
     static const struct {
         const char *name, *code;
         int count;
@@ -427,6 +651,7 @@ int main(int argc, char **argv)
     render(dir, "now_playing_failed", &app);
     g_stub_radio = (RadioStatus){0};
     render(dir, "now_playing_empty", &app);
+    podcastScenes(dir, &app);
 
     // The + menu and its exit question, Settings' pages (pink, with the sleep
     // timer on) and About, over Popular; and the way through them.

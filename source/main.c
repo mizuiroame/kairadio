@@ -218,6 +218,7 @@ int main(int argc, char **argv)
     appInit(&app, g_folder);
     appStartLanguages(&app);  // Before anything is said on screen.
     appStartUpdates(&app, argc > 0 ? argv[0] : NULL);
+    appPodcastsStart(&app);  // The podcasts kept, and their new episodes looked for.
     appSetView(&app, app.view);
     if (app.config.background[0] &&
         !backgroundLoad(g_folder, app.config.background, app.config.background_blur))
@@ -228,6 +229,7 @@ int main(int argc, char **argv)
 
     runLoop(&app);
     appStopUpdates();  // A download stops; its part is removed.
+    appPodcastsStop(&app);  // Before the radio: where the episode playing is gets kept.
 
     appletSetMediaPlaybackState(false);
     screenExit();

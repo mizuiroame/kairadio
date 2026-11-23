@@ -34,3 +34,15 @@ extern UiListScroll g_list_scroll;
 bool uiListScrollPx(int px);
 // A button moved the cursor: the list keeps it in its middle again.
 void uiListRelease(void);
+
+// For the other screens' lists (ui_podcast.c): as ui.c's own lists draw.
+// A list starts: the first row in view and pixels into it; drawn cut to its place until uiListEnd.
+size_t uiListBegin(const void *key, size_t cursor, size_t count, int *offset);
+void uiListEnd(void);
+void uiDrawScrollbar(size_t first, size_t count);
+// A message in the list's place, and a Try again button if retry.
+void uiDrawListMessage(const char *line1, const char *line2, bool retry);
+// The row highlight of the selected row at y.
+void uiDrawRowSelection(int y);
+// A tile with the icon of a genre's word (as Search's genres have).
+void uiDrawGenreTile(int x, int y, int size, const char *tag);

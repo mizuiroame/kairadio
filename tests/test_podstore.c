@@ -51,10 +51,12 @@ static void testSubscriptions(void)
     Episode list[3] = {episode("3", 3000, 600), episode("2", 2000, 600), episode("1", 500, 0)};
     Feed feed = {.episodes = list, .count = 3};
     snprintf(feed.title, sizeof(feed.title), "%s", "Alpha (renamed)");
+    snprintf(feed.image, sizeof(feed.image), "%s", "https://feeds.example/huge-3000px.jpg");
     int alpha = podStoreFind(&s, "https://feeds.example/a");
     CHECK(alpha == 1 && podStoreTakeFeed(&s, alpha, &feed, 5000) == 0);  // The first read: none "new".
     CHECK(s.subs[alpha].count == 3 && s.subs[alpha].checked == 5000 &&
           !strcmp(s.subs[alpha].title, "Alpha (renamed)") && !strcmp(s.subs[alpha].author, "Kai"));
+    CHECK(!strcmp(s.subs[alpha].image, "https://img.example/a.jpg"));  // The search's picture stays.
     CHECK(podStoreNewCount(&s.subs[alpha]) == 2);  // Published after it was subscribed (1000).
     podStoreSeen(&s, alpha, 4000);
     CHECK(podStoreNewCount(&s.subs[alpha]) == 0);

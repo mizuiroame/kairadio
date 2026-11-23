@@ -33,6 +33,15 @@ typedef enum {
     HIT_SETTINGS_BACK,  // The Back button on a Settings page: back to the main one.
     HIT_OVERLAY_OUT,  // Outside a panel: closes it (About back to Settings).
     HIT_NOTICE,       // The notice bubble at the top: a tap sends it away.
+    HIT_POD_ROW,      // arg: a row of the Podcasts tab's list. A tap opens the podcast or plays the episode.
+    HIT_POD_SUBSCRIBE,  // arg: a row of the search's answers, or -1 for the open podcast. Subscribes or not.
+    HIT_POD_SEARCH,   // Types a podcast search.
+    HIT_POD_BACK,     // Back from a podcast's episodes or a search's answers.
+    HIT_POD_HEARD,    // arg: an episode's row: heard or not.
+    HIT_SEEK,         // The episode's progress bar: a tap jumps there.
+    HIT_JUMP,         // arg: seconds to jump by (-15 or 30).
+    HIT_POD_MODE,     // arg: the Podcasts tab's mode (a PodPage: Yours, Top, Genres).
+    HIT_POD_REGION,   // The region of the charts: opens the list of them.
 } HitKind;
 
 typedef struct {

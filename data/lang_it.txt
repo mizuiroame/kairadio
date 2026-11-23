@@ -671,3 +671,207 @@ Vista del mondo
 
 Z to A
 Dalla Z alla A
+
+%d episode
+%d episodio
+
+%d episodes
+%d episodi
+
+%d h %02d min
+%d h %02d min
+
+%d min
+%d min
+
+%d min left
+mancano %d min
+
+%d new
+%d nuovi
+
+[A] episodes  [Y] subscribe  [X] search again  [B] back  [ZL][ZR] tabs  [+] menu
+[A] episodi  [Y] iscriviti  [X] cerca di nuovo  [B] indietro  [ZL][ZR] schede  [+] menu
+
+[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu
+[A] pausa/riproduci  [L] indietro 15 s  [R] avanti 30 s  [B] indietro  [ZL][ZR] schede  [+] menu
+
+[A] play  [X] heard  [Y] subscribe  [B] back  [L][R] jump  [-] pause  [+] menu
+[A] riproduci  [X] ascoltato  [Y] iscriviti  [B] indietro  [L][R] salta  [-] pausa  [+] menu
+
+Find a podcast
+Trova un podcast
+
+Heard
+Ascoltato
+
+Loading episodes…
+Caricamento degli episodi…
+
+Loading…
+Caricamento…
+
+Looking for new episodes…
+Ricerca di nuovi episodi…
+
+Looking for podcasts…
+Ricerca di podcast…
+
+New
+Nuovo
+
+No episodes to play.
+Nessun episodio da ascoltare.
+
+No podcasts found.
+Nessun podcast trovato.
+
+No podcasts yet.
+Ancora nessun podcast.
+
+Paused
+In pausa
+
+Played to the end
+Ascoltato fino alla fine
+
+Playing
+In riproduzione
+
+Podcasts
+Podcast
+
+Podcasts for “%s”
+Podcast per “%s”
+
+Started
+Iniziato
+
+Subscribe
+Iscriviti
+
+Subscribed
+Iscritto
+
+Subscribed to %s
+Iscritto a %s
+
+That address isn't a podcast's feed.
+Quell'indirizzo non è il feed di un podcast.
+
+That's as many podcasts as KaiRadio keeps.
+KaiRadio non tiene più podcast di così.
+
+The podcast couldn't be read.
+Non è stato possibile leggere il podcast.
+
+The podcast search can't be reached.
+La ricerca di podcast non è raggiungibile.
+
+The podcast search didn't answer as expected.
+La ricerca di podcast ha risposto in modo inatteso.
+
+This episode's audio format isn't supported.
+Il formato audio di questo episodio non è supportato.
+
+This podcast can't be read right now.
+Questo podcast non si può leggere ora.
+
+This podcast has nothing to listen to yet.
+Questo podcast non ha ancora nulla da ascoltare.
+
+Try other words.
+Prova con altre parole.
+
+Unsubscribed from %s
+Iscrizione a %s annullata
+
+[A] choose  [B] back  [ZL][ZR] tabs  [+] menu
+[A] scegli  [B] indietro  [ZL][ZR] schede  [+] menu
+
+[A] episodes  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] episodi  [<>] tuoi, top, generi  [X] trova un podcast  [ZL][ZR] schede  [+] menu
+
+[A] episodes  [Y] subscribe  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] episodi  [Y] iscriviti  [<>] tuoi, top, generi  [X] trova un podcast  [ZL][ZR] schede  [+] menu
+
+[A] open  [Y] region  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] apri  [Y] regione  [<>] tuoi, top, generi  [X] trova un podcast  [ZL][ZR] schede  [+] menu
+
+Arts
+Arte
+
+Business
+Economia
+
+Comedy
+Comicità
+
+Education
+Istruzione
+
+Fiction
+Narrativa
+
+Genres
+Generi
+
+Health & Fitness
+Salute e benessere
+
+History
+Storia
+
+Kids & Family
+Bambini e famiglia
+
+Leisure
+Tempo libero
+
+Loading the top podcasts…
+Caricamento dei podcast più ascoltati…
+
+Look in Top or Genres, or press X to find one.
+Guarda in Top o Generi, oppure premi X per cercarne uno.
+
+Music
+Musica
+
+News
+Notizie
+
+Religion & Spirituality
+Religione e spiritualità
+
+Science
+Scienza
+
+Society & Culture
+Società e cultura
+
+Sports
+Sport
+
+Technology
+Tecnologia
+
+The podcast charts can't be reached.
+Le classifiche dei podcast non sono raggiungibili.
+
+Top
+Top
+
+True Crime
+True crime
+
+Try another region.
+Prova un'altra regione.
+
+TV & Film
+Cinema e TV
+
+Where the top podcasts come from
+Da dove vengono i podcast più ascoltati
+
+Yours
+Tuoi

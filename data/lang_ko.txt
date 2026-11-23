@@ -671,3 +671,207 @@ World view
 
 Z to A
 Z-A순
+
+%d episode
+에피소드 %d개
+
+%d episodes
+에피소드 %d개
+
+%d h %02d min
+%d시간 %02d분
+
+%d min
+%d분
+
+%d min left
+%d분 남음
+
+%d new
+새 에피소드 %d
+
+[A] episodes  [Y] subscribe  [X] search again  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 에피소드  [Y] 구독  [X] 다시 검색  [B] 뒤로  [ZL][ZR] 탭  [+] 메뉴
+
+[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 일시정지/재생  [L] 15초 뒤로  [R] 30초 앞으로  [B] 뒤로  [ZL][ZR] 탭  [+] 메뉴
+
+[A] play  [X] heard  [Y] subscribe  [B] back  [L][R] jump  [-] pause  [+] menu
+[A] 재생  [X] 들음  [Y] 구독  [B] 뒤로  [L][R] 건너뛰기  [-] 일시정지  [+] 메뉴
+
+Find a podcast
+팟캐스트 찾기
+
+Heard
+들음
+
+Loading episodes…
+에피소드 불러오는 중…
+
+Loading…
+불러오는 중…
+
+Looking for new episodes…
+새 에피소드 확인 중…
+
+Looking for podcasts…
+팟캐스트 검색 중…
+
+New
+새 에피소드
+
+No episodes to play.
+재생할 에피소드가 없습니다.
+
+No podcasts found.
+팟캐스트를 찾지 못했습니다.
+
+No podcasts yet.
+아직 팟캐스트가 없습니다.
+
+Paused
+일시정지됨
+
+Played to the end
+끝까지 재생함
+
+Playing
+재생 중
+
+Podcasts
+팟캐스트
+
+Podcasts for “%s”
+‘%s’ 팟캐스트
+
+Started
+듣는 중
+
+Subscribe
+구독
+
+Subscribed
+구독 중
+
+Subscribed to %s
+%s 구독함
+
+That address isn't a podcast's feed.
+그 주소는 팟캐스트 피드가 아닙니다.
+
+That's as many podcasts as KaiRadio keeps.
+KaiRadio가 저장할 수 있는 팟캐스트 수의 한도입니다.
+
+The podcast couldn't be read.
+팟캐스트를 읽을 수 없습니다.
+
+The podcast search can't be reached.
+팟캐스트 검색에 연결할 수 없습니다.
+
+The podcast search didn't answer as expected.
+팟캐스트 검색이 예상과 다르게 응답했습니다.
+
+This episode's audio format isn't supported.
+이 에피소드의 오디오 형식은 지원되지 않습니다.
+
+This podcast can't be read right now.
+지금은 이 팟캐스트를 읽을 수 없습니다.
+
+This podcast has nothing to listen to yet.
+이 팟캐스트에는 아직 들을 것이 없습니다.
+
+Try other words.
+다른 단어로 검색해 보세요.
+
+Unsubscribed from %s
+%s 구독 취소함
+
+[A] choose  [B] back  [ZL][ZR] tabs  [+] menu
+[A] 선택  [B] 뒤로  [ZL][ZR] 탭  [+] 메뉴
+
+[A] episodes  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 에피소드  [<>] 내 팟캐스트·인기·장르  [X] 팟캐스트 찾기  [ZL][ZR] 탭  [+] 메뉴
+
+[A] episodes  [Y] subscribe  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 에피소드  [Y] 구독  [<>] 내 팟캐스트·인기·장르  [X] 팟캐스트 찾기  [ZL][ZR] 탭  [+] 메뉴
+
+[A] open  [Y] region  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] 열기  [Y] 지역  [<>] 내 팟캐스트·인기·장르  [X] 팟캐스트 찾기  [ZL][ZR] 탭  [+] 메뉴
+
+Arts
+예술
+
+Business
+비즈니스
+
+Comedy
+코미디
+
+Education
+교육
+
+Fiction
+픽션
+
+Genres
+장르
+
+Health & Fitness
+건강 및 피트니스
+
+History
+역사
+
+Kids & Family
+키즈 및 가족
+
+Leisure
+여가
+
+Loading the top podcasts…
+인기 팟캐스트 불러오는 중…
+
+Look in Top or Genres, or press X to find one.
+인기나 장르에서 고르거나 X를 눌러 찾아보세요.
+
+Music
+음악
+
+News
+뉴스
+
+Religion & Spirituality
+종교 및 영성
+
+Science
+과학
+
+Society & Culture
+사회 및 문화
+
+Sports
+스포츠
+
+Technology
+기술
+
+The podcast charts can't be reached.
+팟캐스트 순위에 연결할 수 없습니다.
+
+Top
+인기
+
+True Crime
+실화 범죄
+
+Try another region.
+다른 지역을 선택해 보세요.
+
+TV & Film
+TV 및 영화
+
+Where the top podcasts come from
+인기 팟캐스트 지역
+
+Yours
+내 팟캐스트

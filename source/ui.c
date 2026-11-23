@@ -17,6 +17,7 @@
 #include "ui_map.h"
 #include "ui_notice.h"
 #include "ui_now.h"
+#include "ui_podcast.h"
 #include "ui_settings.h"
 #include "theme.h"
 #include "util.h"
@@ -32,8 +33,8 @@
 #define BAR_PREV_X (GFX_WIDTH / 2 - BAR_GAP)
 #define BAR_CY (MINI_Y + 46)
 
-static const char *const VIEW_NAMES[VIEW_COUNT] = {N_("World"),     N_("Popular"), N_("Search"),
-                                                   N_("Favorites"), N_("Recent"),  N_("Now Playing")};
+static const char *const VIEW_NAMES[VIEW_COUNT] = {N_("World"),  N_("Popular"),  N_("Search"),     N_("Favorites"),
+                                                   N_("Recent"), N_("Podcasts"), N_("Now Playing")};
 
 size_t uiFirstVisible(size_t cursor, size_t count)
 {
@@ -101,6 +102,22 @@ bool uiListScrollPx(int px)
 void uiListRelease(void)
 {
     g_list_scroll.free = false;
+}
+
+size_t uiListBegin(const void *key, size_t cursor, size_t count, int *offset)
+{
+    return listBegin(key, cursor, count, offset);
+}
+
+void uiListEnd(void)
+{
+    listEnd();
+}
+
+void uiDrawRowSelection(int y)
+{
+    gfxFillRoundRect(MARGIN - 12, y + 2, GFX_WIDTH - 2 * (MARGIN - 12), UI_ROW_H - 4, 10, COLOR_SURFACE_HI);
+    gfxFillRect(MARGIN - 12, y + 14, 3, UI_ROW_H - 28, COLOR_ACCENT);
 }
 
 // --- Header ---
@@ -231,6 +248,11 @@ static void drawScrollbar(size_t first, size_t count)
     gfxFillRoundRect(GFX_WIDTH - 12, thumb_y, 4, thumb_h, 2, COLOR_FAINT);
 }
 
+void uiDrawScrollbar(size_t first, size_t count)
+{
+    drawScrollbar(first, count);
+}
+
 static void drawMessage(const char *line1, const char *line2, bool retry)
 {
     int y = UI_LIST_Y + 60;
@@ -244,6 +266,11 @@ static void drawMessage(const char *line1, const char *line2, bool retry)
         uiDrawPill(x, y + 76, label, COLOR_ACCENT, COLOR_BG);
         uiHitAdd(x - 12, y + 66, w + 24, 50, HIT_RETRY, 0);
     }
+}
+
+void uiDrawListMessage(const char *line1, const char *line2, bool retry)
+{
+    drawMessage(line1, line2, retry);
 }
 
 // --- Search ---
@@ -369,6 +396,14 @@ static void drawCategoryTile(int x, int y, int size, SearchMode mode, const Cate
         if (*p >= 'a' && *p <= 'z')
             *p = (char)(*p - 'a' + 'A');
     fontDrawCentered(FONT_BOLD, 18, x + size / 2.0f, y + size / 2.0f, code, COLOR_ACCENT);
+}
+
+void uiDrawGenreTile(int x, int y, int size, const char *tag)
+{
+    Category c;
+    memset(&c, 0, sizeof(c));
+    snprintf(c.name, sizeof(c.name), "%s", tag);
+    drawCategoryTile(x, y, size, SEARCH_GENRE, &c);
 }
 
 static void drawCategories(const App *app)
@@ -502,6 +537,10 @@ static void drawWorld(const App *app, uint64_t now_ns)
 
 static void drawMiniPlayer(const App *app, const RadioStatus *radio)
 {
+    if (radio->has_episode) {
+        uiDrawEpisodeBar(app, radio);
+        return;
+    }
     gfxFillRect(0, MINI_Y, GFX_WIDTH, MINI_H, COLOR_SURFACE);
     gfxFillRect(0, MINI_Y, GFX_WIDTH, 3, COLOR_FAINT);
     uiHitAdd(0, MINI_Y, GFX_WIDTH, MINI_H, HIT_MINI_PLAYER, 0);
@@ -566,7 +605,7 @@ static void drawMiniPlayer(const App *app, const RadioStatus *radio)
     }
 }
 
-static const char *footerHelp(const App *app)
+static const char *footerHelp(const App *app, const RadioStatus *radio)
 {
     switch (app->overlay) {
     case OVERLAY_MENU: return T("[A] choose  [B] close  [+] exit");
@@ -582,7 +621,10 @@ static const char *footerHelp(const App *app)
         return T("[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  "
                  "[+] menu");
     case VIEW_NOW_PLAYING:
+        if (radio->has_episode)
+            return T("[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu");
         return T("[A] play/stop  [Y] favorite  [L][R] station  [B] back  [ZL][ZR] tabs  [+] menu");
+    case VIEW_PODCASTS: return uiPodcastsHelp(app);
     case VIEW_SEARCH:
         if (appBrowsingCategories(app))
             return T("[A] open  [Y] sort  [<>] name, genre, country, language  [ZL][ZR] tabs  [+] menu");
@@ -626,6 +668,8 @@ void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
     } else {
         if (app->view == VIEW_WORLD)
             drawWorld(app, now_ns);
+        else if (app->view == VIEW_PODCASTS)
+            uiDrawPodcasts(app, radio, now_ns);
         else
             drawList(app, radio, now_ns);
         drawMiniPlayer(app, radio);
@@ -633,7 +677,7 @@ void uiDraw(const App *app, const RadioStatus *radio, uint64_t now_ns)
     if (!background)
         gfxFillRect(0, FOOTER_Y, GFX_WIDTH, GFX_HEIGHT - FOOTER_Y, COLOR_BG);
     uiDrawOverlay(app, now_ns);
-    uiDrawHelp(MARGIN, FOOTER_Y + 28.0f, GFX_WIDTH - 2 * MARGIN, footerHelp(app));
+    uiDrawHelp(MARGIN, FOOTER_Y + 28.0f, GFX_WIDTH - 2 * MARGIN, footerHelp(app, radio));
     uiDrawNotice(app->notice, app->notice_slide);  // Last: over everything, and its tap first.
     logosEndFrame();
 }

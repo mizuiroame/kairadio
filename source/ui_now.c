@@ -8,6 +8,7 @@
 #include "ui_common.h"
 #include "ui_flag.h"
 #include "ui_hit.h"
+#include "ui_podcast.h"
 
 #define LOGO_X 96
 #define LOGO_Y 128
@@ -60,6 +61,10 @@ static void drawTitle(const char *title, int y)
 void uiDrawNowPlaying(const App *app, const RadioStatus *radio, uint64_t now_ns)
 {
     drawBack();
+    if (radio->has_episode) {
+        uiDrawEpisodeNow(app, radio, now_ns);
+        return;
+    }
     if (!radio->has_station) {
         drawEmpty();
         return;

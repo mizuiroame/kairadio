@@ -24,6 +24,7 @@ typedef struct {
     char image[LINK_URL_MAX];  // Its picture; may be empty.
     char genre[PODCAST_TEXT_MAX];
     int episodes;              // As the search says; 0 if unknown.
+    long long id;              // Apple's id for it; 0 if unknown.
 } PodcastResult;
 
 typedef struct {
@@ -55,6 +56,19 @@ bool podcastSearchUrl(const char *words, char *out, size_t size);
 // are left out. False if it isn't the search's answer, or memory runs out.
 bool podcastParseSearch(const char *json, PodcastResults *out);
 void podcastResultsFree(PodcastResults *r);
+
+// Apple's charts: the top podcasts of a country's store (cc: "mx", "us"...),
+// of one genre (an Apple genre id; 0 for all). Two steps: the chart gives
+// ids, a lookup of them gives their feeds.
+#define PODCAST_CHART_MAX 50
+bool podcastChartUrl(const char *cc, int genre, char *out, size_t size);
+// The ids in the chart's JSON answer, in its order. Returns how many (up to max).
+int podcastParseChartIds(const char *json, long long *ids, int max);
+// The lookup's address for these ids.
+bool podcastLookupUrl(const long long *ids, int count, char *out, size_t size);
+// Puts results (the lookup's answer, read with podcastParseSearch) in the
+// chart's order; ids not found are left out.
+void podcastOrderByIds(PodcastResults *results, const long long *ids, int count);
 
 // Reads a feed. Episodes without audio (an http(s) enclosure that isn't a
 // video) are left out; the newest PODCAST_EPISODES_MAX are kept. False if

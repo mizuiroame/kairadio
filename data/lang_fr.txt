@@ -671,3 +671,207 @@ Vue du monde
 
 Z to A
 Z à A
+
+%d episode
+%d épisode
+
+%d episodes
+%d épisodes
+
+%d h %02d min
+%d h %02d min
+
+%d min
+%d min
+
+%d min left
+%d min restantes
+
+%d new
+%d nouveaux
+
+[A] episodes  [Y] subscribe  [X] search again  [B] back  [ZL][ZR] tabs  [+] menu
+[A] épisodes  [Y] s'abonner  [X] nouvelle recherche  [B] retour  [ZL][ZR] onglets  [+] menu
+
+[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu
+[A] pause/lecture  [L] reculer 15 s  [R] avancer 30 s  [B] retour  [ZL][ZR] onglets  [+] menu
+
+[A] play  [X] heard  [Y] subscribe  [B] back  [L][R] jump  [-] pause  [+] menu
+[A] lire  [X] écouté  [Y] s'abonner  [B] retour  [L][R] sauter  [-] pause  [+] menu
+
+Find a podcast
+Trouver un podcast
+
+Heard
+Écouté
+
+Loading episodes…
+Chargement des épisodes…
+
+Loading…
+Chargement…
+
+Looking for new episodes…
+Recherche de nouveaux épisodes…
+
+Looking for podcasts…
+Recherche de podcasts…
+
+New
+Nouveau
+
+No episodes to play.
+Aucun épisode à écouter.
+
+No podcasts found.
+Aucun podcast trouvé.
+
+No podcasts yet.
+Pas encore de podcasts.
+
+Paused
+En pause
+
+Played to the end
+Écouté jusqu'au bout
+
+Playing
+Lecture
+
+Podcasts
+Podcasts
+
+Podcasts for “%s”
+Podcasts pour « %s »
+
+Started
+Commencé
+
+Subscribe
+S'abonner
+
+Subscribed
+Abonné
+
+Subscribed to %s
+Abonné à %s
+
+That address isn't a podcast's feed.
+Cette adresse n'est pas le flux d'un podcast.
+
+That's as many podcasts as KaiRadio keeps.
+KaiRadio ne garde pas plus de podcasts.
+
+The podcast couldn't be read.
+Le podcast n'a pas pu être lu.
+
+The podcast search can't be reached.
+La recherche de podcasts est injoignable.
+
+The podcast search didn't answer as expected.
+La recherche de podcasts a répondu de façon inattendue.
+
+This episode's audio format isn't supported.
+Le format audio de cet épisode n'est pas pris en charge.
+
+This podcast can't be read right now.
+Ce podcast ne peut pas être lu pour le moment.
+
+This podcast has nothing to listen to yet.
+Ce podcast n'a encore rien à écouter.
+
+Try other words.
+Essaie d'autres mots.
+
+Unsubscribed from %s
+Désabonné de %s
+
+[A] choose  [B] back  [ZL][ZR] tabs  [+] menu
+[A] choisir  [B] retour  [ZL][ZR] onglets  [+] menu
+
+[A] episodes  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] épisodes  [<>] les miens, top, genres  [X] trouver un podcast  [ZL][ZR] onglets  [+] menu
+
+[A] episodes  [Y] subscribe  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] épisodes  [Y] s'abonner  [<>] les miens, top, genres  [X] trouver un podcast  [ZL][ZR] onglets  [+] menu
+
+[A] open  [Y] region  [<>] yours, top, genres  [X] find a podcast  [ZL][ZR] tabs  [+] menu
+[A] ouvrir  [Y] région  [<>] les miens, top, genres  [X] trouver un podcast  [ZL][ZR] onglets  [+] menu
+
+Arts
+Arts
+
+Business
+Économie
+
+Comedy
+Humour
+
+Education
+Éducation
+
+Fiction
+Fiction
+
+Genres
+Genres
+
+Health & Fitness
+Santé et forme
+
+History
+Histoire
+
+Kids & Family
+Jeunesse et famille
+
+Leisure
+Loisirs
+
+Loading the top podcasts…
+Chargement des meilleurs podcasts…
+
+Look in Top or Genres, or press X to find one.
+Regarde dans Top ou Genres, ou appuie sur X pour en chercher un.
+
+Music
+Musique
+
+News
+Actualités
+
+Religion & Spirituality
+Religion et spiritualité
+
+Science
+Sciences
+
+Society & Culture
+Société et culture
+
+Sports
+Sport
+
+Technology
+Technologies
+
+The podcast charts can't be reached.
+Le classement des podcasts est injoignable.
+
+Top
+Top
+
+True Crime
+Faits divers
+
+Try another region.
+Essaie une autre région.
+
+TV & Film
+Cinéma et télévision
+
+Where the top podcasts come from
+D'où viennent les meilleurs podcasts
+
+Yours
+Les miens

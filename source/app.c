@@ -112,8 +112,23 @@ void appToast(App *app, const char *message, uint64_t now_ns)
     appNotify(app, NOTICE_INFO, message, now_ns);
 }
 
+// The request waited for is about to be replaced: what it was for is asked again later.
+static void markStale(App *app)
+{
+    if (!app->waiting_active)
+        return;
+    switch (app->waiting_target) {
+    case TARGET_POPULAR: app->stale_popular = true; break;
+    case TARGET_CATEGORIES: app->stale_categories[app->waiting_mode] = true; break;
+    case TARGET_CATEGORY_RESULTS: app->stale_category_results = true; break;
+    case TARGET_NAME_RESULTS: app->stale_name_results = true; break;
+    default: break;  // A random station: said lost with the request.
+    }
+}
+
 static void ask(App *app, Target target, DirectoryQuery query, const char *text)
 {
+    markStale(app);
     directoryRequest(query, text);
     DirectoryStatus status;
     directoryGetStatus(&status);
@@ -311,10 +326,38 @@ static void playRandom(App *app, uint64_t now_ns)
     appToast(app, line, now_ns);
 }
 
+// What the view shows, if its request was replaced before it came: asked again.
+static void askStale(App *app)
+{
+    if (app->waiting_active)
+        return;
+    SearchMode mode = app->search_mode;
+    if (app->view == VIEW_POPULAR && app->stale_popular) {
+        app->stale_popular = false;
+        askPopular(app);
+    } else if (app->view == VIEW_WORLD && app->stale_categories[SEARCH_COUNTRY]) {
+        app->stale_categories[SEARCH_COUNTRY] = false;
+        askCategoriesOf(app, SEARCH_COUNTRY);
+    } else if (appBrowsingCategories(app) && app->stale_categories[mode]) {
+        app->stale_categories[mode] = false;
+        askCategories(app);
+    } else if (app->view == VIEW_SEARCH && app->category_open && app->stale_category_results) {
+        app->stale_category_results = false;
+        bool from_map = app->category_from_map;
+        openCategory(app, app->category_cursor[mode]);
+        app->category_from_map = from_map;
+    } else if (app->view == VIEW_SEARCH && mode == SEARCH_NAME && app->stale_name_results && app->query[0]) {
+        app->stale_name_results = false;
+        ask(app, TARGET_NAME_RESULTS, DIR_SEARCH, app->query);
+    }
+}
+
 void appUpdate(App *app, uint64_t now_ns)
 {
     appUpdatesTick(app, now_ns);
+    appPodcastsUpdate(app, now_ns);
     app->notice = noticeShown(&app->notices, now_ns, &app->notice_slide);
+    askStale(app);
     directoryGetStatus(&app->directory);
     if (!app->waiting_active || app->directory.generation != app->waiting)
         return;
@@ -386,6 +429,10 @@ static void playSelected(App *app)
 
 static void playAdjacent(App *app, int delta)
 {
+    if (appEpisodeActive()) {  // An episode: L and R jump in it instead.
+        appEpisodeJump(app, delta < 0 ? -EPISODE_BACK_S : EPISODE_AHEAD_S);
+        return;
+    }
     if (app->play_list.count == 0)
         return;
     size_t count = app->play_list.count;
@@ -397,7 +444,9 @@ static void togglePlay(App *app)
 {
     RadioStatus status;
     radioGetStatus(&status);
-    if (status.state != RADIO_STOPPED && status.state != RADIO_FAILED)
+    if (status.has_episode)
+        appEpisodeToggle(app);  // Pause and go on, rather than stop.
+    else if (status.state != RADIO_STOPPED && status.state != RADIO_FAILED)
         radioStop();
     else if (status.has_station)
         radioPlay(&status.station);
@@ -453,7 +502,9 @@ static void typeSearch(App *app, uint64_t now_ns)
 
 static void retry(App *app)
 {
-    if (app->view == VIEW_WORLD) {
+    if (app->view == VIEW_PODCASTS) {
+        appPodcastsRetry(app);
+    } else if (app->view == VIEW_WORLD) {
         askCategoriesOf(app, SEARCH_COUNTRY);
     } else if (app->view == VIEW_POPULAR) {
         askPopular(app);
@@ -473,6 +524,10 @@ static void moveCursor(App *app, long delta)
 {
     size_t *cursor;
     size_t count;
+    if (app->view == VIEW_PODCASTS) {
+        appPodMove(app, delta);
+        return;
+    }
     if (appBrowsingCategories(app)) {
         cursor = &app->category_cursor[app->search_mode];
         count = app->categories[app->search_mode].count;
@@ -628,6 +683,10 @@ void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
     }
     if (pressed & BUTTONS_UP) moveCursor(app, -1);
     if (pressed & BUTTONS_DOWN) moveCursor(app, 1);
+    if (app->view == VIEW_PODCASTS) {
+        appPodcastsButtons(app, pressed, now_ns);
+        return;
+    }
     if (app->view == VIEW_SEARCH) {
         if (pressed & HidNpadButton_StickRUp) moveCursor(app, -UI_LIST_ROWS);
         if (pressed & HidNpadButton_StickRDown) moveCursor(app, UI_LIST_ROWS);
@@ -719,6 +778,15 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         appChangeSetting(app, hit->arg / 2, hit->arg % 2 ? 1 : -1, now_ns);
         break;
     case HIT_OVERLAY_OUT: app->overlay = app->overlay == OVERLAY_ABOUT ? OVERLAY_SETTINGS : OVERLAY_NONE; break;
+    case HIT_POD_ROW:
+    case HIT_POD_SUBSCRIBE:
+    case HIT_POD_SEARCH:
+    case HIT_POD_BACK:
+    case HIT_POD_HEARD:
+    case HIT_SEEK:
+    case HIT_JUMP:
+    case HIT_POD_MODE:
+    case HIT_POD_REGION: appPodcastsTap(app, hit->kind, hit->arg, x, y, now_ns); break;
     }
     return true;
 }
@@ -797,8 +865,9 @@ void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns)
         appTap(app, e.x, e.y, now_ns);
     } else if (e.type == TOUCH_DRAG) {
         const HitRegion *start = uiHitFind(e.start_x, e.start_y);
-        bool on_list = start && (start->kind == HIT_LIST || start->kind == HIT_ROW ||
-                                 start->kind == HIT_FAVORITE || start->kind == HIT_CATEGORY);
+        bool on_list = start && (start->kind == HIT_LIST || start->kind == HIT_ROW || start->kind == HIT_FAVORITE ||
+                                 start->kind == HIT_CATEGORY || start->kind == HIT_POD_ROW ||
+                                 start->kind == HIT_POD_HEARD || (start->kind == HIT_POD_SUBSCRIBE && start->arg >= 0));
         if (!on_list)
             return;
         // The list goes with the finger: dragging up shows the rows below, as on a phone.

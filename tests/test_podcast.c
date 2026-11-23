@@ -154,6 +154,46 @@ static void testSearch(void)
     CHECK(!podcastParseSearch("<html>rate limited</html>", &r) && !podcastParseSearch(NULL, &r));
 }
 
+static void testCharts(void)
+{
+    char url[512];
+    CHECK(podcastChartUrl("mx", 1488, url, sizeof(url)) &&
+          !strcmp(url, "https://itunes.apple.com/mx/rss/toppodcasts/limit=50/genre=1488/json"));
+    CHECK(podcastChartUrl("us", 0, url, sizeof(url)) &&
+          !strcmp(url, "https://itunes.apple.com/us/rss/toppodcasts/limit=50/json"));
+    CHECK(!podcastChartUrl("MX", 0, url, sizeof(url)) && !podcastChartUrl("m/", 0, url, sizeof(url)) &&
+          !podcastChartUrl("mex", 0, url, sizeof(url)) && !podcastChartUrl(NULL, 0, url, sizeof(url)));
+
+    const char *chart = "{\"feed\":{\"entry\":["
+                        "{\"im:name\":{\"label\":\"A\"},\"id\":{\"attributes\":{\"im:id\":\"1539248506\"}}},"
+                        "{\"id\":{\"attributes\":{\"im:id\":\"x12\"}}},"
+                        "{\"id\":{\"attributes\":{\"im:id\":\"1517954480\"}}},"
+                        "{\"id\":{\"attributes\":{\"im:id\":\"1539248506\"}}},"
+                        "{\"id\":{\"attributes\":{\"im:id\":\"1580419124\"}}}]}}";
+    long long ids[8];
+    CHECK(podcastParseChartIds(chart, ids, 8) == 3 && ids[0] == 1539248506LL && ids[1] == 1517954480LL &&
+          ids[2] == 1580419124LL);
+    CHECK(podcastParseChartIds(chart, ids, 2) == 2);
+    CHECK(podcastParseChartIds("{\"feed\":{\"entry\":{\"id\":{\"attributes\":{\"im:id\":\"7\"}}}}}", ids, 8) == 1 &&
+          ids[0] == 7);  // A chart of one.
+    CHECK(podcastParseChartIds("{\"feed\":{}}", ids, 8) == 0 && podcastParseChartIds("<html>", ids, 8) == 0);
+
+    long long want[3] = {30, 10, 20};
+    CHECK(podcastLookupUrl(want, 3, url, sizeof(url)) &&
+          !strcmp(url, "https://itunes.apple.com/lookup?entity=podcast&id=30,10,20"));
+    CHECK(!podcastLookupUrl(want, 0, url, sizeof(url)) && !podcastLookupUrl(want, 3, url, 40));
+
+    const char *lookup = "{\"results\":["
+                         "{\"collectionId\":10,\"collectionName\":\"Ten\",\"feedUrl\":\"https://f.example/10\"},"
+                         "{\"collectionId\":40,\"collectionName\":\"Forty\",\"feedUrl\":\"https://f.example/40\"},"
+                         "{\"collectionId\":30,\"collectionName\":\"Thirty\",\"feedUrl\":\"https://f.example/30\"}]}";
+    PodcastResults r;
+    CHECK(podcastParseSearch(lookup, &r) && r.count == 3 && r.items[0].id == 10);
+    podcastOrderByIds(&r, want, 3);  // The chart's order; 20 wasn't found, 40 wasn't asked for.
+    CHECK(r.count == 2 && r.items[0].id == 30 && r.items[1].id == 10);
+    podcastResultsFree(&r);
+}
+
 static void testDurationsAndDates(void)
 {
     CHECK(podcastParseDuration("1:02:03") == 3723 && podcastParseDuration("62:03") == 3723);
@@ -224,6 +264,25 @@ static void testFetch(void)
     if (st.state == POD_SEARCH_READY)
         podcastResultsFree(&found);
 
+    // A chart: its ids, then the lookup, in the chart's order.
+    fakeNetAnswer("itunes.apple.com/mx/rss/toppodcasts",
+                  "{\"feed\":{\"entry\":[{\"id\":{\"attributes\":{\"im:id\":\"22\"}}},"
+                  "{\"id\":{\"attributes\":{\"im:id\":\"11\"}}}]}}", 200);
+    fakeNetAnswer("itunes.apple.com/lookup",
+                  "{\"results\":[{\"collectionId\":11,\"collectionName\":\"Eleven\",\"feedUrl\":\"https://f.example/11\"},"
+                  "{\"collectionId\":22,\"collectionName\":\"Twenty-two\",\"feedUrl\":\"https://f.example/22\"}]}", 200);
+    podFetchChart("mx", 1488);
+    for (int i = 0; i < 500; i++) {
+        podFetchSearchStatus(&st);
+        if (st.state != POD_SEARCH_LOADING)
+            break;
+        usleep(2000);
+    }
+    CHECK(st.state == POD_SEARCH_READY && podFetchTakeSearch(st.generation, &found) && found.count == 2 &&
+          found.items[0].id == 22 && !strcmp(found.items[1].title, "Eleven"));
+    if (st.state == POD_SEARCH_READY)
+        podcastResultsFree(&found);
+
     podFetchFeed("https://feeds.example/a");
     podFetchFeed("https://feeds.example/a");  // Asked again before it's read: read once.
     podFetchFeed("https://feeds.example/html");
@@ -254,5 +313,6 @@ void testPodcast(void)
     testXml();
     testFeed();
     testSearch();
+    testCharts();
     testDurationsAndDates();
 }

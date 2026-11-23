@@ -56,8 +56,8 @@ int podStoreFind(const PodStore *s, const char *feed);
 int podStoreSubscribe(PodStore *s, const PodcastResult *r, int64_t now);
 // Unsubscribes and saves. Its marks are kept, for a subscription again.
 bool podStoreUnsubscribe(PodStore *s, int index);
-// Takes a refreshed feed for a subscription: its name and picture when it
-// has them, and its episodes (copied). Returns how many are newer than the
+// Takes a refreshed feed for a subscription: its name when it has one, its
+// picture when the subscription had none, and its episodes (copied). Returns how many are newer than the
 // newest it had, or -1 if memory ran out (the old episodes then stay).
 // Doesn't save.
 int podStoreTakeFeed(PodStore *s, int index, const Feed *feed, int64_t now);
