@@ -34,6 +34,13 @@ static bool g_stop_request;
 static bool g_playing;        // A station is meant to be playing.
 static bool g_decoding;       // The decoder has produced audio.
 static char g_error[160];
+static bool g_has_episode;
+static RadioEpisode g_episode;
+static bool g_is_episode;     // What plays (or last played) is g_episode, not g_station.
+static bool g_seek_request;
+static double g_seek_to;
+static bool g_paused;
+static bool g_ended;
 
 // Owned by the audio thread.
 static Thread g_thread;
@@ -42,6 +49,7 @@ static volatile bool g_abort;  // Makes a blocked read give up (a new command ca
 static Ring g_ring;
 static size_t g_prebuffer;
 static bool g_open;            // The decoder is open for this station.
+static PodReader *g_reader;    // An episode's audio, while one plays.
 static u32 g_out_rate;
 static AudioOutBuffer g_buffers[BUFFER_COUNT];
 static bool g_queued[BUFFER_COUNT];
@@ -170,6 +178,8 @@ static void stopPlayback(void)
     g_abort = true;
     streamStop();
     decoderClose();
+    podReaderClose(g_reader);
+    g_reader = NULL;
     g_open = false;
     flushOutput();
     g_abort = false;
@@ -178,9 +188,28 @@ static void stopPlayback(void)
     mutexUnlock(&g_lock);
 }
 
+static void startEpisode(void)
+{
+    mutexLock(&g_lock);
+    char url[LINK_URL_MAX];
+    snprintf(url, sizeof(url), "%s", g_episode.url);
+    g_error[0] = '\0';
+    g_playing = true;
+    g_ended = false;
+    mutexUnlock(&g_lock);
+    g_reader = podReaderOpen(url);
+    logStart(url);
+    if (!g_reader)
+        setError(N_("Out of memory"));
+}
+
 static void startPlayback(void)
 {
     stopPlayback();
+    if (g_is_episode) {
+        startEpisode();
+        return;
+    }
     mutexLock(&g_lock);
     char url[LINK_URL_MAX];
     snprintf(url, sizeof(url), "%s", g_station.url);
@@ -201,12 +230,23 @@ static void startPlayback(void)
 static void handleCommands(void)
 {
     mutexLock(&g_lock);
-    bool play = g_play_request, stop = g_stop_request;
-    g_play_request = g_stop_request = false;
+    bool play = g_play_request, stop = g_stop_request, seek = g_seek_request;
+    double seek_to = g_seek_to;
+    g_play_request = g_stop_request = g_seek_request = false;
+    if (seek && !g_open)
+        g_episode.start = (int)seek_to;  // Not open yet: it starts there.
     mutexUnlock(&g_lock);
     g_abort = false;
     if (play) {
         startPlayback();
+    } else if (seek && g_open && g_is_episode) {
+        flushOutput();
+        if (decoderSeek(seek_to)) {
+            mutexLock(&g_lock);
+            g_ended = false;
+            g_playing = g_error[0] == '\0';
+            mutexUnlock(&g_lock);
+        }
     } else if (stop) {
         stopPlayback();
         logLine("stopped");
@@ -234,9 +274,62 @@ static void failWith(const char *fallback)
     setError(message);
 }
 
+// An episode: the decoder reads through the reader, which waits for the
+// network itself; then it jumps to where the episode was left.
+static bool openEpisode(void)
+{
+    if (!g_reader)
+        return false;
+    mutexLock(&g_lock);
+    char type[sizeof(g_episode.type)];
+    snprintf(type, sizeof(type), "%s", g_episode.type);
+    int start = g_episode.start;
+    mutexUnlock(&g_lock);
+    if (!decoderOpenReader(g_reader, type, g_out_rate, &g_abort)) {
+        if (g_abort)
+            return false;  // A command came: tried again after it.
+        PodReaderInfo info;
+        podReaderInfo(g_reader, &info);
+        stopPlayback();
+        const char *message = info.failed ? info.error : N_("This episode's audio format isn't supported.");
+        logLine(message);
+        setError(message);
+        return false;
+    }
+    if (start > 0)
+        decoderSeek(start);
+    g_open = true;
+    DecoderInfo d;
+    decoderGetInfo(&d);
+    char line[160];
+    snprintf(line, sizeof(line), "episode decoder %s, %.0f s, from %d s", d.codec, decoderDuration(), start);
+    logLine(line);
+    return true;
+}
+
+// The end of an episode: what's queued plays out, then it's ended.
+static void episodeEnded(void)
+{
+    PodReaderInfo info;
+    podReaderInfo(g_reader, &info);
+    if (info.failed) {
+        stopPlayback();
+        logLine(info.error);
+        setError(info.error);
+        return;
+    }
+    logLine("episode ended");
+    mutexLock(&g_lock);
+    g_ended = true;
+    g_playing = false;
+    mutexUnlock(&g_lock);
+}
+
 // Opens the decoder once the start of the stream is buffered.
 static bool openWhenBuffered(void)
 {
+    if (g_is_episode)
+        return openEpisode();
     StreamInfo info;
     streamGetInfo(&info);
     if (info.state == STREAM_FAILED) {
@@ -266,6 +359,13 @@ static void playStep(void)
 {
     if (!g_open && !openWhenBuffered())
         return;
+    mutexLock(&g_lock);
+    bool paused = g_paused && g_is_episode;
+    mutexUnlock(&g_lock);
+    if (paused) {
+        reapBuffers();  // What's queued plays out; nothing more is decoded.
+        return;
+    }
     for (int i = 0; i < BUFFER_COUNT && !g_abort; i++) {
         if (g_queued[i])
             continue;
@@ -278,6 +378,10 @@ static void playStep(void)
                 waiting |= g_queued[k];
             if (g_abort || waiting)
                 break;  // Let what's queued play out first.
+            if (g_is_episode) {
+                episodeEnded();
+                return;
+            }
             StreamInfo info;
             streamGetInfo(&info);
             failWith(info.state == STREAM_ENDED ? N_("The station ended the broadcast.")
@@ -386,11 +490,63 @@ void radioExit(void)
     g_log.file = NULL;
 }
 
+void radioPlayEpisode(const RadioEpisode *episode)
+{
+    mutexLock(&g_lock);
+    g_episode = *episode;
+    g_has_episode = true;
+    g_has_station = false;
+    g_is_episode = true;
+    g_paused = false;
+    g_ended = false;
+    g_seek_request = false;
+    g_play_request = true;
+    g_stop_request = false;
+    g_playing = true;
+    g_error[0] = '\0';
+    g_decoding = false;
+    mutexUnlock(&g_lock);
+    g_abort = true;
+    ringCancel(&g_ring);
+}
+
+void radioSeek(double seconds)
+{
+    mutexLock(&g_lock);
+    bool episode = g_is_episode && g_has_episode;
+    if (episode) {
+        g_seek_to = seconds < 0 ? 0 : seconds;
+        g_seek_request = true;
+        if (g_ended || g_error[0]) {  // From the end, or after a failure: it plays again from there.
+            g_episode.start = (int)g_seek_to;
+            g_play_request = true;
+            g_playing = true;
+            g_error[0] = '\0';
+            g_ended = false;
+            g_decoding = false;
+        }
+    }
+    mutexUnlock(&g_lock);
+    if (episode)
+        g_abort = true;  // A read waiting on the network gives up for the jump.
+}
+
+void radioPause(bool paused)
+{
+    mutexLock(&g_lock);
+    g_paused = paused;
+    mutexUnlock(&g_lock);
+}
+
 void radioPlay(const Station *station)
 {
     mutexLock(&g_lock);
     g_station = *station;
     g_has_station = true;
+    g_has_episode = false;
+    g_is_episode = false;
+    g_paused = false;
+    g_ended = false;
     g_play_request = true;
     g_stop_request = false;
     g_playing = true;
@@ -423,8 +579,33 @@ void radioGetStatus(RadioStatus *out)
     out->has_station = g_has_station;
     out->station = g_station;
     snprintf(out->error, sizeof(out->error), "%s", g_error);
-    bool playing = g_playing, decoding = g_decoding;
+    bool playing = g_playing, decoding = g_decoding, episode = g_is_episode;
+    out->has_episode = g_has_episode;
+    out->episode = g_episode;
+    out->paused = g_paused;
+    out->ended = g_ended;
+    bool seeking = g_seek_request;
+    double seek_to = g_seek_to;
     mutexUnlock(&g_lock);
+
+    if (episode) {
+        snprintf(out->codec, sizeof(out->codec), "%s", d.codec);
+        out->sample_rate = d.sample_rate;
+        double length = decoderDuration();
+        out->duration = length > 0 ? length : out->episode.duration;
+        out->position = seeking ? seek_to : decoding ? decoderPosition() : out->episode.start;
+        if (out->ended)
+            out->position = out->duration;
+        if (out->error[0])
+            out->state = RADIO_FAILED;
+        else if (!playing)
+            out->state = RADIO_STOPPED;
+        else if (!decoding)
+            out->state = RADIO_CONNECTING;
+        else
+            out->state = decoderBuffering() ? RADIO_BUFFERING : RADIO_PLAYING;
+        return;
+    }
 
     snprintf(out->codec, sizeof(out->codec), "%s", d.codec);
     out->sample_rate = d.sample_rate;

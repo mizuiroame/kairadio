@@ -16,6 +16,19 @@ typedef enum {
     RADIO_FAILED,  // See error.
 } RadioState;
 
+// A podcast episode to play (podcast.h has where these come from).
+typedef struct {
+    char feed[LINK_URL_MAX];   // The podcast it's from (its id).
+    char guid[160];
+    char title[160];
+    char podcast[160];         // The podcast's name.
+    char image[LINK_URL_MAX];  // Its picture; may be empty.
+    char url[LINK_URL_MAX];    // The audio.
+    char type[32];             // Its content type; may be empty.
+    int start;                 // Seconds in to start at.
+    int duration;              // As the feed says; 0 if unknown.
+} RadioEpisode;
+
 typedef struct {
     RadioState state;
     bool has_station;
@@ -28,6 +41,13 @@ typedef struct {
     bool hls;
     float buffered_seconds; // Audio waiting to be played.
     char error[160];        // In English, as logged: shown with T().
+    // An episode instead of a station (has_station is then false).
+    bool has_episode;
+    RadioEpisode episode;
+    double position;        // Seconds in.
+    double duration;        // Its length (the file's, else the feed's); 0 if unknown.
+    bool paused;
+    bool ended;             // It played to the end.
 } RadioStatus;
 
 // False if the audio output can't start.
@@ -36,6 +56,11 @@ bool radioInit(const char *folder);
 void radioExit(void);
 
 void radioPlay(const Station *station);
+// Plays an episode from episode->start. Stops a station or episode playing.
+void radioPlayEpisode(const RadioEpisode *episode);
+// For an episode: jumps to seconds in, and pauses or goes on.
+void radioSeek(double seconds);
+void radioPause(bool paused);
 void radioStop(void);
 void radioGetStatus(RadioStatus *out);
 

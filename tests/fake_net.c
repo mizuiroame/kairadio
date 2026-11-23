@@ -76,3 +76,71 @@ void netResponseFree(NetResponse *r)
     r->data = NULL;
     r->size = 0;
 }
+
+// --- A file streamed in pieces (podread.c) ---
+
+#define FAKE_CHUNK 65536
+
+static struct {
+    char url_part[128];
+    int64_t size;
+    bool ranges;
+    int64_t drop_after;  // Once: the connection drops after this many bytes; -1 never.
+    int streams;
+} g_file;
+
+uint8_t fakeNetFileByte(int64_t offset)
+{
+    return (uint8_t)(offset * 7 + offset / 251);
+}
+
+void fakeNetFile(const char *url_part, int64_t size, bool ranges, int64_t drop_after)
+{
+    snprintf(g_file.url_part, sizeof(g_file.url_part), "%s", url_part);
+    g_file.size = size;
+    g_file.ranges = ranges;
+    g_file.drop_after = drop_after;
+    g_file.streams = 0;
+}
+
+int fakeNetStreams(void)
+{
+    return g_file.streams;
+}
+
+bool netStream(const char *url, int64_t from, const volatile bool *cancel, NetStreamSink sink, void *user,
+               NetStreamHead *head_out, char *error, size_t error_size)
+{
+    error[0] = '\0';
+    g_file.streams++;
+    if (!g_file.url_part[0] || !strstr(url, g_file.url_part)) {
+        snprintf(error, error_size, "The server answered 404");
+        return false;
+    }
+    NetStreamHead head = {.total = g_file.size};
+    snprintf(head.content_type, sizeof(head.content_type), "audio/mpeg");
+    int64_t at = g_file.ranges ? from : 0;
+    head.status = g_file.ranges && from > 0 ? 206 : 200;
+    head.start = at;
+    if (head_out)
+        *head_out = head;
+    uint8_t chunk[FAKE_CHUNK];
+    int64_t sent = 0;
+    while (at < g_file.size) {
+        if (cancel && *cancel)
+            return false;
+        if (g_file.drop_after >= 0 && sent >= g_file.drop_after) {
+            g_file.drop_after = -1;
+            snprintf(error, error_size, "Connection reset");
+            return false;
+        }
+        size_t n = g_file.size - at < FAKE_CHUNK ? (size_t)(g_file.size - at) : FAKE_CHUNK;
+        for (size_t i = 0; i < n; i++)
+            chunk[i] = fakeNetFileByte(at + (int64_t)i);
+        if (!sink(&head, chunk, n, user))
+            return false;
+        at += (int64_t)n;
+        sent += (int64_t)n;
+    }
+    return true;
+}

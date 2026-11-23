@@ -165,6 +165,113 @@ static int onFileProgress(void *user, curl_off_t total, curl_off_t now, curl_off
     return watch->cancel && *watch->cancel ? 1 : 0;
 }
 
+typedef struct {
+    NetStreamHead head;
+    int64_t from;
+    int64_t length;  // Content-Length of the answer; -1 if none.
+    bool head_ready;
+    NetStreamSink sink;
+    void *user;
+    bool stopped;    // The sink asked to stop.
+    const volatile bool *cancel;
+} StreamSink;
+
+// Each answer's headers (a redirect's too: a status line starts them over).
+static size_t onStreamHeader(char *line, size_t one, size_t count, void *user)
+{
+    StreamSink *s = user;
+    size_t n = one * count;
+    char text[256];
+    size_t len = n < sizeof(text) - 1 ? n : sizeof(text) - 1;
+    memcpy(text, line, len);
+    text[len] = '\0';
+    text[strcspn(text, "\r\n")] = '\0';
+    if (!strncasecmp(text, "HTTP/", 5)) {
+        const char *space = strchr(text, ' ');
+        s->head.status = space ? atol(space + 1) : 0;
+        s->head.total = -1;
+        s->head.start = 0;
+        s->head.content_type[0] = '\0';
+        s->length = -1;
+    } else if (!strncasecmp(text, "Content-Type:", 13)) {
+        const char *v = text + 13;
+        v += strspn(v, " \t");
+        snprintf(s->head.content_type, sizeof(s->head.content_type), "%.*s", (int)strcspn(v, "; \t"), v);
+    } else if (!strncasecmp(text, "Content-Length:", 15)) {
+        long long v = atoll(text + 15);
+        s->length = v >= 0 ? v : -1;
+    } else if (!strncasecmp(text, "Content-Range:", 14)) {  // "bytes 100-199/1000".
+        long long first = -1, last = -1, total = -1;
+        const char *v = strstr(text, "bytes");
+        if (v && sscanf(v, "bytes %lld-%lld/%lld", &first, &last, &total) >= 2) {
+            s->head.start = first >= 0 ? first : 0;
+            s->head.total = total > 0 ? total : -1;
+        }
+    }
+    return n;
+}
+
+static size_t onStreamData(char *data, size_t one, size_t count, void *user)
+{
+    StreamSink *s = user;
+    size_t n = one * count;
+    if (!s->head_ready) {
+        s->head_ready = true;
+        if (s->head.status != 206)
+            s->head.start = 0;  // The whole file, whatever was asked.
+        if (s->head.total < 0 && s->length >= 0)
+            s->head.total = s->head.status == 206 ? -1 : s->length;
+    }
+    if (!s->sink(&s->head, data, n, s->user)) {
+        s->stopped = true;
+        return 0;
+    }
+    return n;
+}
+
+bool netStream(const char *url, int64_t from, const volatile bool *cancel, NetStreamSink sink, void *user,
+               NetStreamHead *head, char *error, size_t error_size)
+{
+    error[0] = '\0';
+    CURL *curl = curl_easy_init();
+    if (!curl) {
+        snprintf(error, error_size, "%s", T("Out of memory"));
+        return false;
+    }
+    char curl_error[CURL_ERROR_SIZE] = "";
+    StreamSink s = {.from = from, .length = -1, .sink = sink, .user = user, .cancel = cancel};
+    s.head.total = -1;
+    setCommon(curl, url, curl_error);
+    char range[48];
+    if (from > 0) {
+        snprintf(range, sizeof(range), "%lld-", (long long)from);
+        curl_easy_setopt(curl, CURLOPT_RANGE, range);
+    }
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, DOWNLOAD_STALL_S);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, onStreamHeader);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &s);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, onStreamData);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, onProgress);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, (void *)cancel);
+    CURLcode rc = curl_easy_perform(curl);
+    long status = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    curl_easy_cleanup(curl);
+    if (head)
+        *head = s.head;
+    bool ok = rc == CURLE_OK && status >= 200 && status < 300;
+    if (!ok && !s.stopped && !(cancel && *cancel)) {
+        if (rc != CURLE_OK)
+            snprintf(error, error_size, "%s", curl_error[0] ? curl_error : curl_easy_strerror(rc));
+        else
+            snprintf(error, error_size, T("The server answered %ld"), status);
+    }
+    return ok;
+}
+
 bool netDownloadFile(const char *url, const char *path, size_t max_bytes, const volatile bool *cancel,
                      volatile float *progress, NetResponse *out)
 {

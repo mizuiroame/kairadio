@@ -37,6 +37,8 @@ static int g_stream = -1;
 static int g_swr_rate, g_swr_format;
 static AVChannelLayout g_swr_layout;
 static DecoderInfo g_info;
+static bool g_seekable;          // Opened from a reader: it can jump.
+static volatile double g_position;  // Seconds into the episode of the audio decoded last.
 
 static int readPacket(void *opaque, uint8_t *buf, int size)
 {
@@ -58,6 +60,30 @@ static int readPacket(void *opaque, uint8_t *buf, int size)
             return AVERROR_EOF;
     }
     return AVERROR_EXIT;
+}
+
+// An episode: read through the seekable reader instead of the ring.
+static int readReader(void *opaque, uint8_t *buf, int size)
+{
+    int n = podReaderRead(opaque, buf, size, g_abort);
+    return n > 0 ? n : n == 0 ? AVERROR_EOF : n == -2 ? AVERROR_EXIT : AVERROR(EIO);
+}
+
+static int64_t seekReader(void *opaque, int64_t offset, int whence)
+{
+    PodReader *r = opaque;
+    int64_t size = podReaderSize(r);
+    switch (whence & ~AVSEEK_FORCE) {
+    case AVSEEK_SIZE: return size >= 0 ? size : -1;
+    case SEEK_SET: return podReaderSeek(r, offset);
+    case SEEK_CUR: {
+        PodReaderInfo info;
+        podReaderInfo(r, &info);
+        return podReaderSeek(r, info.position + offset);
+    }
+    case SEEK_END: return size >= 0 ? podReaderSeek(r, size + offset) : -1;
+    default: return -1;
+    }
 }
 
 static int interrupted(void *opaque)
@@ -117,25 +143,16 @@ void decoderClose(void)
     g_stream = -1;
     g_playing = false;
     g_buffering = false;
+    g_seekable = false;
+    g_position = 0;
     memset(&g_info, 0, sizeof(g_info));
 }
 
-bool decoderOpen(Ring *ring, const char *content_type, unsigned out_rate, const volatile bool *abort,
-                 size_t rebuffer)
+// Opens what g_avio reads (the ring's stream, or an episode).
+static bool openInput(const char *content_type)
 {
-    decoderClose();
-    g_ring = ring;
-    g_abort = abort;
-    g_rebuffer = rebuffer;
-    g_out_rate = out_rate;
-    g_packet = av_packet_alloc();
-    g_frame = av_frame_alloc();
-    uint8_t *buffer = av_malloc(AVIO_BUFFER);
-    g_avio = buffer ? avio_alloc_context(buffer, AVIO_BUFFER, 0, NULL, readPacket, NULL, NULL) : NULL;
     g_format = avformat_alloc_context();
     if (!g_packet || !g_frame || !g_avio || !g_format) {
-        if (!g_avio)
-            av_free(buffer);
         decoderClose();
         return false;
     }
@@ -158,6 +175,77 @@ bool decoderOpen(Ring *ring, const char *content_type, unsigned out_rate, const 
         return false;
     }
     codecLabel(g_codec, g_info.codec, sizeof(g_info.codec));
+    return true;
+}
+
+bool decoderOpen(Ring *ring, const char *content_type, unsigned out_rate, const volatile bool *abort,
+                 size_t rebuffer)
+{
+    decoderClose();
+    g_ring = ring;
+    g_abort = abort;
+    g_rebuffer = rebuffer;
+    g_out_rate = out_rate;
+    g_packet = av_packet_alloc();
+    g_frame = av_frame_alloc();
+    uint8_t *buffer = av_malloc(AVIO_BUFFER);
+    g_avio = buffer ? avio_alloc_context(buffer, AVIO_BUFFER, 0, NULL, readPacket, NULL, NULL) : NULL;
+    if (buffer && !g_avio)
+        av_free(buffer);
+    return openInput(content_type);
+}
+
+bool decoderOpenReader(PodReader *reader, const char *content_type, unsigned out_rate, const volatile bool *abort)
+{
+    decoderClose();
+    g_ring = NULL;
+    g_abort = abort;
+    g_rebuffer = 0;
+    g_out_rate = out_rate;
+    g_packet = av_packet_alloc();
+    g_frame = av_frame_alloc();
+    uint8_t *buffer = av_malloc(AVIO_BUFFER);
+    g_avio = buffer ? avio_alloc_context(buffer, AVIO_BUFFER, 0, reader, readReader, NULL, seekReader) : NULL;
+    if (buffer && !g_avio)
+        av_free(buffer);
+    if (g_avio)
+        g_avio->seekable = AVIO_SEEKABLE_NORMAL;
+    g_seekable = true;
+    return openInput(content_type);
+}
+
+double decoderDuration(void)
+{
+    if (!g_format)
+        return 0;
+    if (g_format->duration > 0 && g_format->duration != AV_NOPTS_VALUE)
+        return (double)g_format->duration / AV_TIME_BASE;
+    const AVStream *s = g_stream >= 0 ? g_format->streams[g_stream] : NULL;
+    if (s && s->duration > 0 && s->duration != AV_NOPTS_VALUE)
+        return (double)s->duration * av_q2d(s->time_base);
+    return 0;
+}
+
+double decoderPosition(void)
+{
+    return g_position;
+}
+
+bool decoderSeek(double seconds)
+{
+    if (!g_format || !g_codec || !g_seekable)
+        return false;
+    if (seconds < 0)
+        seconds = 0;
+    int64_t target = (int64_t)(seconds * AV_TIME_BASE);
+    g_avio->eof_reached = 0;  // A read stopped for this jump left these set.
+    g_avio->error = 0;
+    if (avformat_seek_file(g_format, -1, INT64_MIN, target, INT64_MAX, 0) < 0)
+        return false;
+    avcodec_flush_buffers(g_codec);
+    swr_free(&g_swr);  // What it held was from before: made again for the next frame.
+    av_channel_layout_uninit(&g_swr_layout);
+    g_position = seconds;
     return true;
 }
 
@@ -204,6 +292,9 @@ size_t decoderRead(int16_t *out, size_t frames)
             break;
         int rc = avcodec_receive_frame(g_codec, g_frame);
         if (rc == 0) {
+            int64_t pts = g_frame->best_effort_timestamp;
+            if (pts != AV_NOPTS_VALUE && g_stream >= 0)
+                g_position = (double)pts * av_q2d(g_format->streams[g_stream]->time_base);
             bool ok = prepareResampler(g_frame);
             if (ok) {
                 // Converts what fits; swr keeps the rest for drainResampler.

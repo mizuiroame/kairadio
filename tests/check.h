@@ -40,3 +40,4 @@ void testUpdateRelease(void);
 void testNotice(void);
 void testPodcast(void);
 void testPodStore(void);
+void testPodRead(void);

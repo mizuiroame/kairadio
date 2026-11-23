@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #define NET_USER_AGENT "KaiRadio/" KAIRADIO_VERSION " (+https://github.com/mizuiroame/kairadio)"
 
@@ -28,4 +29,23 @@ bool netGet(const char *url, size_t max_bytes, const volatile bool *cancel, NetR
 bool netDownloadFile(const char *url, const char *path, size_t max_bytes, const volatile bool *cancel,
                      volatile float *progress, NetResponse *out);
 void netResponseFree(NetResponse *r);
+
+// What a streamed answer is, known before its first bytes.
+typedef struct {
+    long status;              // 206 when it starts where asked.
+    int64_t start;            // The offset in the file of the first byte given.
+    int64_t total;            // The file's size; -1 if the server doesn't say.
+    char content_type[64];
+} NetStreamHead;
+
+// Takes the bytes as they come; false stops the transfer.
+typedef bool (*NetStreamSink)(const NetStreamHead *head, const void *data, size_t size, void *user);
+
+// GETs url from byte from on (an HTTP range; a server without ranges sends
+// the whole file, which head->start then says), handing the bytes to sink.
+// For audio that may take long: it fails only when nothing comes for a
+// while. True when it all came. False on a failure (error says why), or
+// when cancel or the sink stopped it (error empty).
+bool netStream(const char *url, int64_t from, const volatile bool *cancel, NetStreamSink sink, void *user,
+               NetStreamHead *head, char *error, size_t error_size);
 

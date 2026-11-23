@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "podread.h"
 #include "ring.h"
 
 typedef struct {
@@ -20,7 +21,16 @@ typedef struct {
 // After an underrun, reading waits until rebuffer bytes are in the ring.
 bool decoderOpen(Ring *ring, const char *content_type, unsigned out_rate, const volatile bool *abort,
                  size_t rebuffer);
+// Opens an episode, read through reader (podread.h), which can seek.
+bool decoderOpenReader(PodReader *reader, const char *content_type, unsigned out_rate, const volatile bool *abort);
 void decoderClose(void);
+
+// An episode's length in seconds (0 if not known), where the audio decoded
+// last is, and a jump (only for an episode). The next decoderRead goes on
+// from the new place.
+double decoderDuration(void);
+double decoderPosition(void);
+bool decoderSeek(double seconds);
 
 // Decodes up to frames stereo frames into out. Returns the frames written;
 // fewer than asked only at the end of the stream, on an error, or when
