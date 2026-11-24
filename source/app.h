@@ -276,6 +276,8 @@ void appCheckSleep(App *app, uint64_t now_ns);
 // Opens the stations of the country at index of categories[SEARCH_COUNTRY]
 // (in Search), from the World view.
 void appOpenMapCountry(App *app, size_t index);
+// Plays a station at random from the country at index (a tap on the map).
+void appRandomStationIn(App *app, size_t index, uint64_t now_ns);
 void appSetSearchMode(App *app, SearchMode mode);
 
 // app_podcast.c: the Podcasts tab, and episodes playing.

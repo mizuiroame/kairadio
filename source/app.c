@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include "buttons.h"
 #include "keyboard_system.h"
@@ -242,8 +243,30 @@ void appCycleSort(App *app, uint64_t now_ns)
         app->map_cursor = findCategory(list, &on_map, 0);
 }
 
+static void turnGlobeToPick(App *app, uint64_t now_ns);
+
+// World opens on the country of the station playing (or that was, resumed),
+// not on the first of the list. False if there's none, or it isn't on the list.
+static bool pickPlayingCountry(App *app, uint64_t now_ns)
+{
+    RadioStatus status;
+    radioGetStatus(&status);
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    if (!status.has_station || !status.station.countrycode[0])
+        return false;
+    for (size_t i = 0; i < countries->count; i++) {
+        if (!strcasecmp(countries->items[i].code, status.station.countrycode)) {
+            app->map_cursor = i;
+            turnGlobeToPick(app, now_ns);
+            return true;
+        }
+    }
+    return false;
+}
+
 void appSetView(App *app, View view)
 {
+    bool to_world = view == VIEW_WORLD && app->view != VIEW_WORLD;
     if (view != VIEW_NOW_PLAYING)
         app->list_view = view;
     app->view = view;
@@ -251,6 +274,8 @@ void appSetView(App *app, View view)
         askPopular(app);
     if (view == VIEW_WORLD && !app->categories_asked[SEARCH_COUNTRY])
         askCategoriesOf(app, SEARCH_COUNTRY);
+    if (to_world)
+        pickPlayingCountry(app, app->globe_frame_ns);
 }
 
 void appOpenMapCountry(App *app, size_t index)
@@ -265,7 +290,6 @@ void appOpenMapCountry(App *app, size_t index)
 }
 
 static void playFrom(App *app, const StationList *list, size_t index);
-static void turnGlobeToPick(App *app, uint64_t now_ns);
 static void playRandom(App *app, uint64_t now_ns);
 
 // A small random number (xorshift), seeded from the clock the first time.
@@ -306,6 +330,22 @@ void appRandomStation(App *app, uint64_t now_ns)
     snprintf(line, sizeof(line), T("Somewhere unexpected: %s\xE2\x80\xA6"), label);
     appToast(app, line, now_ns);
     ask(app, TARGET_RANDOM, DIR_COUNTRY, countries->items[app->map_cursor].code);
+}
+
+// A station at random from the country at index (a tap on the map): the
+// globe turns to it, and one of its stations plays when they come.
+void appRandomStationIn(App *app, size_t index, uint64_t now_ns)
+{
+    const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+    if (index >= countries->count)
+        return;
+    app->map_cursor = index;
+    turnGlobeToPick(app, now_ns);
+    char label[CATEGORY_NAME_MAX], line[NOTICE_TEXT_MAX];
+    categoryLabel(&countries->items[index], label, sizeof(label));
+    snprintf(line, sizeof(line), T("A station from %s\xE2\x80\xA6"), label);
+    appToast(app, line, now_ns);
+    ask(app, TARGET_RANDOM, DIR_COUNTRY, countries->items[index].code);
 }
 
 // The random country's stations came: one of them plays.
@@ -368,6 +408,8 @@ void appUpdate(App *app, uint64_t now_ns)
                 categoryListFree(&app->categories[app->waiting_mode]);
                 categorySort(&list, app->category_sort[app->waiting_mode]);
                 app->categories[app->waiting_mode] = list;
+                if (app->waiting_mode == SEARCH_COUNTRY && app->view == VIEW_WORLD)
+                    pickPlayingCountry(app, now_ns);
             }
         } else {
             StationList list;
@@ -650,8 +692,29 @@ void appGlobeTick(App *app, uint64_t now_ns)
     }
 }
 
+// The right stick as the d-pad: where it has nothing of its own to do.
+static uint64_t rightStickAsDpad(uint64_t pressed)
+{
+    static const struct {
+        uint64_t stick, dpad;
+    } MAP[] = {
+        {HidNpadButton_StickRUp, HidNpadButton_Up},
+        {HidNpadButton_StickRDown, HidNpadButton_Down},
+        {HidNpadButton_StickRLeft, HidNpadButton_Left},
+        {HidNpadButton_StickRRight, HidNpadButton_Right},
+    };
+    for (size_t i = 0; i < sizeof(MAP) / sizeof(MAP[0]); i++)
+        if (pressed & MAP[i].stick)
+            pressed = (pressed & ~MAP[i].stick) | MAP[i].dpad;
+    return pressed;
+}
+
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
 {
+    // In the menu, Settings and other panels, and on the map, the right stick moves like the d-pad
+    // (in the lists it moves a page, as it did).
+    if (app->overlay != OVERLAY_NONE || app->view == VIEW_WORLD)
+        pressed = rightStickAsDpad(pressed);
     if (app->overlay != OVERLAY_NONE) {
         appHandleOverlay(app, pressed, now_ns);
         return;
@@ -749,12 +812,8 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
                                               : mapNearest(countries, (float)x, (float)y);
         if (nearest < 0)
             break;
-        if ((size_t)nearest == app->map_cursor) {
-            appOpenMapCountry(app, app->map_cursor);  // A second tap on it opens it.
-        } else {
-            app->map_cursor = (size_t)nearest;
-            turnGlobeToPick(app, now_ns);
-        }
+        // A tap on a country plays one of its stations; its card (or A) opens them all.
+        appRandomStationIn(app, (size_t)nearest, now_ns);
         break;
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;

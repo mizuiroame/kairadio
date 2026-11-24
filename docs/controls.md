@@ -20,6 +20,9 @@ on the GPU, sharp in handheld and docked.
 | **−** | Play or stop |
 | **+** | The menu: Settings, Exit KaiRadio (**+** again asks to exit, and **+** once more exits) |
 
+The **right stick** moves like the D-pad in World, in the menu and in
+Settings; in the lists it moves a page up or down.
+
 In Settings, **↑** / **↓** choose a row, **A** or **▶** opens a page, **◀** /
 **▶** or **A** change a setting, and **B** goes back to the main page (or
 closes Settings from it). **+** closes Settings.
@@ -30,8 +33,8 @@ Tap:
 
 - a station to play it, and its heart to keep it;
 - a tab, genre or country to open it;
-- a country on the globe to pick it (tap it again, or Open its stations, to
-  open it);
+- a country on the globe to play one of its stations at random (its card
+  beside the globe opens all of them);
 - Random station beside the globe;
 - the sort at the top right of a list of genres, countries or languages to
   change it;

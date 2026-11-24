@@ -875,3 +875,6 @@ Woher die Top-Podcasts kommen
 
 Yours
 Meine
+
+A station from %s…
+Ein Sender aus %s…

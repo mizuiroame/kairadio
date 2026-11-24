@@ -9,10 +9,13 @@ of public stations.
 ## World
 
 - A night globe, each country lit up by how many stations it has.
-- Turn it with a finger, or go from country to country with the stick.
+- Turn it with a finger, or go from country to country with either stick.
+- It opens on the country of the station playing.
+- **Tap a country** and one of its stations plays, picked at random; tap it
+  again for another one.
 - Beside it, the country picked: its flag, how many stations it has, and its
   **time and weather** right now.
-- Open it to see its stations.
+- Open it (**A**, or its card) to see all its stations.
 - The globe can be a flat night map instead (Settings > World view).
 
 ## Random station

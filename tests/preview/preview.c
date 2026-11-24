@@ -134,7 +134,9 @@ static Snapshot snapshot(const App *app)
     s.sleep_minutes = app->sleep_minutes;
     s.config = app->config;
     snprintf(s.toast, sizeof(s.toast), "%s", app->notices.count ? app->notices.items[app->notices.count - 1].text : "");
-    s.notice_length = app->notices.count ? app->notices.items[0].length_ns : 0;
+    s.notice_length = 0;  // Any bubble's: a tap on any of them sends it away sooner.
+    for (int i = 0; i < app->notices.count; i++)
+        s.notice_length += app->notices.items[i].length_ns + (app->notices.items[i].pushed_out ? 1 : 0);
     s.pod_page = app->pod_page;
     memcpy(s.pod_cursor, app->pod_cursor, sizeof(s.pod_cursor));
     s.pod_subs = app->pods.sub_count;
@@ -657,7 +659,7 @@ int main(int argc, char **argv)
     // timer on) and About, over Popular; and the way through them.
     appSetView(&app, VIEW_POPULAR);
     app.notices = (Notices){0};  // The sort's message from earlier: not part of these shots.
-    app.notice = NULL;
+    app.notice_count = 0;
     appOpenMenu(&app);
     render(dir, "menu", &app);
     appHandleOverlay(&app, HidNpadButton_Plus, 0);
@@ -716,29 +718,26 @@ int main(int argc, char **argv)
     app.sleep_minutes = 0;
     app.sleep_until_ns = 0;
 
-    // Notices: a bubble at the top, over the view (and over Settings).
-    // Each starts when first shown (at 1 s), and is drawn fully in a second later.
+    // Notices: bubbles at the top, over the view (and over Settings). Each
+    // comes at 1 ns and is fully in once NOTICE_SLIDE_NS has gone by.
+    const uint64_t in = 1 + NOTICE_SLIDE_NS;
     noticePush(&app.notices, NOTICE_INFO, T("KaiRadio 1.3.0 is out: Settings > About installs it."), 1);
-    noticeShown(&app.notices, 1000000000ull, &app.notice_slide);
-    app.notice = noticeShown(&app.notices, 2000000000ull, &app.notice_slide);
+    app.notice_count = noticeVisible(&app.notices, in, app.notice_views);
     render(dir, "notice_info", &app);
-    expect(tapTarget(&app, HIT_NOTICE, 0), "a tap reaches the notice");
-    app.notice = noticeShown(&app.notices, 1000000000ull + NOTICE_SLIDE_NS / 2, &app.notice_slide);
-    render(dir, "notice_leaving", &app);  // The tap sent it away: half slid out.
+    expect(tapTarget(&app, HIT_NOTICE, (int)app.notices.items[0].id), "a tap reaches the notice");
     app.notices = (Notices){0};
     noticePush(&app.notices, NOTICE_ERROR, T("The download didn't match GitHub's checksum: nothing was changed."), 1);
-    noticeShown(&app.notices, 1000000000ull, &app.notice_slide);
-    app.notice = noticeShown(&app.notices, 2000000000ull, &app.notice_slide);
-    render(dir, "notice_error", &app);
+    noticePush(&app.notices, NOTICE_INFO, T("KaiRadio 1.3.0 is out: Settings > About installs it."), 2);
+    app.notice_count = noticeVisible(&app.notices, in + NOTICE_MOVE_NS, app.notice_views);
+    render(dir, "notice_error", &app);  // Two, stacked: the newest on top.
     app.notices = (Notices){0};
     noticePush(&app.notices, NOTICE_DONE, T("KaiRadio is up to date."), 1);
-    noticeShown(&app.notices, 1000000000ull, &app.notice_slide);
-    app.notice = noticeShown(&app.notices, 2000000000ull, &app.notice_slide);
+    app.notice_count = noticeVisible(&app.notices, in, app.notice_views);
     appOpenSettings(&app);
     render(dir, "notice_done_settings", &app);
     app.overlay = OVERLAY_NONE;
     app.notices = (Notices){0};
-    app.notice = NULL;
+    app.notice_count = 0;
 
     appFree(&app);
     fontExit();

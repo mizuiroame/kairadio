@@ -875,3 +875,6 @@ Where the top podcasts come from
 
 Yours
 登録済み
+
+A station from %s…
+%sの局…
