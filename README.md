@@ -1,5 +1,7 @@
 # KaiRadio
 
+<p align="center"><img src="docs/cover.png" alt="KaiRadio" width="100%"></p>
+
 An **open-source internet radio player** for **Switch 2** running
 [kaiHEN](https://github.com/ouncebrew/kaihen), in the spirit of
 [KaiPlayer](https://github.com/mizuiroame/kaiplayer). Browse tens of
