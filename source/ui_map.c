@@ -47,23 +47,11 @@
 #define TUNER_REST 0.62f      // Where its needle rests.
 #define RANDOM_H 84
 #define SHARP_ZOOM 1.5f       // Zoomed past this, the flat map draws from its full picture.
-#define GLOBE_SIZES 3         // The globe's picture, made bigger as it's zoomed (pixels across).
-static const int GLOBE_IMAGE_SIZES[GLOBE_SIZES] = {GLOBE_IMAGE, 896, 1152};
 #define GLOBE_FADE 40          // Pixels over which the zoomed globe fades out under the header and over the bar.
 #define PANEL_VEIL 225         // How opaque the panel's backing is over a globe zoomed under it,
 #define VEIL_FADE 150          // and how far past the panel it fades out.
 #define TABLE_SLACK 48        // Pixels made around the part that shows, so a small zoom or move needn't make it again.
 
-// The globe's picture size for a zoom: a step up past 1.4x and 2x, back down
-// a little below them, so a pinch about a step doesn't make the table again and again.
-static int globeImageSize(float zoom, int current)
-{
-    int wanted = zoom < 1.4f ? 0 : zoom < 2.0f ? 1 : 2;
-    int now = current == GLOBE_IMAGE_SIZES[2] ? 2 : current == GLOBE_IMAGE_SIZES[1] ? 1 : 0;
-    if (wanted < now && zoom >= (now == 2 ? 1.85f : 1.3f))
-        wanted = now;
-    return GLOBE_IMAGE_SIZES[wanted];
-}
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
 static bool g_land_failed;
@@ -255,7 +243,6 @@ static void drawGlobe(const App *app)
     static GlobeTable table;
     static uint32_t *land_rgba, *picture;
     static uint8_t *land;
-    int biggest = GLOBE_IMAGE_SIZES[GLOBE_SIZES - 1];
     if (!mapImage(&(int){0}, &(int){0}))
         return;  // The land's PNG can't be read.
     if (!land) {
@@ -264,13 +251,13 @@ static void drawGlobe(const App *app)
         for (int i = 0; land && i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
             land[i] = (uint8_t)(land_rgba[i] >> 24);
         free(land_rgba);
-        picture = land ? malloc((size_t)biggest * biggest * sizeof(uint32_t)) : NULL;
+        picture = land ? malloc((size_t)GLOBE_IMAGE * GLOBE_IMAGE * sizeof(uint32_t)) : NULL;
         if (!picture)
             return;
     }
-    // Zoomed, a bigger picture (its table made again only when the size steps).
-    float zoom = app->globe_view.zoom > 1.0f ? app->globe_view.zoom : 1.0f;
-    int size = globeImageSize(zoom, table.size);
+    // The same picture size zoomed: the land it's painted from has no more detail than
+    // that (1024 pixels round the world), and a bigger one cost the frame rate.
+    int size = GLOBE_IMAGE;
     float tilt = roundf(app->globe_view.lat / GLOBE_TILT_STEP) * GLOBE_TILT_STEP;
     float half = globeRadius(app->globe_view) / GLOBE_DISC;  // The picture's half-width, glow included, layout pixels.
     float left = GLOBE_CX - half, top = GLOBE_CY - half, per_px = 2 * half / size;
