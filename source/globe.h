@@ -19,11 +19,13 @@
 #define GLOBE_DISC 0.9f
 #define GLOBE_IMAGE 640   // The picture's pixels across: made each frame, scaled to the screen.
 #define GLOBE_TILT_MAX 70.0f  // How far north or south the middle can turn, degrees.
-// Its box: zoomed, it's cut to it (right of the country's panel, as high as the flat map).
-#define GLOBE_BOX_X 468
-#define GLOBE_BOX_Y MAP_Y
-#define GLOBE_BOX_W (MAP_X + MAP_W - GLOBE_BOX_X)
-#define GLOBE_BOX_H MAP_H
+// Where it may show: zoomed, it fills the World view, the whole width from
+// under the header (64) to the player bar (572), its top and bottom fading
+// out; the country's panel is drawn over it.
+#define GLOBE_BOX_X 0
+#define GLOBE_BOX_Y 64
+#define GLOBE_BOX_W 1280
+#define GLOBE_BOX_H 508
 
 // A place: degrees east and north.
 typedef struct {

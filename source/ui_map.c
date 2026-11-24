@@ -49,6 +49,9 @@
 #define SHARP_ZOOM 1.5f       // Zoomed past this, the flat map draws from its full picture.
 #define GLOBE_SIZES 3         // The globe's picture, made bigger as it's zoomed (pixels across).
 static const int GLOBE_IMAGE_SIZES[GLOBE_SIZES] = {GLOBE_IMAGE, 896, 1152};
+#define GLOBE_FADE 40          // Pixels over which the zoomed globe fades out under the header and over the bar.
+#define PANEL_VEIL 225         // How opaque the panel's backing is over a globe zoomed under it,
+#define VEIL_FADE 150          // and how far past the panel it fades out.
 #define TABLE_SLACK 48        // Pixels made around the part that shows, so a small zoom or move needn't make it again.
 
 // The globe's picture size for a zoom: a step up past 1.4x and 2x, back down
@@ -435,11 +438,42 @@ static void drawTimeAndWeather(const App *app, const Category *c, int x, int y)
     fontDraw(FONT_REGULAR, 19, x + INFO_ICON + 12, y + 36, line, COLOR_TEXT);
 }
 
+// The zoomed globe's top and bottom fade into the background, under the
+// header and over the player bar, instead of a straight cut.
+static void drawGlobeFades(void)
+{
+    for (int i = 0; i < GLOBE_FADE; i++) {
+        unsigned alpha = (unsigned)(255 * (GLOBE_FADE - i) / GLOBE_FADE);
+        gfxBlendRect(GLOBE_BOX_X, GLOBE_BOX_Y + i, GLOBE_BOX_W, 1, COLOR_BG, alpha);
+        gfxBlendRect(GLOBE_BOX_X, GLOBE_BOX_Y + GLOBE_BOX_H - 1 - i, GLOBE_BOX_W, 1, COLOR_BG, alpha);
+    }
+}
+
+// A dark backing for the panel where the zoomed globe reaches under it: as
+// opaque as the globe comes in, so the text stays readable over the land.
+static void drawPanelVeil(const App *app)
+{
+    float left = GLOBE_CX - globeRadius(app->globe_view) / GLOBE_DISC;  // The globe's glow's left edge.
+    float under = PANEL_X + PANEL_W + 24 - left;
+    if (under <= 0)
+        return;
+    float strength = under >= 80 ? 1.0f : under / 80.0f;
+    // Solid behind the panel, then fading to nothing toward the globe: no edge to see.
+    int solid = PANEL_X + PANEL_W - 40, end = PANEL_X + PANEL_W + VEIL_FADE;
+    for (int x = 0; x < end; x += 2) {
+        float f = x < solid ? 1.0f : 1.0f - (float)(x - solid) / (end - solid);
+        unsigned alpha = (unsigned)(PANEL_VEIL * strength * f * f);
+        if (alpha)
+            gfxBlendRect(x, GLOBE_BOX_Y, 2, GLOBE_BOX_H, COLOR_BG, alpha);
+    }
+}
+
 // Beside the globe: the country picked (its flag, name and stations, its
 // time and weather, and Open), a random station, and how to turn the globe.
 static void drawPanel(const App *app, const Category *c, uint64_t now_ns)
 {
     int x = PANEL_X, y = PANEL_Y;
+    drawPanelVeil(app);
     if (c) {
         if (!uiDrawFlag(x, y, PANEL_FLAG_W, PANEL_FLAG_H, c->code))
             gfxFillRoundRect(x, y, PANEL_FLAG_W, PANEL_FLAG_H, 10, COLOR_SURFACE);
@@ -513,6 +547,7 @@ void uiDrawMap(const App *app, uint64_t now_ns)
         if (picked)
             drawPickedLight(app, picked, now_ns);
         gfxResetClip();
+        drawGlobeFades();
         drawPanel(app, picked, now_ns);
     } else if (picked) {
         drawPicked(app, picked, now_ns);
