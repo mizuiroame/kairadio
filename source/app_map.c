@@ -35,6 +35,7 @@ static void zoomBy(App *app, float factor, float sx, float sy)
 {
     if (app->config.world_globe) {
         app->globe_view.zoom = globeZoomBy(app->globe_view.zoom, factor);
+        app->globe_touched_ns = app->globe_frame_ns;  // Touched: it doesn't turn by itself now.
         return;
     }
     mapZoomBy(&app->map_zoom, factor, sx, sy);
@@ -85,6 +86,7 @@ bool appMapPinch(App *app, int count, float x0, float y0, float x1, float y1)
     float zoom = mapPinchZoom(app->pinch_zoom, app->pinch_distance, distance, globe ? GLOBE_ZOOM_MAX : MAP_ZOOM_MAX);
     if (globe) {
         app->globe_view.zoom = zoom;
+        app->globe_touched_ns = app->globe_frame_ns;
     } else {
         mapZoomPan(&app->map_zoom, mx - app->pinch_x, my - app->pinch_y);  // Both fingers moving: the map too.
         mapZoomBy(&app->map_zoom, zoom / app->map_zoom.zoom, mx, my);       // Around the fingers' middle.

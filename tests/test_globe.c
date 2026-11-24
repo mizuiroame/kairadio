@@ -67,6 +67,16 @@ static void testPaint(void)
     globeRender(&t, 180.0f, land, LAND_W, LAND_H, &colors, out);                      // Turned halfway round:
     east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];
     CHECK(((east >> 8) & 0xFF) > ((east >> 16) & 0xFF));                              // land now east of the middle.
+    CHECK(globeTableCovers(&t, SIZE, 0.0f, 0, 0, SIZE, SIZE) && !globeTableCovers(&t, SIZE, 1.0f, 0, 0, 4, 4));
+    // A table made only in part covers only that part, and paints the same there.
+    GlobeTable part;
+    memset(&part, 0, sizeof(part));
+    CHECK(globeTableBuildPart(&part, SIZE, 0.0f, LAND_H, 16, 16, 48, 48));
+    CHECK(globeTableCovers(&part, SIZE, 0.0f, 20, 20, 40, 40) && !globeTableCovers(&part, SIZE, 0.0f, 0, 0, 40, 40));
+    CHECK(globeTableBuildPart(&part, SIZE, 0.0f, LAND_H, -9, -9, 999, 999) && part.x0 == 0 && part.x1 == SIZE);
+    size_t middle = SIZE / 2 * SIZE + SIZE / 2;
+    CHECK(part.row[middle] == t.row[middle] && part.alpha[middle] == t.alpha[middle]);
+    globeTableFree(&part);
     // Only a part painted: the rest of the picture is left as it was.
     memset(out, 0xAB, SIZE * SIZE * sizeof(uint32_t));
     globeRenderPart(&t, 0.0f, land, LAND_W, &colors, out, 16, 16, 48, 48);

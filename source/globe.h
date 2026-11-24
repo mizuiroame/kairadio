@@ -70,10 +70,16 @@ typedef struct {
     uint8_t *shade;  // Light on the sphere, 0-255.
     uint8_t *alpha;  // 255 on the globe, its edge smoothed; the air's glow around it; 0 beyond.
     bool *air;       // A pixel of the glow, not of the globe.
+    int x0, y0, x1, y1;  // The part made (columns x0 to x1, rows y0 to y1, not included).
 } GlobeTable;
 
 // Makes (or makes again) the table for a size x size picture, a tilt, and land_h rows of land.
 bool globeTableBuild(GlobeTable *t, int size, float tilt, int land_h);
+// The same, only its part in columns x0 to x1 and rows y0 to y1 (cut to the
+// picture): zoomed, only that shows, and it's made again for each tilt.
+bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1);
+// True when the table was made for size and tilt, over at least that part.
+bool globeTableCovers(const GlobeTable *t, int size, float tilt, int x0, int y0, int x1, int y1);
 void globeTableFree(GlobeTable *t);
 
 typedef struct {

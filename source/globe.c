@@ -142,6 +142,20 @@ static void tablePixel(GlobeTable *t, size_t i, float nx, float ny, float pixel,
 
 bool globeTableBuild(GlobeTable *t, int size, float tilt, int land_h)
 {
+    return globeTableBuildPart(t, size, tilt, land_h, 0, 0, size, size);
+}
+
+bool globeTableCovers(const GlobeTable *t, int size, float tilt, int x0, int y0, int x1, int y1)
+{
+    x0 = x0 < 0 ? 0 : x0;
+    y0 = y0 < 0 ? 0 : y0;
+    x1 = x1 > size ? size : x1;
+    y1 = y1 > size ? size : y1;
+    return t->size == size && t->tilt == tilt && t->x0 <= x0 && t->y0 <= y0 && t->x1 >= x1 && t->y1 >= y1;
+}
+
+bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1)
+{
     if (t->size != size) {
         globeTableFree(t);
         size_t n = (size_t)size * size;
@@ -157,9 +171,13 @@ bool globeTableBuild(GlobeTable *t, int size, float tilt, int land_h)
         t->size = size;
     }
     t->tilt = tilt;
+    t->x0 = x0 < 0 ? 0 : x0;
+    t->y0 = y0 < 0 ? 0 : y0;
+    t->x1 = x1 > size ? size : x1 < t->x0 ? t->x0 : x1;
+    t->y1 = y1 > size ? size : y1 < t->y0 ? t->y0 : y1;
     float half = size / 2.0f, radius = half * GLOBE_DISC, pixel = 1.0f / radius, rt = tilt * RAD;
-    for (int y = 0; y < size; y++)
-        for (int x = 0; x < size; x++)
+    for (int y = t->y0; y < t->y1; y++)
+        for (int x = t->x0; x < t->x1; x++)
             tablePixel(t, (size_t)y * size + x, (x + 0.5f - half) / radius, (half - y - 0.5f) / radius, pixel, rt,
                        land_h);
     return true;

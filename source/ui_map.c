@@ -49,6 +49,18 @@
 #define SHARP_ZOOM 1.5f       // Zoomed past this, the flat map draws from its full picture.
 #define GLOBE_SIZES 3         // The globe's picture, made bigger as it's zoomed (pixels across).
 static const int GLOBE_IMAGE_SIZES[GLOBE_SIZES] = {GLOBE_IMAGE, 896, 1152};
+#define TABLE_SLACK 48        // Pixels made around the part that shows, so a small zoom or move needn't make it again.
+
+// The globe's picture size for a zoom: a step up past 1.4x and 2x, back down
+// a little below them, so a pinch about a step doesn't make the table again and again.
+static int globeImageSize(float zoom, int current)
+{
+    int wanted = zoom < 1.4f ? 0 : zoom < 2.0f ? 1 : 2;
+    int now = current == GLOBE_IMAGE_SIZES[2] ? 2 : current == GLOBE_IMAGE_SIZES[1] ? 1 : 0;
+    if (wanted < now && zoom >= (now == 2 ? 1.85f : 1.3f))
+        wanted = now;
+    return GLOBE_IMAGE_SIZES[wanted];
+}
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
 static bool g_land_failed;
@@ -125,9 +137,11 @@ static const uint32_t *mapImage(int *w, int *h)
 static const uint32_t *mapImageFull(void)
 {
     static uint32_t *full;
-    if (full || !mapImage(&(int){0}, &(int){0}))  // mapImage reads the PNG.
+    static bool failed;  // No memory for it: the screen's map, zoomed, and not asked again.
+    if (full || failed || !mapImage(&(int){0}, &(int){0}))  // mapImage reads the PNG.
         return full;
     full = malloc((size_t)MAP_IMAGE_W * MAP_IMAGE_H * sizeof(uint32_t));
+    failed = !full;
     for (size_t i = 0; full && i < (size_t)MAP_IMAGE_W * MAP_IMAGE_H; i++)
         full[i] = (COLOR_LAND & 0x00FFFFFFu) | (uint32_t)g_land[i] << 24;
     return full;
@@ -253,16 +267,18 @@ static void drawGlobe(const App *app)
     }
     // Zoomed, a bigger picture (its table made again only when the size steps).
     float zoom = app->globe_view.zoom > 1.0f ? app->globe_view.zoom : 1.0f;
-    int size = GLOBE_IMAGE_SIZES[zoom < 1.4f ? 0 : zoom < 2.0f ? 1 : 2];
+    int size = globeImageSize(zoom, table.size);
     float tilt = roundf(app->globe_view.lat / GLOBE_TILT_STEP) * GLOBE_TILT_STEP;
-    if ((table.size != size || table.tilt != tilt) && !globeTableBuild(&table, size, tilt, GLOBE_LAND_H))
-        return;
     float half = globeRadius(app->globe_view) / GLOBE_DISC;  // The picture's half-width, glow included, layout pixels.
     float left = GLOBE_CX - half, top = GLOBE_CY - half, per_px = 2 * half / size;
-    // Only the part in the box is painted: zoomed, most of the picture is out of it.
+    // Only the part in the box is made and painted: zoomed, most of the picture is out of it.
     int x0 = (int)floorf((GLOBE_BOX_X - left) / per_px), y0 = (int)floorf((GLOBE_BOX_Y - top) / per_px);
     int x1 = (int)ceilf((GLOBE_BOX_X + GLOBE_BOX_W - left) / per_px) + 1;
     int y1 = (int)ceilf((GLOBE_BOX_Y + GLOBE_BOX_H - top) / per_px) + 1;
+    if (!globeTableCovers(&table, size, tilt, x0, y0, x1, y1) &&
+        !globeTableBuildPart(&table, size, tilt, GLOBE_LAND_H, x0 - TABLE_SLACK, y0 - TABLE_SLACK, x1 + TABLE_SLACK,
+                             y1 + TABLE_SLACK))
+        return;
     static const GlobeColors COLORS = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR};
     globeRenderPart(&table, app->globe_view.lon, land, GLOBE_LAND_W, &COLORS, picture, x0, y0, x1, y1);
     gfxImageChanged(picture);
@@ -493,8 +509,10 @@ void uiDrawMap(const App *app, uint64_t now_ns)
     gfxResetClip();
     const Category *picked = app->map_cursor < countries->count ? &countries->items[app->map_cursor] : NULL;
     if (app->config.world_globe) {  // Beside the globe, with room for more than the flat map's card.
+        gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);  // Zoomed, it may be out of the box.
         if (picked)
             drawPickedLight(app, picked, now_ns);
+        gfxResetClip();
         drawPanel(app, picked, now_ns);
     } else if (picked) {
         drawPicked(app, picked, now_ns);

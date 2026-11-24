@@ -688,7 +688,8 @@ void appGlobeTick(App *app, uint64_t now_ns)
                     fabsf(app->globe_target.lat - app->globe_view.lat);
         app->globe_turning = off > 0.05f;
         app->globe_touched_ns = now_ns;
-    } else if (now_ns - app->globe_touched_ns > GLOBE_IDLE_NS) {  // Left alone: it turns slowly by itself.
+    } else if (now_ns - app->globe_touched_ns > GLOBE_IDLE_NS && !(app->globe_view.zoom > 1.0f)) {
+        // Left alone (and not zoomed in on a place): it turns slowly by itself.
         app->globe_view.lon = globeWrapLon(app->globe_view.lon + GLOBE_IDLE_DEG_S * seconds);
         app->globe_view.lat += (GLOBE_TILT_HOME - app->globe_view.lat) * (1.0f - expf(-0.5f * seconds));
     }
