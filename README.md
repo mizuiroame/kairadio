@@ -27,7 +27,8 @@ The screenshots show made-up stations.
 ## What it can do
 
 - **World**: a night globe, each country lit up by how many stations it has,
-  with its flag, **time and weather**. Or a flat night map.
+  with its flag, **time and weather**. Or a flat night map. **Zoom** in with two
+  fingers or the right stick.
   [More](docs/stations.md#world)
 - **Random station** (**Y** in World): a country at random and one of its
   stations playing. [More](docs/stations.md#random-station)

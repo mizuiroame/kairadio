@@ -16,6 +16,7 @@ on the GPU, sharp in handheld and docked.
 | **L** / **R** | Previous / next station, in the list you played from |
 | **◀** / **▶** | In World: the country that way. In Search: by name, genre, country or language. Elsewhere: a page up or down |
 | **↑** / **↓** | Move in the list; in World, the country that way |
+| Right stick ↑ / ↓ | In World: zoom in or out (the flat map up to 4×, the globe up to 2.5×). In menus and panels: moves like the D-pad |
 | **B** | Back (out of Now Playing, or out of a genre, country or language, to the map if opened from it) |
 | **−** | Play or stop |
 | **+** | The menu: Settings, Exit KaiRadio (**+** again asks to exit, and **+** once more exits) |
@@ -40,9 +41,10 @@ Tap:
   change it;
 - the bar at the bottom for Now Playing;
 - the title at the top left to open the menu, and the **×** before it to
-  exit;
+  exit (it asks first, as **+** does);
 - an item in the menu or in Settings, either side of a setting's value to
   change it, **Back** to go back a page, and outside the panel to close it.
 
 Drag the globe to turn it, and a list to scroll it: a quick flick keeps it
-gliding, and a touch stops it.
+gliding, and a touch stops it. In World, spread or pinch two fingers to zoom in
+or out; a finger moves the zoomed flat map.

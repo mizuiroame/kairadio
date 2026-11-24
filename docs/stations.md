@@ -17,6 +17,10 @@ of public stations.
   **time and weather** right now.
 - Open it (**A**, or its card) to see all its stations.
 - The globe can be a flat night map instead (Settings > World view).
+- **Zoom** with two fingers, or the right stick up and down: the flat map up to
+  4× (a finger moves it, and the countries of Europe or the Caribbean can be
+  tapped one by one), the globe up to 2.5× around the country in its middle,
+  filling the view.
 
 ## Random station
 
