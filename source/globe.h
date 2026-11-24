@@ -19,14 +19,26 @@
 #define GLOBE_DISC 0.9f
 #define GLOBE_IMAGE 640   // The picture's pixels across: made each frame, scaled to the screen.
 #define GLOBE_TILT_MAX 70.0f  // How far north or south the middle can turn, degrees.
+// Its box: zoomed, it's cut to it (right of the country's panel, as high as the flat map).
+#define GLOBE_BOX_X 468
+#define GLOBE_BOX_Y MAP_Y
+#define GLOBE_BOX_W (MAP_X + MAP_W - GLOBE_BOX_X)
+#define GLOBE_BOX_H MAP_H
 
 // A place: degrees east and north.
 typedef struct {
     float lon, lat;
 } GeoPoint;
 
-// Which way the globe faces: the place in its middle.
-typedef GeoPoint GlobeView;
+// Which way the globe faces (the place in its middle), and how close it is:
+// zoom 1 (or 0, unset) is the whole globe, more makes it bigger around its middle.
+typedef struct {
+    float lon, lat;
+    float zoom;
+} GlobeView;
+
+// The globe's radius in layout pixels at view's zoom.
+float globeRadius(GlobeView view);
 
 // A map point's place (the map is equirectangular, MAP_NORTH to MAP_SOUTH).
 GeoPoint globeMapPlace(MapPoint p);
@@ -36,10 +48,10 @@ bool globeProject(GlobeView view, GeoPoint place, float *x, float *y, float *dep
 // The place under layout point (x, y). False off the globe.
 bool globeUnproject(GlobeView view, float x, float y, GeoPoint *out);
 // Degrees the globe turns for a finger moving one layout pixel across its middle.
-float globeDegreesPerPixel(void);
+float globeDegreesPerPixel(GlobeView view);
 // Turns view by a finger's move (dx, dy layout pixels): the land goes with it.
 GlobeView globeDrag(GlobeView view, float dx, float dy);
-// A step of the way from view toward target (the short way round), fraction t of it.
+// A step of the way from view toward target (the short way round), fraction t of it; view keeps its zoom.
 GlobeView globeToward(GlobeView view, GlobeView target, float t);
 // Longitude in [-180, 180).
 float globeWrapLon(float lon);
@@ -72,3 +84,7 @@ typedef struct {
 // 0xAABBGGRR), from land coverage (land_w x land_h, 0-255, equirectangular).
 void globeRender(const GlobeTable *t, float lon, const uint8_t *land, int land_w, int land_h, const GlobeColors *c,
                  uint32_t *out);
+// The same, only the picture's pixels in columns x0 to x1 and rows y0 to y1
+// (not included): the part that shows when the globe is zoomed past its box.
+void globeRenderPart(const GlobeTable *t, float lon, const uint8_t *land, int land_w, const GlobeColors *c,
+                     uint32_t *out, int x0, int y0, int x1, int y1);

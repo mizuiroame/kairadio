@@ -42,18 +42,24 @@ static bool readTouch(App *app, uint64_t now)
     static bool full_hd;  // Seen coordinates beyond 1280x720: scale them down.
     HidTouchScreenState state = {0};
     bool touching = hidGetTouchScreenStates(&state, 1) > 0 && state.count > 0;
-    int x = 0, y = 0;
-    if (touching) {
-        x = (int)state.touches[0].x;
-        y = (int)state.touches[0].y;
-        if (x >= SCREEN_W || y >= SCREEN_H)
+    int count = touching ? (int)state.count : 0;
+    float fx[2] = {0}, fy[2] = {0};
+    for (int i = 0; i < count && i < 2; i++) {
+        fx[i] = (float)state.touches[i].x;
+        fy[i] = (float)state.touches[i].y;
+        if (fx[i] >= SCREEN_W || fy[i] >= SCREEN_H)
             full_hd = true;
-        if (full_hd) {
-            x = x * SCREEN_W / PANEL_W;
-            y = y * SCREEN_W / PANEL_W;
-        }
     }
-    appHandleTouch(app, touching, x, y, now);
+    for (int i = 0; i < 2 && full_hd; i++) {
+        fx[i] = fx[i] * SCREEN_W / PANEL_W;
+        fy[i] = fy[i] * SCREEN_W / PANEL_W;
+    }
+    if (appMapPinch(app, count, fx[0], fy[0], fx[1], fy[1])) {
+        touchReset(&app->touch);  // Two fingers zoom: no tap or drag when they lift.
+        app->globe_dragging = false;
+    } else {
+        appHandleTouch(app, touching, (int)fx[0], (int)fy[0], now);
+    }
     appGlobeTick(app, now);
     return touching;
 }

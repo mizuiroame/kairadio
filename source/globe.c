@@ -27,20 +27,27 @@ float globeWrapLon(float lon)
     return lon - 180.0f;
 }
 
+float globeRadius(GlobeView view)
+{
+    return GLOBE_R * (view.zoom > 1.0f ? view.zoom : 1.0f);
+}
+
 bool globeProject(GlobeView view, GeoPoint place, float *x, float *y, float *depth)
 {
     float lat = place.lat * RAD, dlon = (place.lon - view.lon) * RAD, tilt = view.lat * RAD;
     float gx = cosf(lat) * sinf(dlon), gy = sinf(lat), gz = cosf(lat) * cosf(dlon);
     float vy = gy * cosf(tilt) - gz * sinf(tilt), vz = gy * sinf(tilt) + gz * cosf(tilt);
-    *x = GLOBE_CX + gx * GLOBE_R;
-    *y = GLOBE_CY - vy * GLOBE_R;
+    float r = globeRadius(view);
+    *x = GLOBE_CX + gx * r;
+    *y = GLOBE_CY - vy * r;
     *depth = vz;
     return vz > 0.0f;
 }
 
 bool globeUnproject(GlobeView view, float x, float y, GeoPoint *out)
 {
-    float nx = (x - GLOBE_CX) / GLOBE_R, ny = (GLOBE_CY - y) / GLOBE_R, r2 = nx * nx + ny * ny;
+    float r = globeRadius(view);
+    float nx = (x - GLOBE_CX) / r, ny = (GLOBE_CY - y) / r, r2 = nx * nx + ny * ny;
     if (r2 > 1.0f)
         return false;
     float nz = sqrtf(1.0f - r2), tilt = view.lat * RAD;
@@ -50,14 +57,14 @@ bool globeUnproject(GlobeView view, float x, float y, GeoPoint *out)
     return true;
 }
 
-float globeDegreesPerPixel(void)
+float globeDegreesPerPixel(GlobeView view)
 {
-    return 1.0f / (GLOBE_R * RAD);
+    return 1.0f / (globeRadius(view) * RAD);
 }
 
 GlobeView globeDrag(GlobeView view, float dx, float dy)
 {
-    float step = globeDegreesPerPixel();
+    float step = globeDegreesPerPixel(view);  // Closer, a finger turns it less: the land stays under it.
     view.lon = globeWrapLon(view.lon - dx * step);
     view.lat += dy * step;
     view.lat = view.lat > GLOBE_TILT_MAX ? GLOBE_TILT_MAX : view.lat < -GLOBE_TILT_MAX ? -GLOBE_TILT_MAX : view.lat;
@@ -167,28 +174,41 @@ static uint32_t scaled(Color c, unsigned shade, unsigned alpha)
 void globeRender(const GlobeTable *t, float lon, const uint8_t *land, int land_w, int land_h, const GlobeColors *c,
                  uint32_t *out)
 {
-    float cols = land_w / 360.0f;
     (void)land_h;
-    for (int i = 0, n = t->size * t->size; i < n; i++) {
-        unsigned alpha = t->alpha[i];
-        if (!alpha) {
-            out[i] = 0;
-            continue;
-        }
-        if (t->air[i]) {
-            out[i] = (c->air & 0x00FFFFFFu) | (uint32_t)alpha << 24;
-            continue;
-        }
-        Color here;
-        if (t->row[i] == -1) {
-            here = c->ocean;
-        } else if (t->row[i] == -2) {
-            here = c->ice;
-        } else {
-            int col = (int)((globeWrapLon(lon + t->lon[i]) + 180.0f) * cols);
-            col = col < 0 ? 0 : col >= land_w ? land_w - 1 : col;
-            here = gfxMix(c->ocean, c->land, land[(size_t)t->row[i] * land_w + col]);
-        }
-        out[i] = scaled(here, t->shade[i], alpha);
+    globeRenderPart(t, lon, land, land_w, c, out, 0, 0, t->size, t->size);
+}
+
+// One pixel of the picture: nothing, the air's glow, ice, or ocean and land, shaded.
+static uint32_t picturePixel(const GlobeTable *t, int i, float lon, const uint8_t *land, int land_w, float cols,
+                             const GlobeColors *c)
+{
+    unsigned alpha = t->alpha[i];
+    if (!alpha)
+        return 0;
+    if (t->air[i])
+        return (c->air & 0x00FFFFFFu) | (uint32_t)alpha << 24;
+    Color here;
+    if (t->row[i] == -1) {
+        here = c->ocean;
+    } else if (t->row[i] == -2) {
+        here = c->ice;
+    } else {
+        int col = (int)((globeWrapLon(lon + t->lon[i]) + 180.0f) * cols);
+        col = col < 0 ? 0 : col >= land_w ? land_w - 1 : col;
+        here = gfxMix(c->ocean, c->land, land[(size_t)t->row[i] * land_w + col]);
     }
+    return scaled(here, t->shade[i], alpha);
+}
+
+void globeRenderPart(const GlobeTable *t, float lon, const uint8_t *land, int land_w, const GlobeColors *c,
+                     uint32_t *out, int x0, int y0, int x1, int y1)
+{
+    float cols = land_w / 360.0f;
+    x0 = x0 < 0 ? 0 : x0;
+    y0 = y0 < 0 ? 0 : y0;
+    x1 = x1 > t->size ? t->size : x1;
+    y1 = y1 > t->size ? t->size : y1;
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++)
+            out[y * t->size + x] = picturePixel(t, y * t->size + x, lon, land, land_w, cols, c);
 }

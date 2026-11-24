@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "check.h"
+#include "mapzoom.h"
 #include "worldmap.h"
 
 static Category country(const char *name, const char *code, int count)
@@ -82,10 +83,62 @@ static void testMoving(void)
     CHECK(mapNearest(&empty, x, y) == -1 && mapStep(&empty, 0, 1, 0) == -1);
 }
 
+static bool nearly(float a, float b)
+{
+    return fabsf(a - b) < 0.01f;
+}
+
+// The flat map's zoom: around a point, moved with a finger, kept on the map.
+static void testZoom(void)
+{
+    MapZoom z;
+    mapZoomReset(&z);
+    float sx, sy, x, y;
+    mapZoomToScreen(&z, MAP_X + 100, MAP_Y + 50, &sx, &sy);  // Not zoomed: where it is.
+    CHECK(nearly(sx, MAP_X + 100) && nearly(sy, MAP_Y + 50));
+    mapZoomPan(&z, 200, 0);  // Nothing to move at zoom 1.
+    CHECK(nearly(z.cx, MAP_X + MAP_W / 2.0f));
+
+    mapZoomBy(&z, 2.0f, MAP_X + 300, MAP_Y + 200);  // The point under (300, 200) stays there.
+    CHECK(nearly(z.zoom, 2.0f));
+    mapZoomFromScreen(&z, MAP_X + 300, MAP_Y + 200, &x, &y);
+    CHECK(nearly(x, MAP_X + 300) && nearly(y, MAP_Y + 200));
+    mapZoomToScreen(&z, x, y, &sx, &sy);
+    CHECK(nearly(sx, MAP_X + 300) && nearly(sy, MAP_Y + 200));
+
+    mapZoomBy(&z, 100.0f, MAP_X, MAP_Y);  // At most MAP_ZOOM_MAX,
+    CHECK(nearly(z.zoom, MAP_ZOOM_MAX));
+    mapZoomPan(&z, 100000, 100000);       // and never past the map's edge:
+    mapZoomToScreen(&z, MAP_X, MAP_Y, &sx, &sy);
+    CHECK(nearly(sx, MAP_X) && nearly(sy, MAP_Y));  // its corner at the box's corner.
+    mapZoomPan(&z, -100000, -100000);
+    mapZoomToScreen(&z, MAP_X + MAP_W, MAP_Y + MAP_H, &sx, &sy);
+    CHECK(nearly(sx, MAP_X + MAP_W) && nearly(sy, MAP_Y + MAP_H));
+    mapZoomBy(&z, 0.001f, MAP_X, MAP_Y);  // Out all the way: the whole map again.
+    CHECK(nearly(z.zoom, 1.0f) && nearly(z.cx, MAP_X + MAP_W / 2.0f) && nearly(z.cy, MAP_Y + MAP_H / 2.0f));
+
+    // A country picked far off is brought into view.
+    mapZoomBy(&z, 3.0f, MAP_X, MAP_Y);
+    mapZoomShow(&z, MAP_X + MAP_W - 10, MAP_Y + MAP_H - 10, 60);
+    mapZoomToScreen(&z, MAP_X + MAP_W - 10, MAP_Y + MAP_H - 10, &sx, &sy);
+    CHECK(mapZoomInBox(sx, sy));
+    CHECK(!mapZoomInBox(MAP_X - 1, MAP_Y) && mapZoomInBox(MAP_X, MAP_Y));
+    z.zoom = NAN;
+    mapZoomClamp(&z);
+    CHECK(nearly(z.zoom, 1.0f));
+
+    CHECK(nearly(globeZoomBy(1.0f, 10.0f), GLOBE_ZOOM_MAX) && nearly(globeZoomBy(0.0f, 0.5f), 1.0f));
+    CHECK(nearly(globeZoomBy(2.0f, 0.8f), 1.6f));
+    CHECK(nearly(mapPinchZoom(1.0f, 100.0f, 250.0f, 4.0f), 2.5f));  // Fingers apart: closer,
+    CHECK(nearly(mapPinchZoom(2.0f, 100.0f, 25.0f, 4.0f), 1.0f));   // together: farther, not past 1,
+    CHECK(nearly(mapPinchZoom(3.0f, 0.0f, 50.0f, 4.0f), 3.0f));     // and a broken start changes nothing.
+}
+
 void testWorldMap(void)
 {
     testFind();
     testPlaces();
     testLights();
     testMoving();
+    testZoom();
 }

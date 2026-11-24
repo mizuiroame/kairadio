@@ -48,8 +48,8 @@ Saiu a %s: A procura de novo
 24-hour (21:47)
 24 horas (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
-[<>^v] país  [A] abrir  [Y] estação aleatória  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] menu
+[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] país  [RS] zoom  [A] abrir  [Y] estação aleatória  [X] tocando agora  [L][R] estação  [-] tocar/parar  [+] menu
 
 [^v] choose  [<>][A] change  [B] back
 [^v] escolher  [<>][A] mudar  [B] voltar
@@ -878,3 +878,6 @@ Seus
 
 A station from %s…
 Uma estação de %s…
+
+Two fingers or the right stick: closer or farther.
+Dois dedos ou o analógico direito: aproximar ou afastar.

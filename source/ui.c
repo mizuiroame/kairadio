@@ -182,7 +182,7 @@ static void drawStatus(const App *app)
     }
 }
 
-// A cross before the title: the touch way out (+ with the buttons).
+// A cross before the title: the touch way out (+ with the buttons), asking first.
 static void drawHeader(const App *app)
 {
     float cx = MARGIN + 10.0f, cy = 32.0f;
@@ -618,8 +618,8 @@ static const char *footerHelp(const App *app, const RadioStatus *radio)
     }
     switch (app->view) {
     case VIEW_WORLD:
-        return T("[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  "
-                 "[+] menu");
+        return T("[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  "
+                 "[-] play/stop  [+] menu");
     case VIEW_NOW_PLAYING:
         if (radio->has_episode)
             return T("[A] pause/play  [L] back 15 s  [R] ahead 30 s  [B] back  [ZL][ZR] tabs  [+] menu");

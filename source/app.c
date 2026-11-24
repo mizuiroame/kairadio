@@ -81,7 +81,8 @@ void appInit(App *app, const char *config_folder)
     snprintf(app->config_folder, sizeof(app->config_folder), "%s", config_folder);
     configLoad(&app->config, config_folder);
     libraryLoad(&app->library, config_folder);
-    app->globe_view = (GlobeView){-30.0f, GLOBE_TILT_HOME};  // The Atlantic, the Americas and Europe in view.
+    app->globe_view = (GlobeView){-30.0f, GLOBE_TILT_HOME, 1.0f};  // The Atlantic, the Americas and Europe in view.
+    mapZoomReset(&app->map_zoom);
     // Start where Settings say; by default where the stations are: the
     // favorites if there are some, else the world.
     static const View START_VIEWS[START_COUNT] = {VIEW_WORLD, VIEW_WORLD, VIEW_POPULAR, VIEW_FAVORITES, VIEW_RECENT};
@@ -623,7 +624,7 @@ static void turnGlobeToPick(App *app, uint64_t now_ns)
     if (!c)
         return;
     GeoPoint place = globeMapPlace(c->label);
-    app->globe_target = (GlobeView){place.lon, place.lat > GLOBE_TILT_MAX ? GLOBE_TILT_MAX : place.lat};
+    app->globe_target = (GlobeView){place.lon, place.lat > GLOBE_TILT_MAX ? GLOBE_TILT_MAX : place.lat, 0.0f};
     app->globe_turning = true;
     kineticStop(&app->globe_spin);
     app->globe_touched_ns = now_ns;
@@ -640,6 +641,7 @@ static void handleWorld(App *app, uint64_t pressed, uint64_t now_ns)
         if (next >= 0) {
             app->map_cursor = (size_t)next;
             turnGlobeToPick(app, now_ns);
+            appMapFollowPick(app);  // Zoomed in, the flat map moves to keep it in view.
         }
     }
     if (pressed & HidNpadButton_A) appOpenMapCountry(app, app->map_cursor);
@@ -712,7 +714,8 @@ static uint64_t rightStickAsDpad(uint64_t pressed)
 void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns)
 {
     // In the menu, Settings and other panels, and on the map, the right stick moves like the d-pad
-    // (in the lists it moves a page, as it did).
+    // (in the lists it moves a page, as it did); on the map, up and down zoom first.
+    pressed = appMapZoomButtons(app, pressed);
     if (app->overlay != OVERLAY_NONE || app->view == VIEW_WORLD)
         pressed = rightStickAsDpad(pressed);
     if (app->overlay != OVERLAY_NONE) {
@@ -804,12 +807,14 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
         break;
     case HIT_SEARCH: typeSearch(app, now_ns); break;
     case HIT_RETRY: retry(app); break;
-    case HIT_EXIT: app->quit = true; break;
+    case HIT_EXIT: appAskExit(app); break;  // As + twice: "Exit KaiRadio?" first.
     case HIT_LIST: break;  // Only for drags.
     case HIT_MAP: {
         const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
+        float mx, my;  // On the zoomed flat map, the map's point under the finger.
+        appMapTapPoint(app, (float)x, (float)y, &mx, &my);
         int nearest = app->config.world_globe ? globeNearest(countries, app->globe_view, (float)x, (float)y, 48.0f)
-                                              : mapNearest(countries, (float)x, (float)y);
+                                              : mapNearest(countries, mx, my);
         if (nearest < 0)
             break;
         // A tap on a country plays one of its stations; its card (or A) opens them all.
@@ -917,7 +922,7 @@ void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns)
 {
     // Touch coordinates are in the 1280x720 layout.
     TouchEvent e = touchUpdate(&app->touch, touching, x, y, now_ns);
-    if (globeTouch(app, &e, now_ns))
+    if (globeTouch(app, &e, now_ns) || appMapTouch(app, &e))
         return;
     glide(app, &e, now_ns);
     if (e.type == TOUCH_TAP) {

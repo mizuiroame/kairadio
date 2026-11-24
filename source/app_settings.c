@@ -20,7 +20,7 @@ void appOpenMenu(App *app)
     app->menu_cursor = MENU_SETTINGS;
 }
 
-static void askExit(App *app)
+void appAskExit(App *app)
 {
     app->overlay = OVERLAY_EXIT;
     app->menu_cursor = EXIT_CONFIRM;
@@ -34,7 +34,7 @@ void appChooseMenuItem(App *app, int item)
         else
             app->overlay = OVERLAY_NONE;
     } else if (item == MENU_EXIT) {
-        askExit(app);
+        appAskExit(app);
     } else {
         appOpenSettings(app);
     }
@@ -214,7 +214,7 @@ static void handleMenu(App *app, uint64_t pressed)
         if (app->overlay == OVERLAY_EXIT)
             app->quit = true;
         else
-            askExit(app);
+            appAskExit(app);
         return;
     }
     if (pressed & BUTTONS_UP) app->menu_cursor = wrap(app->menu_cursor, -1, count);

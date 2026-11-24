@@ -13,7 +13,7 @@ static bool near(float a, float b, float tolerance)
 
 static void testProject(void)
 {
-    GlobeView view = {10.0f, 20.0f};
+    GlobeView view = {10.0f, 20.0f, 0.0f};
     float x, y, depth;
     CHECK(globeProject(view, (GeoPoint){10.0f, 20.0f}, &x, &y, &depth));  // The middle shows in the middle.
     CHECK(near(x, GLOBE_CX, 0.01f) && near(y, GLOBE_CY, 0.01f) && near(depth, 1.0f, 0.001f));
@@ -35,12 +35,12 @@ static void testProject(void)
 static void testTurn(void)
 {
     CHECK(near(globeWrapLon(190.0f), -170.0f, 0.001f) && near(globeWrapLon(-181.0f), 179.0f, 0.001f));
-    GlobeView v = globeDrag((GlobeView){0, 0}, 100.0f, 0.0f);  // A finger to the right: the land goes right,
-    CHECK(v.lon < 0.0f && near(v.lon, -100.0f * globeDegreesPerPixel(), 0.001f));  // the middle comes from the west.
-    v = globeDrag((GlobeView){0, 0}, 0.0f, 100000.0f);
+    GlobeView v = globeDrag((GlobeView){0, 0, 0}, 100.0f, 0.0f);  // A finger to the right: the land goes right,
+    CHECK(v.lon < 0.0f && near(v.lon, -100.0f * globeDegreesPerPixel((GlobeView){0, 0, 0}), 0.001f));  // the middle comes from the west.
+    v = globeDrag((GlobeView){0, 0, 0}, 0.0f, 100000.0f);
     CHECK(near(v.lat, GLOBE_TILT_MAX, 0.001f));  // It doesn't turn over the pole.
     // Toward a country the short way round: from 170E to 170W is 20 degrees east.
-    v = globeToward((GlobeView){170.0f, 0}, (GlobeView){-170.0f, 10.0f}, 0.5f);
+    v = globeToward((GlobeView){170.0f, 0, 0}, (GlobeView){-170.0f, 10.0f, 0}, 0.5f);
     CHECK(near(v.lon, 180.0f, 0.01f) || near(v.lon, -180.0f, 0.01f));
     CHECK(near(v.lat, 5.0f, 0.01f));
 }
@@ -67,8 +67,32 @@ static void testPaint(void)
     globeRender(&t, 180.0f, land, LAND_W, LAND_H, &colors, out);                      // Turned halfway round:
     east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];
     CHECK(((east >> 8) & 0xFF) > ((east >> 16) & 0xFF));                              // land now east of the middle.
+    // Only a part painted: the rest of the picture is left as it was.
+    memset(out, 0xAB, SIZE * SIZE * sizeof(uint32_t));
+    globeRenderPart(&t, 0.0f, land, LAND_W, &colors, out, 16, 16, 48, 48);
+    CHECK(out[0] == 0xABABABABu && out[SIZE * SIZE - 1] == 0xABABABABu);
+    CHECK(out[SIZE / 2 * SIZE + SIZE / 2] != 0xABABABABu && out[15 * SIZE + 32] == 0xABABABABu);
+    globeRenderPart(&t, 0.0f, land, LAND_W, &colors, out, -5, -5, 999, 999);  // Cut to the picture.
+    CHECK(out[0] >> 24 == 0);
     globeTableFree(&t);
     free(out);
+}
+
+// Zoomed, the globe is bigger around its middle, and a finger turns it less.
+static void testZoom(void)
+{
+    GlobeView flat = {10.0f, 20.0f, 0.0f}, close = {10.0f, 20.0f, 2.0f};
+    CHECK(near(globeRadius(flat), GLOBE_R, 0.01f) && near(globeRadius(close), 2.0f * GLOBE_R, 0.01f));
+    float x1, y1, x2, y2, depth;
+    GeoPoint east = {25.0f, 20.0f};
+    CHECK(globeProject(flat, east, &x1, &y1, &depth) && globeProject(close, east, &x2, &y2, &depth));
+    CHECK(near(x2 - GLOBE_CX, 2.0f * (x1 - GLOBE_CX), 0.05f));
+    GeoPoint back;
+    CHECK(globeUnproject(close, x2, y2, &back) && near(back.lon, 25.0f, 0.05f));
+    CHECK(globeUnproject(close, GLOBE_CX + GLOBE_R + 2, GLOBE_CY, &back));  // Past the small globe's edge: still on it.
+    CHECK(near(globeDegreesPerPixel(close), globeDegreesPerPixel(flat) / 2.0f, 0.0001f));
+    GlobeView turned = globeToward(close, (GlobeView){30.0f, 0.0f, 0.0f}, 0.5f);
+    CHECK(near(turned.zoom, 2.0f, 0.001f));  // Turning keeps the zoom.
 }
 
 void testGlobe(void)
@@ -76,4 +100,5 @@ void testGlobe(void)
     testProject();
     testTurn();
     testPaint();
+    testZoom();
 }

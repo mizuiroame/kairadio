@@ -48,8 +48,8 @@ language = 简体中文
 24-hour (21:47)
 24小时制（21:47）
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
-[<>^v] 国家  [A] 打开  [Y] 随机电台  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 菜单
+[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] 国家  [RS] 缩放  [A] 打开  [Y] 随机电台  [X] 正在播放  [L][R] 换台  [-] 播放/停止  [+] 菜单
 
 [^v] choose  [<>][A] change  [B] back
 [^v] 选择  [<>][A] 更改  [B] 返回
@@ -878,3 +878,6 @@ Yours
 
 A station from %s…
 来自%s的电台…
+
+Two fingers or the right stick: closer or farther.
+双指或右摇杆：放大或缩小。

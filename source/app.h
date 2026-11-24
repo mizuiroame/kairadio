@@ -9,6 +9,7 @@
 #include "notice.h"
 #include "background.h"
 #include "globe.h"
+#include "mapzoom.h"
 #include "kinetic.h"
 #include "categories.h"
 #include "config.h"
@@ -135,6 +136,13 @@ typedef struct {
     bool globe_dragging;
     uint64_t globe_touched_ns;   // The last time it was touched or turned: it turns by itself after a while.
     uint64_t globe_frame_ns;
+    // Zoom (app_map.c): the flat map's (the globe's is in globe_view), and two fingers on the screen.
+    MapZoom map_zoom;
+    bool pinching;               // Two fingers: zooming.
+    bool touch_held;             // After two fingers, until every finger is up: no tap, no drag.
+    float pinch_distance;        // The fingers' distance when they came down, and the zoom then.
+    float pinch_zoom;
+    float pinch_x, pinch_y;      // Their middle last frame: the map follows it.
     StationList category_results;
 
     // The directory request that the app waits for, and what it is for.
@@ -244,6 +252,20 @@ void appHandleButtons(App *app, uint64_t pressed, uint64_t now_ns);
 void appHandleTouch(App *app, bool touching, int x, int y, uint64_t now_ns);
 // The World view's globe, each frame: turning to a country, gliding, or turning slowly by itself.
 void appGlobeTick(App *app, uint64_t now_ns);
+
+// app_map.c: the World view's zoom. The right stick up and down zoom in and
+// out on the map; returns pressed without them.
+uint64_t appMapZoomButtons(App *app, uint64_t pressed);
+// Two fingers on the screen, each frame (count: how many touch it; the first
+// two at (x0, y0) and (x1, y1), layout pixels). True while they own the
+// touch: from two fingers down until every finger is up, nothing else gets it.
+bool appMapPinch(App *app, int count, float x0, float y0, float x1, float y1);
+// A finger dragging the zoomed flat map moves it. True if it took the event.
+bool appMapTouch(App *app, const TouchEvent *e);
+// After the stick picks a country on the zoomed flat map: it's moved into view.
+void appMapFollowPick(App *app);
+// A tap on the flat map at screen (x, y): the map's point there, as mapToLayout's.
+void appMapTapPoint(const App *app, float x, float y, float *mx, float *my);
 // What a tap at (x, y) does, against the last frame's targets. For the
 // preview's checks too. Returns false if nothing is there.
 bool appTap(App *app, int x, int y, uint64_t now_ns);
@@ -255,6 +277,8 @@ void appPlayFrom(App *app, const StationList *list, size_t index);
 
 // app_settings.c: the + menu, Settings and About.
 void appOpenMenu(App *app);
+// "Exit KaiRadio?": Exit or Cancel (+ there exits).
+void appAskExit(App *app);
 // A menu item chosen (MenuItem, or ExitItem in the exit question).
 void appChooseMenuItem(App *app, int item);
 void appOpenSettings(App *app);

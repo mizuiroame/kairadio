@@ -48,8 +48,8 @@ language = Deutsch
 24-hour (21:47)
 24 Stunden (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
-[<>^v] Land  [A] Öffnen  [Y] Zufallssender  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Menü
+[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] Land  [RS] Zoom  [A] Öffnen  [Y] Zufallssender  [X] Jetzt läuft  [L][R] Sender  [-] Start/Stopp  [+] Menü
 
 [^v] choose  [<>][A] change  [B] back
 [^v] Wählen  [<>][A] Ändern  [B] Zurück
@@ -878,3 +878,6 @@ Meine
 
 A station from %s…
 Ein Sender aus %s…
+
+Two fingers or the right stick: closer or farther.
+Zwei Finger oder der rechte Stick: näher oder weiter weg.

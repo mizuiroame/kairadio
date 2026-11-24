@@ -48,8 +48,8 @@ language = 日本語
 24-hour (21:47)
 24時間制（21:47）
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
-[<>^v] 国  [A] 開く  [Y] ランダム選局  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] メニュー
+[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] 国  [RS] ズーム  [A] 開く  [Y] ランダム選局  [X] 再生中  [L][R] 選局  [-] 再生/停止  [+] メニュー
 
 [^v] choose  [<>][A] change  [B] back
 [^v] 選ぶ  [<>][A] 変更  [B] 戻る
@@ -878,3 +878,6 @@ Yours
 
 A station from %s…
 %sの局…
+
+Two fingers or the right stick: closer or farther.
+2本指か右スティックで拡大・縮小できます。

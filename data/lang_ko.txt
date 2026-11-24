@@ -48,8 +48,8 @@ language = 한국어
 24-hour (21:47)
 24시간제 (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
-[<>^v] 국가  [A] 열기  [Y] 랜덤 방송국  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 메뉴
+[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] 국가  [RS] 확대/축소  [A] 열기  [Y] 랜덤 방송국  [X] 재생 중  [L][R] 방송국  [-] 재생/정지  [+] 메뉴
 
 [^v] choose  [<>][A] change  [B] back
 [^v] 선택  [<>][A] 변경  [B] 뒤로
@@ -878,3 +878,6 @@ Yours
 
 A station from %s…
 %s의 방송국…
+
+Two fingers or the right stick: closer or farther.
+두 손가락이나 오른쪽 스틱으로 확대하거나 축소합니다.

@@ -48,8 +48,8 @@ language = Italiano
 24-hour (21:47)
 24 ore (21:47)
 
-[<>^v] country  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
-[<>^v] paese  [A] apri  [Y] stazione a caso  [X] in riproduzione  [L][R] stazione  [-] avvia/ferma  [+] menu
+[<>^v] country  [RS] zoom  [A] open  [Y] random station  [X] now playing  [L][R] station  [-] play/stop  [+] menu
+[<>^v] paese  [RS] zoom  [A] apri  [Y] stazione a caso  [X] in riproduzione  [L][R] stazione  [-] avvia/ferma  [+] menu
 
 [^v] choose  [<>][A] change  [B] back
 [^v] scegli  [<>][A] cambia  [B] indietro
@@ -878,3 +878,6 @@ Tuoi
 
 A station from %s…
 Una stazione da %s…
+
+Two fingers or the right stick: closer or farther.
+Due dita o la levetta destra: avvicina o allontana.

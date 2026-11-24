@@ -10,6 +10,7 @@
 #include "globe.h"
 #include "image_config.h"
 #include "lang.h"
+#include "mapzoom.h"
 #include "stb_image.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
@@ -40,11 +41,14 @@
 #define PANEL_W 420
 #define PANEL_FLAG_W 112
 #define PANEL_FLAG_H 84
-#define RANDOM_Y (PANEL_Y + 322)
+#define RANDOM_Y (PANEL_Y + 304)
 #define INFO_ICON 22          // The time's and the weather's icons.
 #define TUNER_TICKS 12        // The tuning dial's marks.
 #define TUNER_REST 0.62f      // Where its needle rests.
 #define RANDOM_H 84
+#define SHARP_ZOOM 1.5f       // Zoomed past this, the flat map draws from its full picture.
+#define GLOBE_SIZES 3         // The globe's picture, made bigger as it's zoomed (pixels across).
+static const int GLOBE_IMAGE_SIZES[GLOBE_SIZES] = {GLOBE_IMAGE, 896, 1152};
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
 static bool g_land_failed;
@@ -117,6 +121,38 @@ static const uint32_t *mapImage(int *w, int *h)
     return g_map;
 }
 
+// The land at its full detail, for the zoomed flat map: the PNG's coverage as alpha.
+static const uint32_t *mapImageFull(void)
+{
+    static uint32_t *full;
+    if (full || !mapImage(&(int){0}, &(int){0}))  // mapImage reads the PNG.
+        return full;
+    full = malloc((size_t)MAP_IMAGE_W * MAP_IMAGE_H * sizeof(uint32_t));
+    for (size_t i = 0; full && i < (size_t)MAP_IMAGE_W * MAP_IMAGE_H; i++)
+        full[i] = (COLOR_LAND & 0x00FFFFFFu) | (uint32_t)g_land[i] << 24;
+    return full;
+}
+
+// The flat map, zoomed: drawn as big as the zoom makes it, cut to its box.
+static void drawFlatMap(const App *app)
+{
+    int w, h;
+    const uint32_t *map = mapImage(&w, &h);
+    if (!map)
+        return;
+    const MapZoom *z = &app->map_zoom;
+    if (z->zoom > SHARP_ZOOM && mapImageFull()) {
+        map = mapImageFull();
+        w = MAP_IMAGE_W;
+        h = MAP_IMAGE_H;
+    }
+    float x0, y0;
+    mapZoomToScreen(z, MAP_X, MAP_Y, &x0, &y0);
+    gfxSetClip(MAP_X, MAP_Y, MAP_W, MAP_H);
+    gfxDrawImageScaledFb(x0 * GFX_SCALE, y0 * GFX_SCALE, MAP_FB_W * z->zoom, MAP_FB_H * z->zoom, w, h, map);
+    gfxResetClip();
+}
+
 // A (2r+1)-pixel square mask: bright in the middle, fading to nothing at r.
 static const uint8_t *glow(int r)
 {
@@ -161,8 +197,10 @@ static bool placeOf(const App *app, MapPoint p, float *x, float *y, float *fade)
 {
     *fade = 1.0f;
     if (!app->config.world_globe) {
-        mapToLayout(p, x, y);
-        return true;
+        float mx, my;
+        mapToLayout(p, &mx, &my);
+        mapZoomToScreen(&app->map_zoom, mx, my, x, y);
+        return mapZoomInBox(*x, *y);
     }
     float depth;
     if (!globeProject(app->globe_view, globeMapPlace(p), x, y, &depth))
@@ -200,6 +238,7 @@ static void drawGlobe(const App *app)
     static GlobeTable table;
     static uint32_t *land_rgba, *picture;
     static uint8_t *land;
+    int biggest = GLOBE_IMAGE_SIZES[GLOBE_SIZES - 1];
     if (!mapImage(&(int){0}, &(int){0}))
         return;  // The land's PNG can't be read.
     if (!land) {
@@ -208,19 +247,29 @@ static void drawGlobe(const App *app)
         for (int i = 0; land && i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
             land[i] = (uint8_t)(land_rgba[i] >> 24);
         free(land_rgba);
-        picture = land ? malloc((size_t)GLOBE_IMAGE * GLOBE_IMAGE * sizeof(uint32_t)) : NULL;
+        picture = land ? malloc((size_t)biggest * biggest * sizeof(uint32_t)) : NULL;
         if (!picture)
             return;
     }
+    // Zoomed, a bigger picture (its table made again only when the size steps).
+    float zoom = app->globe_view.zoom > 1.0f ? app->globe_view.zoom : 1.0f;
+    int size = GLOBE_IMAGE_SIZES[zoom < 1.4f ? 0 : zoom < 2.0f ? 1 : 2];
     float tilt = roundf(app->globe_view.lat / GLOBE_TILT_STEP) * GLOBE_TILT_STEP;
-    if ((table.size != GLOBE_IMAGE || table.tilt != tilt) && !globeTableBuild(&table, GLOBE_IMAGE, tilt, GLOBE_LAND_H))
+    if ((table.size != size || table.tilt != tilt) && !globeTableBuild(&table, size, tilt, GLOBE_LAND_H))
         return;
+    float half = globeRadius(app->globe_view) / GLOBE_DISC;  // The picture's half-width, glow included, layout pixels.
+    float left = GLOBE_CX - half, top = GLOBE_CY - half, per_px = 2 * half / size;
+    // Only the part in the box is painted: zoomed, most of the picture is out of it.
+    int x0 = (int)floorf((GLOBE_BOX_X - left) / per_px), y0 = (int)floorf((GLOBE_BOX_Y - top) / per_px);
+    int x1 = (int)ceilf((GLOBE_BOX_X + GLOBE_BOX_W - left) / per_px) + 1;
+    int y1 = (int)ceilf((GLOBE_BOX_Y + GLOBE_BOX_H - top) / per_px) + 1;
     static const GlobeColors COLORS = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR};
-    globeRender(&table, app->globe_view.lon, land, GLOBE_LAND_W, GLOBE_LAND_H, &COLORS, picture);
+    globeRenderPart(&table, app->globe_view.lon, land, GLOBE_LAND_W, &COLORS, picture, x0, y0, x1, y1);
     gfxImageChanged(picture);
-    float half = GLOBE_R / GLOBE_DISC;  // The picture's half-width, glow included, in layout pixels.
-    gfxDrawImageScaledFb((GLOBE_CX - half) * GFX_SCALE, (GLOBE_CY - half) * GFX_SCALE, 2 * half * GFX_SCALE,
-                         2 * half * GFX_SCALE, GLOBE_IMAGE, GLOBE_IMAGE, picture);
+    gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);
+    gfxDrawImageScaledFb(left * GFX_SCALE, top * GFX_SCALE, 2 * half * GFX_SCALE, 2 * half * GFX_SCALE, size, size,
+                         picture);
+    gfxResetClip();
 }
 
 // The picked country's light: a ring around it, pulsing.
@@ -400,27 +449,31 @@ static void drawPanel(const App *app, const Category *c, uint64_t now_ns)
     int said = fontDraw(FONT_REGULAR, 17, x + 86, ry + 48, T("Somewhere unexpected"), COLOR_DIM);
     uiDrawButton(x + 86 + said + 12, (float)(ry + 58), "Y", COLOR_SURFACE_HI, COLOR_DIM);
     uiHitAdd(x, ry, PANEL_W, RANDOM_H, HIT_RANDOM, 0);
-    fontDrawClipped(FONT_REGULAR, 16, x, ry + RANDOM_H + 18, PANEL_W,
+    fontDrawClipped(FONT_REGULAR, 16, x, ry + RANDOM_H + 14, PANEL_W,
                     T("Turn the globe with a finger; the stick picks countries."), COLOR_FAINT);
+    fontDrawClipped(FONT_REGULAR, 16, x, ry + RANDOM_H + 36, PANEL_W,
+                    T("Two fingers or the right stick: closer or farther."), COLOR_FAINT);
 }
 
 void uiDrawMap(const App *app, uint64_t now_ns)
 {
-    int w, h;
-    if (app->config.world_globe) {
+    if (app->config.world_globe)
         drawGlobe(app);
-    } else {
-        const uint32_t *map = mapImage(&w, &h);
-        if (map)
-            gfxDrawImageScaledFb((float)gfxToFb(MAP_X), (float)gfxToFb(MAP_Y), MAP_FB_W, MAP_FB_H, w, h, map);
-    }
+    else
+        drawFlatMap(app);
     const CategoryList *countries = &app->categories[SEARCH_COUNTRY];
     if (countries->count == 0)
         return;
-    if (app->config.world_globe)
-        uiHitAdd(GLOBE_CX - GLOBE_R, GLOBE_CY - GLOBE_R, 2 * GLOBE_R, 2 * GLOBE_R, HIT_MAP, 0);
-    else
+    if (app->config.world_globe) {  // The globe's square, cut to its box.
+        float r = globeRadius(app->globe_view);
+        float x0 = fmaxf(GLOBE_CX - r, GLOBE_BOX_X), y0 = fmaxf(GLOBE_CY - r, GLOBE_BOX_Y);
+        float x1 = fminf(GLOBE_CX + r, GLOBE_BOX_X + GLOBE_BOX_W), y1 = fminf(GLOBE_CY + r, GLOBE_BOX_Y + GLOBE_BOX_H);
+        uiHitAdd((int)x0, (int)y0, (int)(x1 - x0), (int)(y1 - y0), HIT_MAP, 0);
+        gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);  // Its lights too.
+    } else {
         uiHitAdd(MAP_X, MAP_Y, MAP_W, MAP_H, HIT_MAP, 0);
+        gfxSetClip(MAP_X, MAP_Y, MAP_W, MAP_H);
+    }
     // The ones with fewest stations first, so the bright ones draw over them,
     // however Search > Country sorts the list.
     static size_t order[CATEGORY_LIMIT];
@@ -437,6 +490,7 @@ void uiDrawMap(const App *app, uint64_t now_ns)
         if (c)
             drawCountry(app, c, item->count, now_ns, (unsigned)k);
     }
+    gfxResetClip();
     const Category *picked = app->map_cursor < countries->count ? &countries->items[app->map_cursor] : NULL;
     if (app->config.world_globe) {  // Beside the globe, with room for more than the flat map's card.
         if (picked)

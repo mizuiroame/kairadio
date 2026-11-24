@@ -548,6 +548,18 @@ int main(int argc, char **argv)
     render(dir, "world", &app);
     app.map_cursor = 5;  // Mexico.
     render(dir, "world_picked", &app);
+    // Zoomed in on Europe: the globe at its closest, facing Germany, and the flat map 3x.
+    app.map_cursor = 1;
+    GlobeView home = app.globe_view;
+    app.globe_view = (GlobeView){10.0f, 50.0f, GLOBE_ZOOM_MAX};
+    render(dir, "world_globe_zoom", &app);
+    app.globe_view = home;
+    app.config.world_globe = false;
+    render(dir, "world_flat", &app);
+    mapZoomBy(&app.map_zoom, 3.0f, MAP_X + MAP_W * 0.53f, MAP_Y + MAP_H * 0.28f);
+    render(dir, "world_flat_zoom", &app);
+    mapZoomReset(&app.map_zoom);
+    app.config.world_globe = true;
     categoryListFree(world);
     app.categories_asked[SEARCH_COUNTRY] = false;
     app.map_cursor = 0;
