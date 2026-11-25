@@ -884,3 +884,6 @@ Deux doigts ou le stick droit : rapprocher ou éloigner.
 
 Made by
 Créé par
+
+Open source (MIT)  ·  github.com/mizuiroame/kairadio
+Open source (MIT)  ·  github.com/mizuiroame/kairadio

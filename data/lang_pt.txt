@@ -884,3 +884,6 @@ Dois dedos ou o analógico direito: aproximar ou afastar.
 
 Made by
 Feito por
+
+Open source (MIT)  ·  github.com/mizuiroame/kairadio
+Código aberto (MIT)  ·  github.com/mizuiroame/kairadio

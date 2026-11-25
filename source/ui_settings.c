@@ -15,7 +15,8 @@
 #define SETTINGS_W 760  // Settings, as KaiVideo's.
 #define ROW_H 48
 #define HEAD_H 76
-#define FOOT_H 76  // The row's help, on up to two lines.
+#define FOOT_H 76  // The row's help, on up to two lines,
+#define PROJECT_H 30  // and on the main page the project's line under it.
 #define HELP_PX 16
 #define HELP_LINE_H 24
 #define VALUE_MAX_W 300
@@ -154,7 +155,7 @@ static void drawSettings(const App *app, uint64_t now_ns)
     SettingsPage page = (SettingsPage)app->settings_page;
     SettingRow rows[SETTINGS_PAGE_MAX_ROWS];
     int count = settingsPageRows(page, rows);
-    int h = HEAD_H + count * ROW_H + FOOT_H;
+    int h = HEAD_H + count * ROW_H + FOOT_H + (page == SETTINGS_PAGE_MAIN ? PROJECT_H : 0);
     int x = (GFX_WIDTH - SETTINGS_W) / 2, y = (GFX_HEIGHT - h) / 2;
     backdrop(x, y, SETTINGS_W, h);
     int title_x = x + PAD;
@@ -163,7 +164,11 @@ static void drawSettings(const App *app, uint64_t now_ns)
     fontDraw(FONT_BOLD, 24, title_x, y + 22, settingsPageTitle(page), COLOR_TEXT);
     for (int n = 0; n < count; n++)
         drawSettingRow(app, rows[n], x, y + HEAD_H + n * ROW_H, now_ns);
-    drawHelp(settingsRowHelp(app->settings_cursor), x + PAD, y + h - FOOT_H + 10, SETTINGS_W - 2 * PAD);
+    int foot_y = y + HEAD_H + count * ROW_H;
+    drawHelp(settingsRowHelp(app->settings_cursor), x + PAD, foot_y + 10, SETTINGS_W - 2 * PAD);
+    if (page == SETTINGS_PAGE_MAIN)  // As KaiVideo's and KaiPlayer's.
+        fontDrawClipped(FONT_REGULAR, 16, x + PAD, foot_y + FOOT_H, SETTINGS_W - 2 * PAD,
+                        T("Open source (MIT)  \xC2\xB7  github.com/mizuiroame/kairadio"), COLOR_FAINT);
 }
 
 static void drawAbout(void)

@@ -884,3 +884,6 @@ Dos dedos o la palanca derecha: acercar o alejar.
 
 Made by
 Hecho por
+
+Open source (MIT)  ·  github.com/mizuiroame/kairadio
+Código abierto (MIT)  ·  github.com/mizuiroame/kairadio

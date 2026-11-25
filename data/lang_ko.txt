@@ -884,3 +884,6 @@ Two fingers or the right stick: closer or farther.
 
 Made by
 제작
+
+Open source (MIT)  ·  github.com/mizuiroame/kairadio
+오픈 소스 (MIT)  ·  github.com/mizuiroame/kairadio

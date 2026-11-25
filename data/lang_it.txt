@@ -884,3 +884,6 @@ Due dita o la levetta destra: avvicina o allontana.
 
 Made by
 Creato da
+
+Open source (MIT)  ·  github.com/mizuiroame/kairadio
+Open source (MIT)  ·  github.com/mizuiroame/kairadio
