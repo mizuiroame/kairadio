@@ -881,3 +881,6 @@ Ein Sender aus %s…
 
 Two fingers or the right stick: closer or farther.
 Zwei Finger oder der rechte Stick: näher oder weiter weg.
+
+Made by
+Erstellt von

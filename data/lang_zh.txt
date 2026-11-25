@@ -881,3 +881,6 @@ A station from %s…
 
 Two fingers or the right stick: closer or farther.
 双指或右摇杆：放大或缩小。
+
+Made by
+制作者

@@ -881,3 +881,6 @@ Une station de %s…
 
 Two fingers or the right stick: closer or farther.
 Deux doigts ou le stick droit : rapprocher ou éloigner.
+
+Made by
+Créé par

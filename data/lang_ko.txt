@@ -881,3 +881,6 @@ A station from %s…
 
 Two fingers or the right stick: closer or farther.
 두 손가락이나 오른쪽 스틱으로 확대하거나 축소합니다.
+
+Made by
+제작

@@ -881,3 +881,6 @@ Una emisora de %s…
 
 Two fingers or the right stick: closer or farther.
 Dos dedos o la palanca derecha: acercar o alejar.
+
+Made by
+Hecho por

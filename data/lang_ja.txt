@@ -881,3 +881,6 @@ A station from %s…
 
 Two fingers or the right stick: closer or farther.
 2本指か右スティックで拡大・縮小できます。
+
+Made by
+制作

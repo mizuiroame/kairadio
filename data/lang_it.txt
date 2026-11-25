@@ -881,3 +881,6 @@ Una stazione da %s…
 
 Two fingers or the right stick: closer or farther.
 Due dita o la levetta destra: avvicina o allontana.
+
+Made by
+Creato da

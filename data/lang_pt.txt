@@ -881,3 +881,6 @@ Uma estação de %s…
 
 Two fingers or the right stick: closer or farther.
 Dois dedos ou o analógico direito: aproximar ou afastar.
+
+Made by
+Feito por

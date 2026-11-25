@@ -1,4 +1,5 @@
 #include "ui_settings.h"
+#include "ui_brand.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -184,11 +185,14 @@ static void drawAbout(void)
     int top = (GFX_HEIGHT - ABOUT_H) / 2 - 20;
     backdrop(ABOUT_X, top, ABOUT_W, ABOUT_H);
     int x = ABOUT_X + PAD, y = top + 20;
-    int title_w = fontDraw(FONT_BOLD, 26, x, y, "KaiRadio", COLOR_ACCENT);
-    fontDraw(FONT_REGULAR, 18, x + title_w + 12, y + 7, KAIRADIO_VERSION, COLOR_DIM);
-    y += 64;
+    uiDrawAppIcon(x, y);  // KaiRadio's icon, beside the name and version.
+    int title_w = fontDraw(FONT_BOLD, 34, x + 108, y + 4, "KaiRadio", COLOR_TEXT);
+    (void)title_w;
+    fontDraw(FONT_REGULAR, 20, x + 108, y + 52, KAIRADIO_VERSION, COLOR_DIM);
+    y += 108;
     for (size_t i = 0; i < sizeof(LINES) / sizeof(LINES[0]); i++, y += LINES[i - 1][0] ? 34 : 18)
         fontDrawClipped(FONT_REGULAR, 18, x, y, ABOUT_W - 2 * PAD, T(LINES[i]), i == 0 ? COLOR_TEXT : COLOR_DIM);
+    uiDrawBrandAt(ABOUT_X + ABOUT_W - PAD, top + ABOUT_H - 24);  // Mizuiro's mark, at the bottom right.
 }
 
 void uiDrawOverlay(const App *app, uint64_t now_ns)
