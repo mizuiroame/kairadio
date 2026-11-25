@@ -90,6 +90,9 @@ typedef struct {
     // The night over the land's grid (land_w x land_h, 0 day to 255 night, as
     // sunNightGrid makes it), darkening the globe there; NULL for none.
     const uint8_t *night;
+    // The land's colors over the same grid (0xAABBGGRR, alpha unused), in
+    // place of land; NULL for land everywhere.
+    const uint32_t *terrain;
 } GlobeColors;
 
 // Paints the globe facing lon (the table's tilt) into out (size x size,

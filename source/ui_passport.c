@@ -25,6 +25,10 @@
 #define FLAG_H 48
 #define GRID_Y 118   // Below the title and the count.
 #define SHOWN_MAX 400  // Countries drawn: more than there are.
+#define CARD_FLAGS 3      // The World view's card: the newest stamps' flags,
+#define CARD_FLAG_W 40
+#define CARD_FLAG_H 30
+#define CARD_FLAG_STEP 22  // overlapping.
 
 int uiPassportRows(const App *app)
 {
@@ -115,14 +119,31 @@ void uiDrawPassport(const App *app)
         }
 }
 
-void uiDrawPassportButton(const App *app, int x)
+void uiDrawPassportCard(const App *app)
 {
-    PassportCountry none;
-    int n = (int)passportCountries(&app->passport, &none, 0);
-    char label[64];
-    snprintf(label, sizeof(label), "%s  %d", T("Passport"), n);
-    int y = SUBTITLE_Y - 6, w = uiPillWidth(label);
-    uiDrawPill(x, y, label, COLOR_SURFACE_HI, COLOR_TEXT);
-    uiDrawButton(x + w + 8, (float)y + 15, "LS", COLOR_SURFACE_HI, COLOR_DIM);
-    uiHitAdd(x - 4, y - 6, w + 8 + 22 + 8, 42, HIT_PASSPORT, 0);
+    static PassportCountry countries[SHOWN_MAX];
+    int n = (int)passportCountries(&app->passport, countries, SHOWN_MAX);
+    int shown = n > SHOWN_MAX ? SHOWN_MAX : n;
+    int x = UI_PASSPORT_CARD_X, y = app->config.world_globe ? UI_PASSPORT_CARD_Y_GLOBE : UI_PASSPORT_CARD_Y_FLAT;
+    gfxFillRoundRect(x, y, UI_PASSPORT_CARD_W, UI_PASSPORT_CARD_H, 14, COLOR_SURFACE);
+    gfxFillRect(x, y + 16, 3, UI_PASSPORT_CARD_H - 32, COLOR_ACCENT);
+    // The newest stamps, overlapping at the right, the newest on top.
+    int flags = shown < CARD_FLAGS ? shown : CARD_FLAGS;
+    int flags_w = flags ? CARD_FLAG_W + (flags - 1) * CARD_FLAG_STEP : 0;
+    int fx = x + UI_PASSPORT_CARD_W - 16 - flags_w, fy = y + (UI_PASSPORT_CARD_H - CARD_FLAG_H) / 2;
+    for (int i = 0; i < flags; i++) {
+        const char *code = countries[shown - flags + i].code;
+        gfxFillRoundRect(fx + i * CARD_FLAG_STEP - 2, fy - 2, CARD_FLAG_W + 4, CARD_FLAG_H + 4, 5, COLOR_SURFACE);
+        if (!uiDrawFlag(fx + i * CARD_FLAG_STEP, fy, CARD_FLAG_W, CARD_FLAG_H, code))
+            gfxFillRoundRect(fx + i * CARD_FLAG_STEP, fy, CARD_FLAG_W, CARD_FLAG_H, 4, COLOR_SURFACE_HI);
+    }
+    int text_w = (flags ? fx - 12 : x + UI_PASSPORT_CARD_W - 16) - (x + 20);
+    char count[64];
+    snprintf(count, sizeof(count), n == 1 ? T("%d country") : T("%d countries"), n);
+    fontDrawClipped(FONT_BOLD, 22, x + 20, y + 12, text_w, T("Passport"), COLOR_TEXT);
+    fontDrawClipped(FONT_REGULAR, 17, x + 20, y + 44, text_w - 30, count, COLOR_DIM);
+    int said = fontTextWidth(FONT_REGULAR, 17, count);
+    said = said > text_w - 30 ? text_w - 30 : said;
+    uiDrawButton(x + 20 + said + 8, (float)(y + 54), "LS", COLOR_SURFACE_HI, COLOR_DIM);
+    uiHitAdd(x, y, UI_PASSPORT_CARD_W, UI_PASSPORT_CARD_H, HIT_PASSPORT, 0);
 }

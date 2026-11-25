@@ -40,7 +40,9 @@ under the LGPL 2.1; the other bundled libraries are listed in
 Korean text is drawn with the console's own fonts, which aren't part of
 KaiRadio. The world map is drawn
 from [Natural Earth](https://www.naturalearthdata.com/) (public domain) by
-`tools/make_map.py`; the flags come from
+`tools/make_map.py`, its land colored by Natural Earth's Cross Blended
+Hypsometric Tints with Shaded Relief and Water (1:50m, public domain) by
+`tools/make_terrain.py`; the flags come from
 [flag-icons](https://github.com/lipis/flag-icons) (MIT) and the genre icons
 from [Lucide](https://lucide.dev/) (ISC). Weather data by
 [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0).
@@ -57,7 +59,7 @@ from [Lucide](https://lucide.dev/) (ISC). Weather data by
 | Noto Sans | KaiRadio's font | [OFL](../third_party/NotoSans-OFL.txt) |
 | [flag-icons](https://github.com/lipis/flag-icons) | Flags | [MIT](../third_party/flag-icons-LICENSE.txt) |
 | [Lucide](https://lucide.dev/) | Genre icons | [ISC](../third_party/lucide-LICENSE.txt) (some icons MIT, from Feather) |
-| [Natural Earth](https://www.naturalearthdata.com/) | The world map | Public domain |
+| [Natural Earth](https://www.naturalearthdata.com/) | The world map, and its land's colors (hypsometric tints) | Public domain |
 | [Open-Meteo](https://open-meteo.com/) | Time and weather | CC BY 4.0 (data) |
 
 Under the LGPL, you may change FFmpeg and relink KaiRadio with your version:

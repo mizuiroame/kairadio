@@ -37,7 +37,7 @@ Tap:
 - a tab, genre or country to open it;
 - a country on the globe to play one of its stations at random (its card
   beside the globe opens all of them);
-- Random station beside the globe, and Passport above it;
+- Random station beside the globe, and the Passport card at its right;
 - the sort at the top right of a list of genres, countries or languages to
   change it;
 - the bar at the bottom for Now Playing;

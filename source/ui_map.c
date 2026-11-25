@@ -13,11 +13,14 @@
 #include "mapzoom.h"
 #include "stb_image.h"
 #include "sunlight.h"
+#include "terrain.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
 #include "ui_flag.h"
 #include "ui_hit.h"
+#include "ui_passport.h"
 #include "world_map_png.h"
+#include "world_terrain_jpg.h"
 #include "weatherfetch.h"
 #include "worldmap.h"
 
@@ -54,12 +57,16 @@
 #define VEIL_FADE 150          // and how far past the panel it fades out.
 #define TABLE_SLACK 48        // Pixels made around the part that shows, so a small zoom or move needn't make it again.
 #define NIGHT_COLOR GFX_RGB(0x02, 0x04, 0x0E)  // The night over the flat map,
-#define FLAT_NIGHT_ALPHA 120   // at its darkest: the land and the lights still read through it.
+#define FLAT_NIGHT_ALPHA 150   // at its darkest: the land and the lights still read through it;
+#define DAY_COLOR GFX_RGB(0xC8, 0xD6, 0xEC)    // and the day over it, a little light,
+#define FLAT_DAY_ALPHA 20      // this much.
+#define FLAT_TERRAIN 0.8f      // The flat map's land: its terrain this bright (the globe's light adds to it).
 #define NIGHT_EVERY_S 60       // The night is worked out again each minute.
 
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
 static bool g_land_failed;
+static Terrain g_terrain;         // The land's colors, from the JPEG (empty if it can't be read: plain land).
 static uint32_t *g_map;           // The land for this screen: g_map_w x g_map_h, coverage as alpha.
 static int g_map_w, g_map_h;
 static uint8_t *g_glows[GLOW_MAX + 1];  // A soft round light of each radius, made when first needed.
@@ -91,8 +98,14 @@ static bool updateNight(void)
     made = minute;
     sunNightGrid(sunOverhead(utc), GLOBE_LAND_W, GLOBE_LAND_H, MAP_NORTH, MAP_SOUTH, g_night);
     gfxImageChanged(g_night_image);
-    for (int i = 0; i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
-        g_night_image[i] = (NIGHT_COLOR & 0x00FFFFFFu) | (uint32_t)(g_night[i] * FLAT_NIGHT_ALPHA / 255) << 24;
+    for (int i = 0; i < GLOBE_LAND_W * GLOBE_LAND_H; i++) {
+        // Light by day, dark by night: in the twilight, each by its own share
+        // of the cover (mixing the colors alone would make it a bright band).
+        unsigned n = g_night[i], day = FLAT_DAY_ALPHA * (255 - n) / 255, night = FLAT_NIGHT_ALPHA * n / 255;
+        unsigned alpha = day + night;
+        Color color = alpha ? gfxMix(DAY_COLOR, NIGHT_COLOR, night * 255 / alpha) : DAY_COLOR;
+        g_night_image[i] = (color & 0x00FFFFFFu) | (uint32_t)alpha << 24;
+    }
     return true;
 }
 
@@ -142,6 +155,8 @@ static const uint32_t *mapImage(int *w, int *h)
             g_land = NULL;
         }
         g_land_failed = !g_land;
+        if (g_land)
+            terrainLoad(&g_terrain, world_terrain_jpg, world_terrain_jpg_size);
     }
     if (!g_land)
         return NULL;
@@ -153,6 +168,8 @@ static const uint32_t *mapImage(int *w, int *h)
             free(g_map);
         }
         g_map = landAt(want_w, want_h);
+        if (g_map && g_terrain.rgb)
+            terrainPaint(&g_terrain, g_map, want_w, want_h, FLAT_TERRAIN);
         g_map_w = want_w;
         g_map_h = want_h;
     }
@@ -172,6 +189,8 @@ static const uint32_t *mapImageFull(void)
     failed = !full;
     for (size_t i = 0; full && i < (size_t)MAP_IMAGE_W * MAP_IMAGE_H; i++)
         full[i] = (COLOR_LAND & 0x00FFFFFFu) | (uint32_t)g_land[i] << 24;
+    if (full && g_terrain.rgb)
+        terrainPaint(&g_terrain, full, MAP_IMAGE_W, MAP_IMAGE_H, FLAT_TERRAIN);
     return full;
 }
 
@@ -281,16 +300,21 @@ static void drawCountry(const App *app, const MapCountry *c, int stations, uint6
 static void drawGlobe(const App *app)
 {
     static GlobeTable table;
-    static uint32_t *land_rgba, *picture;
+    static uint32_t *terrain, *picture;  // The land's colors on the globe's grid (kept), and the picture.
     static uint8_t *land;
     if (!mapImage(&(int){0}, &(int){0}))
         return;  // The land's PNG can't be read.
     if (!land) {
-        land_rgba = landAt(GLOBE_LAND_W, GLOBE_LAND_H);
-        land = land_rgba ? malloc(GLOBE_LAND_W * GLOBE_LAND_H) : NULL;
+        terrain = landAt(GLOBE_LAND_W, GLOBE_LAND_H);
+        land = terrain ? malloc(GLOBE_LAND_W * GLOBE_LAND_H) : NULL;
         for (int i = 0; land && i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
-            land[i] = (uint8_t)(land_rgba[i] >> 24);
-        free(land_rgba);
+            land[i] = (uint8_t)(terrain[i] >> 24);
+        if (land && g_terrain.rgb) {
+            terrainPaint(&g_terrain, terrain, GLOBE_LAND_W, GLOBE_LAND_H, 1.0f);
+        } else {
+            free(terrain);
+            terrain = NULL;
+        }
         picture = land ? malloc((size_t)GLOBE_IMAGE * GLOBE_IMAGE * sizeof(uint32_t)) : NULL;
         if (!picture)
             return;
@@ -309,8 +333,8 @@ static void drawGlobe(const App *app)
         !globeTableBuildPart(&table, size, tilt, GLOBE_LAND_H, x0 - TABLE_SLACK, y0 - TABLE_SLACK, x1 + TABLE_SLACK,
                              y1 + TABLE_SLACK))
         return;
-    // Where it's night now, darker.
-    GlobeColors colors = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR, updateNight() ? g_night : NULL};
+    // The land colored by its terrain; where it's night now, darker.
+    GlobeColors colors = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR, updateNight() ? g_night : NULL, terrain};
     globeRenderPart(&table, app->globe_view.lon, land, GLOBE_LAND_W, &colors, picture, x0, y0, x1, y1);
     gfxImageChanged(picture);
     gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);
@@ -620,4 +644,5 @@ void uiDrawMap(const App *app, uint64_t now_ns)
         if (picked)
             drawPicked(app, picked, now_ns);
     }
+    uiDrawPassportCard(app);
 }

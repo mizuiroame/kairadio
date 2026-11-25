@@ -26,6 +26,7 @@ the build can embed them as `font_regular_ttf`. They are otherwise unchanged.
 | `../data/flags.bin`, `../source/flags_index.c` | [lipis/flag-icons](https://github.com/lipis/flag-icons) v7.6.0, commit `0d8909b00aa8418802a5abf2afa82356b129a7ef` (`flags/4x3/*.svg`, rasterized with rsvg-convert) | `tools/make_flags.py` | MIT (`flag-icons-LICENSE.txt`) |
 | `../data/icons.bin`, `../source/icons_index.c` | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) 1.66.0, commit `a630cec77eac6568b989e87e4947a8bfe45caacd` (`icons/*.svg`, rasterized with rsvg-convert) | `tools/make_icons.py` | ISC, some icons MIT from Feather (`lucide-LICENSE.txt`) |
 | `../data/world_map.png`, `../source/map_countries.c` | [Natural Earth](https://www.naturalearthdata.com/) 1:50m Admin 0 Countries, [nvkelso/natural-earth-vector](https://github.com/nvkelso/natural-earth-vector) v5.1.2 (`geojson/ne_50m_admin_0_countries.geojson`) | `tools/make_map.py` | Public domain |
+| `../data/world_terrain.jpg` | [Natural Earth](https://www.naturalearthdata.com/downloads/50m-raster-data/50m-cross-blend-hypso/) 1:50m Cross Blended Hypsometric Tints with Shaded Relief and Water, version 2.0.0 (`HYP_50M_SR_W.zip` from naciscdn.org, SHA-256 `57d89405e8f7d1e5d1cca11701d394b3d45aea75b301a6992ad5571eff64527a`), cropped to the map's latitudes, shrunk to 2048 x 791 and toned down | `tools/make_terrain.py` | Public domain |
 
 ## SHA-256
 

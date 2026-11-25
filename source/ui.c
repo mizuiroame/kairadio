@@ -16,7 +16,6 @@
 #include "ui_hit.h"
 #include "ui_map.h"
 #include "ui_notice.h"
-#include "ui_passport.h"
 #include "ui_now.h"
 #include "ui_podcast.h"
 #include "ui_settings.h"
@@ -521,8 +520,7 @@ static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
 static void drawWorld(const App *app, uint64_t now_ns)
 {
     uiDrawMap(app, now_ns);  // First: the zoomed globe reaches up under these lines.
-    int said = fontDraw(FONT_REGULAR, 18, MARGIN, SUBTITLE_Y, T("Stations around the world"), COLOR_DIM);
-    uiDrawPassportButton(app, MARGIN + said + 20);
+    fontDraw(FONT_REGULAR, 18, MARGIN, SUBTITLE_Y, T("Stations around the world"), COLOR_DIM);
     const char *credit = app->config.world_globe ? T("From radio-browser.info  \xC2\xB7  Weather by open-meteo.com")
                                                  : T("From radio-browser.info");
     fontDraw(FONT_REGULAR, 15, GFX_WIDTH - MARGIN - fontTextWidth(FONT_REGULAR, 15, credit), SUBTITLE_Y + 2, credit,

@@ -240,6 +240,7 @@ int main(void)
     testGlobe();
     testSunlight();
     testPassport();
+    testTerrain();
     testWeather();
     testLang();
     testUpdate();

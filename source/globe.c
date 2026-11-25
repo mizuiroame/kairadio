@@ -12,7 +12,8 @@
 #define LIGHT_X -0.42f         // The light comes from the upper left, toward the viewer.
 #define LIGHT_Y 0.52f
 #define LIGHT_Z 0.74f
-#define NIGHT_DIM 0.42f        // How much of the light the night takes: the land still reads in it.
+#define NIGHT_DIM 0.55f        // How much of the light the night takes: the land still reads in it.
+#define DAY_GAIN 1.12f         // and how much the day adds to it.
 
 GeoPoint globeMapPlace(MapPoint p)
 {
@@ -188,6 +189,9 @@ bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0
 static uint32_t scaled(Color c, unsigned shade, unsigned alpha)
 {
     unsigned r = (c & 0xFF) * shade / 255, g = ((c >> 8) & 0xFF) * shade / 255, b = ((c >> 16) & 0xFF) * shade / 255;
+    r = r > 255 ? 255 : r;  // Shade past 255: brighter, kept in range.
+    g = g > 255 ? 255 : g;
+    b = b > 255 ? 255 : b;
     return r | g << 8 | b << 16 | (uint32_t)alpha << 24;
 }
 
@@ -218,11 +222,14 @@ static uint32_t picturePixel(const GlobeTable *t, int i, float lon, const uint8_
         here = c->ice;
         row = t->land_h - 1;
     } else {
-        here = gfxMix(c->ocean, c->land, land[(size_t)row * land_w + col]);
+        size_t cell = (size_t)row * land_w + col;
+        here = gfxMix(c->ocean, c->terrain ? c->terrain[cell] : c->land, land[cell]);
     }
     unsigned shade = t->shade[i];
-    if (c->night)
-        shade = shade * (255u - (unsigned)(NIGHT_DIM * c->night[(size_t)row * land_w + col])) / 255u;
+    if (c->night) {  // From DAY_GAIN of the light in the day to 1 - NIGHT_DIM of it at night.
+        float dark = c->night[(size_t)row * land_w + col] / 255.0f;
+        shade = (unsigned)(shade * (DAY_GAIN - (DAY_GAIN - 1.0f + NIGHT_DIM) * dark));
+    }
     return scaled(here, shade, alpha);
 }
 

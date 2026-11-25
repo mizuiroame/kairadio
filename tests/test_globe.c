@@ -55,7 +55,7 @@ static void testPaint(void)
     for (int i = 0; i < LAND_W * LAND_H; i++)
         land[i] = (i % LAND_W) < LAND_W / 2 ? 255 : 0;  // Land in the west, sea in the east.
     uint32_t *out = malloc(SIZE * SIZE * sizeof(uint32_t));
-    GlobeColors colors = {GFX_RGB(0, 0, 200), GFX_RGB(0, 200, 0), GFX_RGB(200, 200, 200), GFX_RGB(100, 150, 250), NULL};
+    GlobeColors colors = {GFX_RGB(0, 0, 200), GFX_RGB(0, 200, 0), GFX_RGB(200, 200, 200), GFX_RGB(100, 150, 250), NULL, NULL};
     globeRender(&t, 0.0f, land, LAND_W, LAND_H, &colors, out);
     CHECK(out[0] >> 24 == 0);                            // A corner: nothing.
     uint32_t west = out[SIZE / 2 * SIZE + SIZE / 2 - 12], east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];
@@ -78,9 +78,19 @@ static void testPaint(void)
     globeRender(&t, 0.0f, land, LAND_W, LAND_H, &colors, out);
     uint32_t night_east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];
     CHECK(((night_east >> 16) & 0xFF) < ((day_east >> 16) & 0xFF) && ((night_east >> 16) & 0xFF) > 0);
-    CHECK(out[SIZE / 2 * SIZE + SIZE / 2 - 12] == day_west);
+    uint32_t lit_west = out[SIZE / 2 * SIZE + SIZE / 2 - 12];  // In the day: a little brighter than with no night.
+    CHECK(((lit_west >> 8) & 0xFF) > ((day_west >> 8) & 0xFF));
     CHECK((out[3 * SIZE + SIZE / 2] >> 24) == (pole >> 24));
     colors.night = NULL;
+    // The terrain's colors in place of the land's: red land west of 0.
+    uint32_t terrain[LAND_W * LAND_H];
+    for (int i = 0; i < LAND_W * LAND_H; i++)
+        terrain[i] = GFX_RGB(220, 0, 0);
+    colors.terrain = terrain;
+    globeRender(&t, 0.0f, land, LAND_W, LAND_H, &colors, out);
+    uint32_t red = out[SIZE / 2 * SIZE + SIZE / 2 - 12];
+    CHECK((red & 0xFF) > ((red >> 8) & 0xFF) && out[SIZE / 2 * SIZE + SIZE / 2 + 12] == day_east);  // The sea as it was.
+    colors.terrain = NULL;
     CHECK(globeTableCovers(&t, SIZE, 0.0f, 0, 0, SIZE, SIZE) && !globeTableCovers(&t, SIZE, 1.0f, 0, 0, 4, 4));
     // A table made only in part covers only that part, and paints the same there.
     GlobeTable part;

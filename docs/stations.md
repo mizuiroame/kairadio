@@ -8,7 +8,8 @@ of public stations.
 
 ## World
 
-- A night globe, each country lit up by how many stations it has.
+- A night globe, each country lit up by how many stations it has, its land
+  colored by its terrain (forests, drylands, mountains, ice and lakes).
 - Turn it with a finger, or go from country to country with either stick.
 - It opens on the country of the station playing.
 - **Tap a country** and one of its stations plays, picked at random; tap it
@@ -28,8 +29,9 @@ of public stations.
 
 Every country you listen to gets a stamp in your passport: its flag, how many
 of its stations you've heard, and the day you first did. A new country says
-so when it starts playing. Open it from World with **Passport** beside
-"Stations around the world" or the left stick's press (**LS**); **↑** / **↓**
+so when it starts playing. Open it from World with the **Passport** card
+(at the right of the globe, with your newest stamps' flags; at the top right of
+the flat map) or the left stick's press (**LS**); **↑** / **↓**
 show more stamps, **A** or **B** close it. It's kept on your card
 (`passport.txt` in KaiRadio's folder) and never sent anywhere.
 
