@@ -68,7 +68,8 @@ touches small:
   Certificates are checked. Many stations only stream over plain `http://`;
   what you listen to then travels unencrypted, as with any web radio player.
 - **What's kept on the card**, in KaiRadio's folder: your settings, favorites
-  and recent stations, the podcasts you subscribed to (with their newest
+  and recent stations, your passport (the countries and station ids you've
+  listened to, and when), the podcasts you subscribed to (with their newest
   episodes) and where you left each episode. No account, no password, no
   history sent anywhere.
 

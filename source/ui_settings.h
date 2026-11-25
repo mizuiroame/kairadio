@@ -8,3 +8,5 @@
 // Draws app->overlay's panel, if any, over what's drawn. Its touch targets
 // replace the view's, so only the panel takes taps.
 void uiDrawOverlay(const App *app, uint64_t now_ns);
+// Dims the view and draws a panel's backing at x, y (w x h); a tap around it closes it.
+void uiDrawBackdrop(int x, int y, int w, int h);

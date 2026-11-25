@@ -20,6 +20,7 @@ on the GPU, sharp in handheld and docked.
 | **B** | Back (out of Now Playing, or out of a genre, country or language, to the map if opened from it) |
 | **−** | Play or stop |
 | **+** | The menu: Settings, Exit KaiRadio (**+** again asks to exit, and **+** once more exits) |
+| Left stick press (**LS**) | In World: your passport (**↑** / **↓** more stamps, **A** or **B** close it) |
 
 The **right stick** moves like the D-pad in World, in the menu and in
 Settings; in the lists it moves a page up or down.
@@ -36,7 +37,7 @@ Tap:
 - a tab, genre or country to open it;
 - a country on the globe to play one of its stations at random (its card
   beside the globe opens all of them);
-- Random station beside the globe;
+- Random station beside the globe, and Passport above it;
 - the sort at the top right of a list of genres, countries or languages to
   change it;
 - the bar at the bottom for Now Playing;

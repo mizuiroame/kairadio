@@ -9,6 +9,7 @@
 #include "ui_buttons.h"
 #include "ui_common.h"
 #include "ui_hit.h"
+#include "ui_passport.h"
 
 #define MENU_W 640  // The + menu, as KaiVideo's and KaiPlayer's.
 #define MENU_ROW_H 48
@@ -35,6 +36,11 @@ static void backdrop(int x, int y, int w, int h)
     uiHitAdd(0, y, x, h, HIT_OVERLAY_OUT, 0);
     uiHitAdd(x + w, y, GFX_WIDTH - x - w, h, HIT_OVERLAY_OUT, 0);
     gfxFillRoundRect(x, y, w, h, 16, COLOR_SURFACE);
+}
+
+void uiDrawBackdrop(int x, int y, int w, int h)
+{
+    backdrop(x, y, w, h);
 }
 
 static void highlight(int x, int y, int w, int h)
@@ -207,6 +213,7 @@ void uiDrawOverlay(const App *app, uint64_t now_ns)
     case OVERLAY_EXIT: drawMenu(app); break;
     case OVERLAY_SETTINGS: drawSettings(app, now_ns); break;
     case OVERLAY_ABOUT: drawAbout(); break;
+    case OVERLAY_PASSPORT: uiDrawPassport(app); break;
     default: break;
     }
 }

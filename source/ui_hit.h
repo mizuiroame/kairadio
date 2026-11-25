@@ -42,6 +42,8 @@ typedef enum {
     HIT_JUMP,         // arg: seconds to jump by (-15 or 30).
     HIT_POD_MODE,     // arg: the Podcasts tab's mode (a PodPage: Yours, Top, Genres).
     HIT_POD_REGION,   // The region of the charts: opens the list of them.
+    HIT_PASSPORT,     // The World view's passport button: opens it.
+    HIT_PASSPORT_SCROLL,  // arg: -1 or 1, the passport's stamps a row up or down.
 } HitKind;
 
 typedef struct {

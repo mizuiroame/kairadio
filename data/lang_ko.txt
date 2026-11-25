@@ -887,3 +887,21 @@ Made by
 
 Open source (MIT)  ·  github.com/mizuiroame/kairadio
 오픈 소스 (MIT)  ·  github.com/mizuiroame/kairadio
+
+Passport
+여권
+
+%d country
+%d개국
+
+%d countries
+%d개국
+
+New in your passport: %s
+여권에 새로 추가: %s
+
+No stamps yet: each country you listen to gets one here.
+아직 스탬프가 없습니다. 듣는 나라마다 여기에 스탬프가 찍힙니다.
+
+[^v] more stamps  [A][B] close
+[^v] 스탬프 더 보기  [A][B] 닫기

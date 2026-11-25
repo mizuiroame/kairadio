@@ -16,6 +16,7 @@
 #include "ui_hit.h"
 #include "ui_map.h"
 #include "ui_notice.h"
+#include "ui_passport.h"
 #include "ui_now.h"
 #include "ui_podcast.h"
 #include "ui_settings.h"
@@ -520,7 +521,8 @@ static void drawList(const App *app, const RadioStatus *radio, uint64_t now_ns)
 static void drawWorld(const App *app, uint64_t now_ns)
 {
     uiDrawMap(app, now_ns);  // First: the zoomed globe reaches up under these lines.
-    fontDraw(FONT_REGULAR, 18, MARGIN, SUBTITLE_Y, T("Stations around the world"), COLOR_DIM);
+    int said = fontDraw(FONT_REGULAR, 18, MARGIN, SUBTITLE_Y, T("Stations around the world"), COLOR_DIM);
+    uiDrawPassportButton(app, MARGIN + said + 20);
     const char *credit = app->config.world_globe ? T("From radio-browser.info  \xC2\xB7  Weather by open-meteo.com")
                                                  : T("From radio-browser.info");
     fontDraw(FONT_REGULAR, 15, GFX_WIDTH - MARGIN - fontTextWidth(FONT_REGULAR, 15, credit), SUBTITLE_Y + 2, credit,
@@ -614,6 +616,7 @@ static const char *footerHelp(const App *app, const RadioStatus *radio)
         return app->settings_page == SETTINGS_PAGE_MAIN ? T("[^v] choose  [>][A] open  [B] close")
                                                         : T("[^v] choose  [<>][A] change  [B] back");
     case OVERLAY_ABOUT: return T("[A][B] back");
+    case OVERLAY_PASSPORT: return T("[^v] more stamps  [A][B] close");
     default: break;
     }
     switch (app->view) {

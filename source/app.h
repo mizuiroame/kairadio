@@ -15,6 +15,7 @@
 #include "config.h"
 #include "directory.h"
 #include "library.h"
+#include "passport.h"
 #include "podcast.h"
 #include "podstore.h"
 #include "radio.h"
@@ -79,14 +80,15 @@ typedef enum {
 #define SEARCH_MAX 64
 #define CONFIG_FOLDER_MAX 128
 
-// A panel over the view: the + menu, its "Exit KaiRadio?", Settings, or
-// About. Only it takes input.
+// A panel over the view: the + menu, its "Exit KaiRadio?", Settings,
+// About, or the passport (from the World view). Only it takes input.
 typedef enum {
     OVERLAY_NONE,
     OVERLAY_MENU,
     OVERLAY_EXIT,
     OVERLAY_SETTINGS,
     OVERLAY_ABOUT,
+    OVERLAY_PASSPORT,
 } Overlay;
 
 // The + menu's items.
@@ -156,6 +158,8 @@ typedef struct {
     bool stale_popular, stale_categories[SEARCH_MODES], stale_category_results, stale_name_results;
 
     Library library;
+    Passport passport;           // The countries and stations listened to.
+    int passport_row;            // The passport's first row of stamps showing.
 
     // Podcasts (app_podcast.c).
     PodStore pods;
@@ -274,6 +278,10 @@ void appSetView(App *app, View view);
 
 // Plays a station of a list, keeping the list for previous and next.
 void appPlayFrom(App *app, const StationList *list, size_t index);
+// The passport, over the World view (the left stick's press or its button).
+void appOpenPassport(App *app);
+// Its stamps rows up (less than 0) or down, kept within them (app_settings.c).
+void appScrollPassport(App *app, int rows);
 
 // app_settings.c: the + menu, Settings and About.
 void appOpenMenu(App *app);

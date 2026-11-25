@@ -10,6 +10,7 @@ enum {
     HidNpadButton_B = BIT(1),
     HidNpadButton_X = BIT(2),
     HidNpadButton_Y = BIT(3),
+    HidNpadButton_StickL = BIT(4),
     HidNpadButton_L = BIT(6),
     HidNpadButton_R = BIT(7),
     HidNpadButton_ZL = BIT(8),

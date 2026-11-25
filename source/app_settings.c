@@ -11,6 +11,7 @@
 #include "radio.h"
 #include "settings.h"
 #include "theme.h"
+#include "ui_passport.h"
 
 #define NS_PER_MINUTE 60000000000ull
 
@@ -259,6 +260,15 @@ static void handleSettings(App *app, uint64_t pressed, uint64_t now_ns)
         appSettingsBack(app);
 }
 
+void appScrollPassport(App *app, int rows)
+{
+    int max = uiPassportRows(app) - UI_PASSPORT_ROWS;
+    int row = app->passport_row + rows;
+    app->passport_row = row > max ? max : row;
+    if (app->passport_row < 0)
+        app->passport_row = 0;
+}
+
 void appHandleOverlay(App *app, uint64_t pressed, uint64_t now_ns)
 {
     switch (app->overlay) {
@@ -268,6 +278,12 @@ void appHandleOverlay(App *app, uint64_t pressed, uint64_t now_ns)
     case OVERLAY_ABOUT:
         if (pressed & (HidNpadButton_A | HidNpadButton_B)) app->overlay = OVERLAY_SETTINGS;
         if (pressed & HidNpadButton_Plus) app->overlay = OVERLAY_NONE;
+        break;
+    case OVERLAY_PASSPORT:
+        if (pressed & BUTTONS_UP) appScrollPassport(app, -1);
+        if (pressed & BUTTONS_DOWN) appScrollPassport(app, 1);
+        if (pressed & (HidNpadButton_A | HidNpadButton_B | HidNpadButton_Plus | HidNpadButton_StickL))
+            app->overlay = OVERLAY_NONE;
         break;
     default: break;
     }

@@ -20,7 +20,18 @@ of public stations.
 - **Zoom** with two fingers, or the right stick up and down: the flat map up to
   4× (a finger moves it, and the countries of Europe or the Caribbean can be
   tapped one by one), the globe up to 2.5× around the country in its middle,
-  filling the view.
+  filling the view. Zoomed in, their edges fade into the background.
+- **Day and night**: where it's night right now is darker, the twilight soft
+  between, worked out from the console's date and time (no connection needed).
+
+## Passport
+
+Every country you listen to gets a stamp in your passport: its flag, how many
+of its stations you've heard, and the day you first did. A new country says
+so when it starts playing. Open it from World with **Passport** beside
+"Stations around the world" or the left stick's press (**LS**); **↑** / **↓**
+show more stamps, **A** or **B** close it. It's kept on your card
+(`passport.txt` in KaiRadio's folder) and never sent anywhere.
 
 ## Random station
 

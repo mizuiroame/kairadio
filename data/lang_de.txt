@@ -887,3 +887,21 @@ Erstellt von
 
 Open source (MIT)  ·  github.com/mizuiroame/kairadio
 Quelloffen (MIT)  ·  github.com/mizuiroame/kairadio
+
+Passport
+Reisepass
+
+%d country
+%d Land
+
+%d countries
+%d Länder
+
+New in your passport: %s
+Neu in deinem Reisepass: %s
+
+No stamps yet: each country you listen to gets one here.
+Noch keine Stempel: Jedes Land, das du hörst, bekommt hier einen.
+
+[^v] more stamps  [A][B] close
+[^v] Weitere Stempel  [A][B] Schließen

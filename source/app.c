@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <time.h>
 
 #include "buttons.h"
 #include "keyboard_system.h"
@@ -81,6 +82,7 @@ void appInit(App *app, const char *config_folder)
     snprintf(app->config_folder, sizeof(app->config_folder), "%s", config_folder);
     configLoad(&app->config, config_folder);
     libraryLoad(&app->library, config_folder);
+    passportLoad(&app->passport, config_folder);
     app->globe_view = (GlobeView){-30.0f, GLOBE_TILT_HOME, 1.0f};  // The Atlantic, the Americas and Europe in view.
     mapZoomReset(&app->map_zoom);
     // Start where Settings say; by default where the stations are: the
@@ -102,6 +104,7 @@ void appFree(App *app)
         categoryListFree(&app->categories[i]);
     stationListFree(&app->play_list);
     libraryFree(&app->library);
+    passportFree(&app->passport);
 }
 
 void appNotify(App *app, NoticeKind kind, const char *message, uint64_t now_ns)
@@ -456,6 +459,18 @@ static void playFrom(App *app, const StationList *list, size_t index)
     radioPlay(&station);
     directoryCountClick(station.uuid);
     libraryPlayed(&app->library, &station);
+    // The first of its country: a new stamp in the passport.
+    if (passportPlayed(&app->passport, &station, (int64_t)time(NULL)) && station.country[0]) {
+        char message[NOTICE_TEXT_MAX];
+        snprintf(message, sizeof(message), T("New in your passport: %s"), station.country);
+        appNotify(app, NOTICE_DONE, message, app->globe_frame_ns);
+    }
+}
+
+void appOpenPassport(App *app)
+{
+    app->overlay = OVERLAY_PASSPORT;
+    app->passport_row = 0;
 }
 
 void appPlayFrom(App *app, const StationList *list, size_t index)
@@ -647,6 +662,7 @@ static void handleWorld(App *app, uint64_t pressed, uint64_t now_ns)
     if (pressed & HidNpadButton_A) appOpenMapCountry(app, app->map_cursor);
     if (pressed & HidNpadButton_X) appSetView(app, VIEW_NOW_PLAYING);
     if (pressed & HidNpadButton_Y) appRandomStation(app, now_ns);
+    if (pressed & HidNpadButton_StickL) appOpenPassport(app);
 }
 
 // The picked country's time and weather, once it has stayed picked a moment.
@@ -824,6 +840,8 @@ bool appTap(App *app, int x, int y, uint64_t now_ns)
     }
     case HIT_MAP_OPEN: appOpenMapCountry(app, app->map_cursor); break;
     case HIT_RANDOM: appRandomStation(app, now_ns); break;
+    case HIT_PASSPORT: appOpenPassport(app); break;
+    case HIT_PASSPORT_SCROLL: appScrollPassport(app, hit->arg); break;
     case HIT_SORT: appCycleSort(app, now_ns); break;
     case HIT_MENU_BUTTON: appOpenMenu(app); break;
     case HIT_MENU_ITEM: appChooseMenuItem(app, hit->arg); break;

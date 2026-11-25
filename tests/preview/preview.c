@@ -102,7 +102,7 @@ typedef struct {
     size_t map_cursor;
     CategorySort category_sort[SEARCH_MODES];
     Overlay overlay;
-    int menu_cursor, settings_page, settings_cursor, sleep_minutes;
+    int menu_cursor, settings_page, settings_cursor, sleep_minutes, passport_row;
     Config config;
     char toast[224];
     uint64_t notice_length;  // A tap on the notice sends it away sooner.
@@ -133,6 +133,7 @@ static Snapshot snapshot(const App *app)
     s.settings_page = app->settings_page;
     s.settings_cursor = app->settings_cursor;
     s.sleep_minutes = app->sleep_minutes;
+    s.passport_row = app->passport_row;
     s.config = app->config;
     snprintf(s.toast, sizeof(s.toast), "%s", app->notices.count ? app->notices.items[app->notices.count - 1].text : "");
     s.notice_length = 0;  // Any bubble's: a tap on any of them sends it away sooner.
@@ -564,6 +565,33 @@ int main(int argc, char **argv)
     render(dir, "world_flat_zoom", &app);
     mapZoomReset(&app.map_zoom);
     app.config.world_globe = true;
+
+    // The passport: the left stick's press opens it, empty at first; B closes it.
+    appHandleButtons(&app, HidNpadButton_StickL, 0);
+    expect(app.overlay == OVERLAY_PASSPORT, "the left stick's press on World opens the passport");
+    render(dir, "passport_empty", &app);
+    appHandleButtons(&app, HidNpadButton_B, 0);
+    expect(app.overlay == OVERLAY_NONE, "B closes the passport");
+    // With stamps: more countries than show at once, a row further down with the stick.
+    static const char *STAMPS[] = {"DE", "US", "JP", "MX", "FR", "BR", "GB", "IT", "ES", "CA",
+                                   "NL", "GR", "PL", "AR", "AU", "IN", "TR", "CO", "KR", "ZZ"};
+    for (int i = 0; i < (int)(sizeof(STAMPS) / sizeof(STAMPS[0])); i++)
+        for (int j = 0; j <= i % 3; j++) {
+            Station s;
+            memset(&s, 0, sizeof(s));
+            snprintf(s.countrycode, sizeof(s.countrycode), "%s", STAMPS[i]);
+            snprintf(s.uuid, sizeof(s.uuid), "stamp-%d-%d", i, j);
+            passportStamp(&app.passport, &s, 1793000000 + (int64_t)i * 3 * 86400);
+        }
+    render(dir, "world_passport", &app);  // Its button counts them.
+    expect(tapTarget(&app, HIT_PASSPORT, 0) && app.overlay == OVERLAY_PASSPORT, "a tap on Passport opens it");
+    render(dir, "passport", &app);
+    appHandleButtons(&app, HidNpadButton_Down, 0);
+    expect(app.passport_row == 1, "down shows the passport's next row of stamps");
+    render(dir, "passport_more", &app);
+    appHandleButtons(&app, HidNpadButton_Down, 0);
+    expect(app.passport_row == 1, "the passport scrolls no further than its last row");
+    app.overlay = OVERLAY_NONE;
     categoryListFree(world);
     app.categories_asked[SEARCH_COUNTRY] = false;
     app.map_cursor = 0;

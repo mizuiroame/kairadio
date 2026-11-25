@@ -887,3 +887,21 @@ Creato da
 
 Open source (MIT)  ·  github.com/mizuiroame/kairadio
 Open source (MIT)  ·  github.com/mizuiroame/kairadio
+
+Passport
+Passaporto
+
+%d country
+%d paese
+
+%d countries
+%d paesi
+
+New in your passport: %s
+Nuovo nel tuo passaporto: %s
+
+No stamps yet: each country you listen to gets one here.
+Ancora nessun timbro: ogni paese che ascolti ne avrà uno qui.
+
+[^v] more stamps  [A][B] close
+[^v] altri timbri  [A][B] chiudi

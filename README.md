@@ -29,9 +29,11 @@ The screenshots show made-up stations.
 ## What it can do
 
 - **World**: a night globe, each country lit up by how many stations it has,
-  with its flag, **time and weather**. Or a flat night map. **Zoom** in with two
-  fingers or the right stick.
+  with its flag, **time and weather**, and where it's night now. Or a flat night
+  map. **Zoom** in with two fingers or the right stick.
   [More](docs/stations.md#world)
+- **Passport**: a stamp for every country you've listened to.
+  [More](docs/stations.md#passport)
 - **Random station** (**Y** in World): a country at random and one of its
   stations playing. [More](docs/stations.md#random-station)
 - **Popular**, **Search** by name, and **genres**, **countries** and

@@ -887,3 +887,21 @@ Feito por
 
 Open source (MIT)  ·  github.com/mizuiroame/kairadio
 Código aberto (MIT)  ·  github.com/mizuiroame/kairadio
+
+Passport
+Passaporte
+
+%d country
+%d país
+
+%d countries
+%d países
+
+New in your passport: %s
+Novo no seu passaporte: %s
+
+No stamps yet: each country you listen to gets one here.
+Ainda sem carimbos: cada país que você ouvir ganha um aqui.
+
+[^v] more stamps  [A][B] close
+[^v] mais carimbos  [A][B] fechar
