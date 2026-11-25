@@ -12,6 +12,7 @@
 #define LIGHT_X -0.42f         // The light comes from the upper left, toward the viewer.
 #define LIGHT_Y 0.52f
 #define LIGHT_Z 0.74f
+#define NIGHT_DIM 0.42f        // How much of the light the night takes: the land still reads in it.
 
 GeoPoint globeMapPlace(MapPoint p)
 {
@@ -171,6 +172,7 @@ bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0
         t->size = size;
     }
     t->tilt = tilt;
+    t->land_h = land_h;
     t->x0 = x0 < 0 ? 0 : x0;
     t->y0 = y0 < 0 ? 0 : y0;
     t->x1 = x1 > size ? size : x1 < t->x0 ? t->x0 : x1;
@@ -206,16 +208,22 @@ static uint32_t picturePixel(const GlobeTable *t, int i, float lon, const uint8_
     if (t->air[i])
         return (c->air & 0x00FFFFFFu) | (uint32_t)alpha << 24;
     Color here;
-    if (t->row[i] == -1) {
+    int col = (int)((globeWrapLon(lon + t->lon[i]) + 180.0f) * cols);
+    col = col < 0 ? 0 : col >= land_w ? land_w - 1 : col;
+    int row = t->row[i];
+    if (row == -1) {
         here = c->ocean;
-    } else if (t->row[i] == -2) {
+        row = 0;  // North of the map: its night as the map's top row.
+    } else if (row == -2) {
         here = c->ice;
+        row = t->land_h - 1;
     } else {
-        int col = (int)((globeWrapLon(lon + t->lon[i]) + 180.0f) * cols);
-        col = col < 0 ? 0 : col >= land_w ? land_w - 1 : col;
-        here = gfxMix(c->ocean, c->land, land[(size_t)t->row[i] * land_w + col]);
+        here = gfxMix(c->ocean, c->land, land[(size_t)row * land_w + col]);
     }
-    return scaled(here, t->shade[i], alpha);
+    unsigned shade = t->shade[i];
+    if (c->night)
+        shade = shade * (255u - (unsigned)(NIGHT_DIM * c->night[(size_t)row * land_w + col])) / 255u;
+    return scaled(here, shade, alpha);
 }
 
 void globeRenderPart(const GlobeTable *t, float lon, const uint8_t *land, int land_w, const GlobeColors *c,

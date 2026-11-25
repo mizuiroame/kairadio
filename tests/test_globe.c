@@ -67,6 +67,20 @@ static void testPaint(void)
     globeRender(&t, 180.0f, land, LAND_W, LAND_H, &colors, out);                      // Turned halfway round:
     east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];
     CHECK(((east >> 8) & 0xFF) > ((east >> 16) & 0xFF));                              // land now east of the middle.
+    // Night over the east half of the land's grid: the globe darker there, the same elsewhere.
+    uint8_t night[LAND_W * LAND_H];
+    for (int i = 0; i < LAND_W * LAND_H; i++)
+        night[i] = (i % LAND_W) >= LAND_W / 2 ? 255 : 0;
+    globeRender(&t, 0.0f, land, LAND_W, LAND_H, &colors, out);
+    uint32_t day_east = out[SIZE / 2 * SIZE + SIZE / 2 + 12], day_west = out[SIZE / 2 * SIZE + SIZE / 2 - 12];
+    uint32_t pole = out[3 * SIZE + SIZE / 2];  // North of the map: its top row's night.
+    colors.night = night;
+    globeRender(&t, 0.0f, land, LAND_W, LAND_H, &colors, out);
+    uint32_t night_east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];
+    CHECK(((night_east >> 16) & 0xFF) < ((day_east >> 16) & 0xFF) && ((night_east >> 16) & 0xFF) > 0);
+    CHECK(out[SIZE / 2 * SIZE + SIZE / 2 - 12] == day_west);
+    CHECK((out[3 * SIZE + SIZE / 2] >> 24) == (pole >> 24));
+    colors.night = NULL;
     CHECK(globeTableCovers(&t, SIZE, 0.0f, 0, 0, SIZE, SIZE) && !globeTableCovers(&t, SIZE, 1.0f, 0, 0, 4, 4));
     // A table made only in part covers only that part, and paints the same there.
     GlobeTable part;

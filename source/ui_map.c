@@ -12,6 +12,7 @@
 #include "lang.h"
 #include "mapzoom.h"
 #include "stb_image.h"
+#include "sunlight.h"
 #include "ui_buttons.h"
 #include "ui_common.h"
 #include "ui_flag.h"
@@ -47,10 +48,14 @@
 #define TUNER_REST 0.62f      // Where its needle rests.
 #define RANDOM_H 84
 #define SHARP_ZOOM 1.5f       // Zoomed past this, the flat map draws from its full picture.
-#define GLOBE_FADE 40          // Pixels over which the zoomed globe fades out under the header and over the bar.
+#define GLOBE_FADE 64          // Pixels over which the zoomed globe fades out under the header and over the bar,
+#define FLAT_FADE 48           // and the zoomed flat map at its box's edges.
 #define PANEL_VEIL 225         // How opaque the panel's backing is over a globe zoomed under it,
 #define VEIL_FADE 150          // and how far past the panel it fades out.
 #define TABLE_SLACK 48        // Pixels made around the part that shows, so a small zoom or move needn't make it again.
+#define NIGHT_COLOR GFX_RGB(0x02, 0x04, 0x0E)  // The night over the flat map,
+#define FLAT_NIGHT_ALPHA 120   // at its darkest: the land and the lights still read through it.
+#define NIGHT_EVERY_S 60       // The night is worked out again each minute.
 
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
@@ -58,6 +63,38 @@ static bool g_land_failed;
 static uint32_t *g_map;           // The land for this screen: g_map_w x g_map_h, coverage as alpha.
 static int g_map_w, g_map_h;
 static uint8_t *g_glows[GLOW_MAX + 1];  // A soft round light of each radius, made when first needed.
+static int64_t g_clock;           // uiMapSetClock's moment, or 0 for the console's clock.
+static uint8_t *g_night;          // The night now over the globe's land grid (GLOBE_LAND_W x GLOBE_LAND_H),
+static uint32_t *g_night_image;   // and as a picture over the flat map.
+
+void uiMapSetClock(int64_t utc)
+{
+    g_clock = utc;
+}
+
+// Works out the night again when the minute changes. False without memory for it.
+static bool updateNight(void)
+{
+    static int64_t made = -1;
+    if (!g_night) {
+        g_night = malloc(GLOBE_LAND_W * GLOBE_LAND_H);
+        g_night_image = g_night ? malloc(GLOBE_LAND_W * GLOBE_LAND_H * sizeof(uint32_t)) : NULL;
+        if (!g_night_image) {
+            free(g_night);
+            g_night = NULL;
+            return false;
+        }
+    }
+    int64_t utc = g_clock ? g_clock : (int64_t)time(NULL), minute = utc / NIGHT_EVERY_S;
+    if (minute == made)
+        return true;
+    made = minute;
+    sunNightGrid(sunOverhead(utc), GLOBE_LAND_W, GLOBE_LAND_H, MAP_NORTH, MAP_SOUTH, g_night);
+    gfxImageChanged(g_night_image);
+    for (int i = 0; i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
+        g_night_image[i] = (NIGHT_COLOR & 0x00FFFFFFu) | (uint32_t)(g_night[i] * FLAT_NIGHT_ALPHA / 255) << 24;
+    return true;
+}
 
 // Shrinks the land to w x h, each pixel the average of the ones it covers.
 static uint32_t *landAt(int w, int h)
@@ -155,6 +192,9 @@ static void drawFlatMap(const App *app)
     mapZoomToScreen(z, MAP_X, MAP_Y, &x0, &y0);
     gfxSetClip(MAP_X, MAP_Y, MAP_W, MAP_H);
     gfxDrawImageScaledFb(x0 * GFX_SCALE, y0 * GFX_SCALE, MAP_FB_W * z->zoom, MAP_FB_H * z->zoom, w, h, map);
+    if (updateNight())  // Where it's night now, darker: the countries' lights go over it.
+        gfxDrawImageScaledFb(x0 * GFX_SCALE, y0 * GFX_SCALE, MAP_FB_W * z->zoom, MAP_FB_H * z->zoom, GLOBE_LAND_W,
+                             GLOBE_LAND_H, g_night_image);
     gfxResetClip();
 }
 
@@ -269,8 +309,9 @@ static void drawGlobe(const App *app)
         !globeTableBuildPart(&table, size, tilt, GLOBE_LAND_H, x0 - TABLE_SLACK, y0 - TABLE_SLACK, x1 + TABLE_SLACK,
                              y1 + TABLE_SLACK))
         return;
-    static const GlobeColors COLORS = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR};
-    globeRenderPart(&table, app->globe_view.lon, land, GLOBE_LAND_W, &COLORS, picture, x0, y0, x1, y1);
+    // Where it's night now, darker.
+    GlobeColors colors = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR, updateNight() ? g_night : NULL};
+    globeRenderPart(&table, app->globe_view.lon, land, GLOBE_LAND_W, &colors, picture, x0, y0, x1, y1);
     gfxImageChanged(picture);
     gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);
     gfxDrawImageScaledFb(left * GFX_SCALE, top * GFX_SCALE, 2 * half * GFX_SCALE, 2 * half * GFX_SCALE, size, size,
@@ -425,14 +466,52 @@ static void drawTimeAndWeather(const App *app, const Category *c, int x, int y)
     fontDraw(FONT_REGULAR, 19, x + INFO_ICON + 12, y + 36, line, COLOR_TEXT);
 }
 
-// The zoomed globe's top and bottom fade into the background, under the
-// header and over the player bar, instead of a straight cut.
-static void drawGlobeFades(void)
+// How much of the background covers a line i pixels in from a faded edge
+// width pixels wide, at strength (0-1): all of it at the edge, smoothly none
+// at the band's end.
+static unsigned fadeAlpha(int i, int width, float strength)
 {
-    for (int i = 0; i < GLOBE_FADE; i++) {
-        unsigned alpha = (unsigned)(255 * (GLOBE_FADE - i) / GLOBE_FADE);
-        gfxBlendRect(GLOBE_BOX_X, GLOBE_BOX_Y + i, GLOBE_BOX_W, 1, COLOR_BG, alpha);
-        gfxBlendRect(GLOBE_BOX_X, GLOBE_BOX_Y + GLOBE_BOX_H - 1 - i, GLOBE_BOX_W, 1, COLOR_BG, alpha);
+    float t = 1.0f - (i + 0.5f) / width;
+    return (unsigned)(255.0f * strength * t * t * (3.0f - 2.0f * t));
+}
+
+// How far past an edge something reaches, as a fade's strength: none when
+// it stays inside, all of it once it's a band's width past.
+static float pastEdge(float past, int width)
+{
+    return past <= 0 ? 0.0f : past >= width ? 1.0f : past / width;
+}
+
+// The zoomed globe's top and bottom fade into the background, under the
+// header and over the player bar, instead of a straight cut: only as much
+// as it reaches past them, so the whole globe isn't dimmed.
+static void drawGlobeFades(const App *app)
+{
+    float reach = globeRadius(app->globe_view) / GLOBE_DISC;  // To its glow's edge.
+    float top = pastEdge(GLOBE_BOX_Y - (GLOBE_CY - reach), GLOBE_FADE);
+    float bottom = pastEdge(GLOBE_CY + reach - (GLOBE_BOX_Y + GLOBE_BOX_H), GLOBE_FADE);
+    for (int i = 0; i < GLOBE_FADE && (top > 0 || bottom > 0); i++) {
+        if (top > 0)
+            gfxBlendRect(GLOBE_BOX_X, GLOBE_BOX_Y + i, GLOBE_BOX_W, 1, COLOR_BG, fadeAlpha(i, GLOBE_FADE, top));
+        if (bottom > 0)
+            gfxBlendRect(GLOBE_BOX_X, GLOBE_BOX_Y + GLOBE_BOX_H - 1 - i, GLOBE_BOX_W, 1, COLOR_BG,
+                         fadeAlpha(i, GLOBE_FADE, bottom));
+    }
+}
+
+// The zoomed flat map's four edges fade into the background instead of a
+// straight cut; at the whole map's size (its edges the map's own), none.
+static void drawFlatFades(const App *app)
+{
+    float strength = pastEdge((app->map_zoom.zoom - 1.0f) * MAP_W / 2.0f, FLAT_FADE);
+    for (int i = 0; strength > 0 && i < FLAT_FADE; i++) {
+        unsigned alpha = fadeAlpha(i, FLAT_FADE, strength);
+        gfxBlendRect(MAP_X, MAP_Y + i, MAP_W, 1, COLOR_BG, alpha);
+        gfxBlendRect(MAP_X, MAP_Y + MAP_H - 1 - i, MAP_W, 1, COLOR_BG, alpha);
+        // The sides, short of the rows above: no corner faded twice.
+        int y = MAP_Y + i + 1, h = MAP_H - 2 * i - 2;
+        gfxBlendRect(MAP_X + i, y, 1, h, COLOR_BG, alpha);
+        gfxBlendRect(MAP_X + MAP_W - 1 - i, y, 1, h, COLOR_BG, alpha);
     }
 }
 
@@ -534,9 +613,11 @@ void uiDrawMap(const App *app, uint64_t now_ns)
         if (picked)
             drawPickedLight(app, picked, now_ns);
         gfxResetClip();
-        drawGlobeFades();
+        drawGlobeFades(app);
         drawPanel(app, picked, now_ns);
-    } else if (picked) {
-        drawPicked(app, picked, now_ns);
+    } else {
+        drawFlatFades(app);
+        if (picked)
+            drawPicked(app, picked, now_ns);
     }
 }

@@ -67,6 +67,7 @@ int globeNearest(const CategoryList *countries, GlobeView view, float x, float y
 typedef struct {
     int size;
     float tilt;
+    int land_h;      // The land's rows it was made for.
     int16_t *row;    // The land's row (of land_h rows), or -1 north of the map, -2 south of it (ice).
     float *lon;      // Degrees east of the middle's longitude.
     uint8_t *shade;  // Light on the sphere, 0-255.
@@ -86,6 +87,9 @@ void globeTableFree(GlobeTable *t);
 
 typedef struct {
     Color ocean, land, ice, air;
+    // The night over the land's grid (land_w x land_h, 0 day to 255 night, as
+    // sunNightGrid makes it), darkening the globe there; NULL for none.
+    const uint8_t *night;
 } GlobeColors;
 
 // Paints the globe facing lon (the table's tilt) into out (size x size,

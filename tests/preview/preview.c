@@ -18,6 +18,7 @@
 #include "stubs.h"
 #include "ui.h"
 #include "ui_hit.h"
+#include "ui_map.h"
 
 #define CONFIG "/tmp/kairadio_preview"
 
@@ -506,6 +507,7 @@ int main(int argc, char **argv)
     appInit(&app, CONFIG);
     appPodcastsStart(&app);  // As main.c does: the podcasts kept in CONFIG.
     app.sys = (SysInfo){true, 21, 47, true, 82, true};
+    uiMapSetClock(1795543200);  // 2026-11-24 18:00 UTC: night over Asia, dusk over Europe, day over the Americas.
 
     // World: loading, then the countries lit (about as many stations as the directory has), then one picked.
     appSetView(&app, VIEW_WORLD);
@@ -553,6 +555,8 @@ int main(int argc, char **argv)
     GlobeView home = app.globe_view;
     app.globe_view = (GlobeView){10.0f, 50.0f, GLOBE_ZOOM_MAX};
     render(dir, "world_globe_zoom", &app);
+    app.globe_view = (GlobeView){-20.0f, 20.0f, 1.6f};  // Halfway in: the globe past the header and the bar.
+    render(dir, "world_globe_zoom_mid", &app);
     app.globe_view = home;
     app.config.world_globe = false;
     render(dir, "world_flat", &app);
