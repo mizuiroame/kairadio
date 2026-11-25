@@ -33,6 +33,7 @@ void testSettings(void);
 void testAppRoot(void);
 void testKinetic(void);
 void testGlobe(void);
+void testSunlight(void);
 void testWeather(void);
 void testLang(void);
 void testUpdate(void);

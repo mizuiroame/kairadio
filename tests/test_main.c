@@ -238,6 +238,7 @@ int main(void)
     testAppRoot();
     testKinetic();
     testGlobe();
+    testSunlight();
     testWeather();
     testLang();
     testUpdate();
