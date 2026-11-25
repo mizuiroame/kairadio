@@ -87,7 +87,18 @@ touches small:
 - **Pinned dependencies.** The libraries in `third_party/` are pinned, with
   SHA-256 sums: see [third_party/VERSIONS.md](third_party/VERSIONS.md) and
   check them with `sh third_party/verify.sh`. libcurl comes from devkitPro's
-  packages (7.69.1, older than upstream's).
+  packages (see below).
 
-The main remaining risk is in FFmpeg's demuxers and decoders, which parse
-every stream. A station you don't know can send anything.
+## Known risks
+
+- **libcurl 7.69.1 is the clearest one.** Every connection KaiRadio makes
+  (the station list, streams, playlists, logos, podcasts, weather, updates)
+  goes through libcurl, and the copy built into KaiRadio is the one devkitPro
+  ships for the Switch: version 7.69.1, from March 2020. Upstream has fixed
+  many security problems since then (several CVEs that a malicious server or
+  redirect could reach). KaiRadio narrows what reaches it (only `http://` and
+  `https://`, no downgrade from `https://`, certificates checked, size limits),
+  but it can't fix bugs inside libcurl itself. It's updated as soon as
+  devkitPro publishes a newer libcurl for the Switch.
+- **FFmpeg's demuxers and decoders** parse every stream. A station you don't
+  know can send anything.
