@@ -16,6 +16,10 @@ docker build -t kairadio-devkit ffmpeg   # once: the devkit plus FFmpeg (LGPL)
 SHA-256) with only the demuxers, parsers and audio decoders radio needs, and
 fails if the build would include GPL or non-free parts.
 
+On every push and pull request, GitHub Actions runs the host tests
+(`make coverage`) in an image built from `tests/Dockerfile.host`
+(`.github/workflows/tests.yml`). The previews stay on the PC.
+
 `python tools/lang_check.py data/lang_es.txt` checks a translation against
 the texts in the code (see [Languages](languages.md)).
 
