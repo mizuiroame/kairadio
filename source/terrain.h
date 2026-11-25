@@ -24,3 +24,6 @@ Color terrainColor(const Terrain *t, float u, float v, float brightness);
 // Gives each pixel of a w x h picture of the map the terrain's color there
 // (times brightness), keeping its alpha (the land's coverage).
 void terrainPaint(const Terrain *t, uint32_t *pixels, int w, int h, float brightness);
+// The same, only its rows y0 to y1 (not included, cut to the picture): a big
+// picture can be painted a few rows a frame.
+void terrainPaintRows(const Terrain *t, uint32_t *pixels, int w, int h, int y0, int y1, float brightness);

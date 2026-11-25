@@ -14,6 +14,7 @@
 #define LIGHT_Z 0.74f
 #define NIGHT_DIM 0.55f        // How much of the light the night takes: the land still reads in it.
 #define DAY_GAIN 1.12f         // and how much the day adds to it.
+#define SIZE_SLOP 0.01f        // A picture's size this share of a step off one is on it.
 
 GeoPoint globeMapPlace(MapPoint p)
 {
@@ -114,6 +115,11 @@ static float clamp01(float v)
     return v < 0.0f ? 0.0f : v > 1.0f ? 1.0f : v;
 }
 
+static int clampi(int v, int lo, int hi)
+{
+    return v < lo ? lo : v > hi ? hi : v;
+}
+
 // One pixel of the table: (nx, ny) in units of the globe's radius.
 static void tablePixel(GlobeTable *t, size_t i, float nx, float ny, float pixel, float tilt, int land_h)
 {
@@ -147,20 +153,25 @@ bool globeTableBuild(GlobeTable *t, int size, float tilt, int land_h)
     return globeTableBuildPart(t, size, tilt, land_h, 0, 0, size, size);
 }
 
-bool globeTableCovers(const GlobeTable *t, int size, float tilt, int x0, int y0, int x1, int y1)
+bool globeTableCovers(const GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1)
 {
-    x0 = x0 < 0 ? 0 : x0;
-    y0 = y0 < 0 ? 0 : y0;
-    x1 = x1 > size ? size : x1;
-    y1 = y1 > size ? size : y1;
-    return t->size == size && t->tilt == tilt && t->x0 <= x0 && t->y0 <= y0 && t->x1 >= x1 && t->y1 >= y1;
+    x0 = clampi(x0, 0, size);
+    y0 = clampi(y0, 0, size);
+    x1 = clampi(x1, x0, size);
+    y1 = clampi(y1, y0, size);
+    return t->size == size && t->tilt == tilt && t->land_h == land_h && t->made == t->y1 - t->y0 && t->x0 <= x0 &&
+           t->y0 <= y0 && t->x1 >= x1 && t->y1 >= y1;
 }
 
-bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1)
+bool globeTableStart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1)
 {
-    if (t->size != size) {
+    x0 = clampi(x0, 0, size);
+    y0 = clampi(y0, 0, size);
+    x1 = clampi(x1, x0, size);
+    y1 = clampi(y1, y0, size);
+    size_t n = (size_t)(x1 - x0) * (size_t)(y1 - y0);
+    if (n > t->cap) {
         globeTableFree(t);
-        size_t n = (size_t)size * size;
         t->row = malloc(n * sizeof(*t->row));
         t->lon = malloc(n * sizeof(*t->lon));
         t->shade = malloc(n);
@@ -170,19 +181,39 @@ bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0
             globeTableFree(t);
             return false;
         }
-        t->size = size;
+        t->cap = n;
     }
+    t->size = size;
     t->tilt = tilt;
     t->land_h = land_h;
-    t->x0 = x0 < 0 ? 0 : x0;
-    t->y0 = y0 < 0 ? 0 : y0;
-    t->x1 = x1 > size ? size : x1 < t->x0 ? t->x0 : x1;
-    t->y1 = y1 > size ? size : y1 < t->y0 ? t->y0 : y1;
-    float half = size / 2.0f, radius = half * GLOBE_DISC, pixel = 1.0f / radius, rt = tilt * RAD;
-    for (int y = t->y0; y < t->y1; y++)
+    t->x0 = x0;
+    t->y0 = y0;
+    t->x1 = x1;
+    t->y1 = y1;
+    t->made = 0;
+    return true;
+}
+
+bool globeTableMake(GlobeTable *t, long pixels)
+{
+    int w = t->x1 - t->x0, rows = t->y1 - t->y0;
+    float half = t->size / 2.0f, radius = half * GLOBE_DISC, pixel = 1.0f / radius, rt = t->tilt * RAD;
+    for (long done = 0; t->made < rows && (done == 0 || done < pixels); done += w) {
+        int y = t->y0 + t->made;
         for (int x = t->x0; x < t->x1; x++)
-            tablePixel(t, (size_t)y * size + x, (x + 0.5f - half) / radius, (half - y - 0.5f) / radius, pixel, rt,
-                       land_h);
+            tablePixel(t, globeTableAt(t, x, y), (x + 0.5f - half) / radius, (half - y - 0.5f) / radius, pixel, rt,
+                       t->land_h);
+        t->made++;
+    }
+    return t->made == rows;
+}
+
+bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1)
+{
+    if (!globeTableStart(t, size, tilt, land_h, x0, y0, x1, y1))
+        return false;
+    while (!globeTableMake(t, 1L << 30))
+        ;
     return true;
 }
 
@@ -195,26 +226,41 @@ static uint32_t scaled(Color c, unsigned shade, unsigned alpha)
     return r | g << 8 | b << 16 | (uint32_t)alpha << 24;
 }
 
-void globeRender(const GlobeTable *t, float lon, const uint8_t *land, int land_w, int land_h, const GlobeColors *c,
+void globeRender(const GlobeTable *t, float lon, const uint32_t *land, int land_w, const GlobeColors *c,
                  uint32_t *out)
 {
-    (void)land_h;
-    globeRenderPart(t, lon, land, land_w, c, out, 0, 0, t->size, t->size);
+    globeRenderPart(t, lon, land, land_w, c, out, t->x1 - t->x0, t->x0, t->y0, t->x1, t->y1);
 }
 
+// What a render needs worked out once, not for each pixel.
+typedef struct {
+    const GlobeTable *t;
+    const GlobeColors *c;
+    const uint32_t *land;
+    int land_w, night_w;
+    float lon, cols;
+    uint32_t night_x, night_y;  // The land's column and row to the night's, 16.16.
+    Color ocean_under;          // The sea under the terrain, darker by its gain (the gain goes on the mix).
+    unsigned gain;              // The terrain's gain, 8.8.
+} Painter;
+
 // One pixel of the picture: nothing, the air's glow, ice, or ocean and land, shaded.
-static uint32_t picturePixel(const GlobeTable *t, int i, float lon, const uint8_t *land, int land_w, float cols,
-                             const GlobeColors *c)
+static uint32_t picturePixel(const Painter *p, size_t i)
 {
+    const GlobeTable *t = p->t;
+    const GlobeColors *c = p->c;
     unsigned alpha = t->alpha[i];
     if (!alpha)
         return 0;
     if (t->air[i])
         return (c->air & 0x00FFFFFFu) | (uint32_t)alpha << 24;
     Color here;
-    int col = (int)((globeWrapLon(lon + t->lon[i]) + 180.0f) * cols);
-    col = col < 0 ? 0 : col >= land_w ? land_w - 1 : col;
+    float lon = p->lon + t->lon[i];  // In [-360, 360]: back to [-180, 180).
+    lon = lon < -180.0f ? lon + 360.0f : lon >= 180.0f ? lon - 360.0f : lon;
+    int col = (int)((lon + 180.0f) * p->cols);
+    col = col < 0 ? 0 : col >= p->land_w ? p->land_w - 1 : col;
     int row = t->row[i];
+    unsigned shade = t->shade[i];
     if (row == -1) {
         here = c->ocean;
         row = 0;  // North of the map: its night as the map's top row.
@@ -222,26 +268,56 @@ static uint32_t picturePixel(const GlobeTable *t, int i, float lon, const uint8_
         here = c->ice;
         row = t->land_h - 1;
     } else {
-        size_t cell = (size_t)row * land_w + col;
-        here = gfxMix(c->ocean, c->terrain ? c->terrain[cell] : c->land, land[cell]);
+        uint32_t land = p->land[(size_t)row * p->land_w + col];
+        if (c->terrain) {
+            here = gfxMix(p->ocean_under, land, land >> 24);
+            shade = shade * p->gain >> 8;
+        } else
+            here = gfxMix(c->ocean, c->land, land >> 24);
     }
-    unsigned shade = t->shade[i];
     if (c->night) {  // From DAY_GAIN of the light in the day to 1 - NIGHT_DIM of it at night.
-        float dark = c->night[(size_t)row * land_w + col] / 255.0f;
+        size_t cell = (size_t)((uint32_t)row * p->night_y >> 16) * p->night_w + ((uint32_t)col * p->night_x >> 16);
+        float dark = c->night[cell] / 255.0f;
         shade = (unsigned)(shade * (DAY_GAIN - (DAY_GAIN - 1.0f + NIGHT_DIM) * dark));
     }
     return scaled(here, shade, alpha);
 }
 
-void globeRenderPart(const GlobeTable *t, float lon, const uint8_t *land, int land_w, const GlobeColors *c,
-                     uint32_t *out, int x0, int y0, int x1, int y1)
+void globeRenderPart(const GlobeTable *t, float lon, const uint32_t *land, int land_w, const GlobeColors *c,
+                     uint32_t *out, int stride, int x0, int y0, int x1, int y1)
 {
-    float cols = land_w / 360.0f;
-    x0 = x0 < 0 ? 0 : x0;
-    y0 = y0 < 0 ? 0 : y0;
-    x1 = x1 > t->size ? t->size : x1;
-    y1 = y1 > t->size ? t->size : y1;
-    for (int y = y0; y < y1; y++)
-        for (int x = x0; x < x1; x++)
-            out[y * t->size + x] = picturePixel(t, y * t->size + x, lon, land, land_w, cols, c);
+    int night_w = c->night_w > 0 ? c->night_w : land_w, night_h = c->night_h > 0 ? c->night_h : t->land_h;
+    Painter p = {t, c, land, land_w, night_w, globeWrapLon(lon), land_w / 360.0f, 0, 0, c->ocean, 256};
+    p.night_x = (uint32_t)(((uint64_t)night_w << 16) / (unsigned)(land_w > 0 ? land_w : 1));
+    p.night_y = (uint32_t)(((uint64_t)night_h << 16) / (unsigned)(t->land_h > 0 ? t->land_h : 1));
+    if (c->terrain_gain > 0.0f && c->terrain_gain != 1.0f) {
+        p.gain = (unsigned)lroundf(c->terrain_gain * 256.0f);
+        p.ocean_under = scaled(c->ocean, (unsigned)lroundf(255.0f / c->terrain_gain), 0);
+    }
+    int cx0 = x0 < t->x0 ? t->x0 : x0, cy0 = y0 < t->y0 ? t->y0 : y0;
+    int cx1 = x1 > t->x1 ? t->x1 : x1, cy1 = y1 > t->y1 ? t->y1 : y1;
+    for (int y = cy0; y < cy1; y++) {
+        uint32_t *line = out + (size_t)(y - y0) * stride;
+        for (int x = cx0; x < cx1; x++)
+            line[x - x0] = picturePixel(&p, globeTableAt(t, x, y));
+    }
+}
+
+int globeImageSize(float scale, float span, bool up)
+{
+    float raw = scale * span;
+    if (!(raw > 16.0f))
+        return 16;
+    float steps = 4.0f * log2f(raw / GLOBE_IMAGE);  // A hair either way is the step it's on.
+    steps = up ? ceilf(steps - SIZE_SLOP) : floorf(steps + SIZE_SLOP);
+    int size = (int)lroundf(GLOBE_IMAGE * exp2f(steps / 4.0f));
+    return size + (size & 1);
+}
+
+float globeImageScale(float want, float area, float budget)
+{
+    if (!(area > 0.0f) || !(budget > 0.0f))
+        return want;
+    float most = sqrtf(budget / area);
+    return want < most ? want : most;
 }

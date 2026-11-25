@@ -555,6 +555,9 @@ int main(int argc, char **argv)
     app.map_cursor = 1;
     GlobeView home = app.globe_view;
     app.globe_view = (GlobeView){10.0f, 50.0f, GLOBE_ZOOM_MAX};
+    render(dir, "world_globe_zoom_turning", &app);  // As it shows while it turns,
+    for (int i = 0; i < 80; i++)                    // and stopped, once its sharp picture is made.
+        draw(&app);
     render(dir, "world_globe_zoom", &app);
     app.globe_view = (GlobeView){-20.0f, 20.0f, 1.6f};  // Halfway in: the globe past the header and the bar.
     render(dir, "world_globe_zoom_mid", &app);
@@ -563,6 +566,8 @@ int main(int argc, char **argv)
     render(dir, "world_flat", &app);
     mapZoomBy(&app.map_zoom, 3.0f, MAP_X + MAP_W * 0.53f, MAP_Y + MAP_H * 0.28f);
     render(dir, "world_flat_zoom", &app);
+    mapZoomBy(&app.map_zoom, MAP_ZOOM_MAX, MAP_X + MAP_W * 0.53f, MAP_Y + MAP_H * 0.28f);  // At its closest.
+    render(dir, "world_flat_zoom_max", &app);
     mapZoomReset(&app.map_zoom);
     app.config.world_globe = true;
 

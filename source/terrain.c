@@ -49,7 +49,14 @@ Color terrainColor(const Terrain *t, float u, float v, float brightness)
 
 void terrainPaint(const Terrain *t, uint32_t *pixels, int w, int h, float brightness)
 {
-    for (int y = 0; y < h; y++)
+    terrainPaintRows(t, pixels, w, h, 0, h, brightness);
+}
+
+void terrainPaintRows(const Terrain *t, uint32_t *pixels, int w, int h, int y0, int y1, float brightness)
+{
+    y0 = y0 < 0 ? 0 : y0;
+    y1 = y1 > h ? h : y1;
+    for (int y = y0; y < y1; y++)
         for (int x = 0; x < w; x++) {
             uint32_t *p = &pixels[(size_t)y * w + x];
             Color c = terrainColor(t, (x + 0.5f) / w, (y + 0.5f) / h, brightness);

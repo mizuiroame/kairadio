@@ -17,7 +17,7 @@
 // Its picture is square, the globe GLOBE_DISC of its half-width across: the
 // rest is the glow of its air around it.
 #define GLOBE_DISC 0.9f
-#define GLOBE_IMAGE 640   // The picture's pixels across: made each frame, scaled to the screen.
+#define GLOBE_IMAGE 640   // The whole globe's picture's pixels across, unzoomed: made each frame, scaled to the screen.
 #define GLOBE_TILT_MAX 70.0f  // How far north or south the middle can turn, degrees.
 // Where it may show: zoomed, it fills the World view, the whole width from
 // under the header (64) to the player bar (572), its top and bottom fading
@@ -62,44 +62,73 @@ float globeWrapLon(float lon);
 // nearest (x, y) on the globe facing view, within reach layout pixels; -1 if none.
 int globeNearest(const CategoryList *countries, GlobeView view, float x, float y, float reach);
 
-// For each pixel of the picture: what's there for a tilt (the middle's
-// latitude), made again when the tilt changes.
+// For each pixel of a part of the picture (columns x0 to x1, rows y0 to y1,
+// not included): what's there for a tilt (the middle's latitude), made again
+// when the tilt changes. Only that part is kept, row by row: zoomed, the
+// picture is far bigger than the part that shows.
 typedef struct {
     int size;
     float tilt;
     int land_h;      // The land's rows it was made for.
+    int x0, y0, x1, y1;  // The part (cut to the picture).
+    int made;        // Rows made so far, from y0: the part is ready when made reaches y1 - y0.
+    size_t cap;      // Pixels the arrays hold.
     int16_t *row;    // The land's row (of land_h rows), or -1 north of the map, -2 south of it (ice).
     float *lon;      // Degrees east of the middle's longitude.
     uint8_t *shade;  // Light on the sphere, 0-255.
     uint8_t *alpha;  // 255 on the globe, its edge smoothed; the air's glow around it; 0 beyond.
     bool *air;       // A pixel of the glow, not of the globe.
-    int x0, y0, x1, y1;  // The part made (columns x0 to x1, rows y0 to y1, not included).
 } GlobeTable;
+
+// Where picture pixel (x, y), inside the table's part, is in its arrays.
+static inline size_t globeTableAt(const GlobeTable *t, int x, int y)
+{
+    return (size_t)(y - t->y0) * (size_t)(t->x1 - t->x0) + (size_t)(x - t->x0);
+}
 
 // Makes (or makes again) the table for a size x size picture, a tilt, and land_h rows of land.
 bool globeTableBuild(GlobeTable *t, int size, float tilt, int land_h);
-// The same, only its part in columns x0 to x1 and rows y0 to y1 (cut to the
-// picture): zoomed, only that shows, and it's made again for each tilt.
+// The same, only its part in columns x0 to x1 and rows y0 to y1 (cut to the picture).
 bool globeTableBuildPart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1);
-// True when the table was made for size and tilt, over at least that part.
-bool globeTableCovers(const GlobeTable *t, int size, float tilt, int x0, int y0, int x1, int y1);
+// Starts a table for that part without making any of it (globeTableMake
+// does, a few rows at a time). False without memory for it.
+bool globeTableStart(GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1);
+// Makes the started table's next rows, about pixels of them (a row at
+// least). True when it's all made.
+bool globeTableMake(GlobeTable *t, long pixels);
+// True when the table is all made for size, tilt and land_h, over at least that part.
+bool globeTableCovers(const GlobeTable *t, int size, float tilt, int land_h, int x0, int y0, int x1, int y1);
 void globeTableFree(GlobeTable *t);
 
 typedef struct {
     Color ocean, land, ice, air;
-    // The night over the land's grid (land_w x land_h, 0 day to 255 night, as
-    // sunNightGrid makes it), darkening the globe there; NULL for none.
+    // The night over its own grid (night_w x night_h over the map's part of
+    // the world, 0 day to 255 night, as sunNightGrid makes it), darkening the
+    // globe there; NULL for none. 0 sizes: the land's grid.
     const uint8_t *night;
-    // The land's colors over the same grid (0xAABBGGRR, alpha unused), in
-    // place of land; NULL for land everywhere.
-    const uint32_t *terrain;
+    // The land picture's colors in place of land: the terrain's.
+    bool terrain;
+    int night_w, night_h;
+    // The terrain's colors times this (0 is 1): a picture of them made darker can be used.
+    float terrain_gain;
 } GlobeColors;
 
-// Paints the globe facing lon (the table's tilt) into out (size x size,
-// 0xAABBGGRR), from land coverage (land_w x land_h, 0-255, equirectangular).
-void globeRender(const GlobeTable *t, float lon, const uint8_t *land, int land_w, int land_h, const GlobeColors *c,
+// Paints the whole table's part facing lon (the table's tilt) into out (its
+// width across, 0xAABBGGRR), from a picture of the land (land_w x the
+// table's land_h, equirectangular, 0xAABBGGRR: its coverage as alpha).
+void globeRender(const GlobeTable *t, float lon, const uint32_t *land, int land_w, const GlobeColors *c,
                  uint32_t *out);
 // The same, only the picture's pixels in columns x0 to x1 and rows y0 to y1
-// (not included): the part that shows when the globe is zoomed past its box.
-void globeRenderPart(const GlobeTable *t, float lon, const uint8_t *land, int land_w, const GlobeColors *c,
-                     uint32_t *out, int x0, int y0, int x1, int y1);
+// (not included, cut to the table's part): out is pixel (x0, y0), its rows
+// stride pixels apart.
+void globeRenderPart(const GlobeTable *t, float lon, const uint32_t *land, int land_w, const GlobeColors *c,
+                     uint32_t *out, int stride, int x0, int y0, int x1, int y1);
+
+// The picture's size for scale pixels per layout pixel over a globe whose
+// picture is span layout pixels across: kept to steps of a quarter of an
+// octave from GLOBE_IMAGE, so a zoom remakes its table only now and then;
+// the step at or above it (up), or at or below it. At least 16, even.
+int globeImageSize(float scale, float span, bool up);
+// Pixels per layout pixel for a picture over area layout pixels that has at
+// most budget pixels and no more than want per layout pixel.
+float globeImageScale(float want, float area, float budget);

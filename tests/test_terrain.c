@@ -31,6 +31,12 @@ static void testSample(void)
     terrainPaint(&t, picture, 4, 1, 1.0f);
     CHECK(picture[0] >> 24 == 0x80 && picture[1] >> 24 == 0 && picture[2] >> 24 == 0xFF);  // The coverage kept,
     CHECK(R(picture[0]) == 200 && B(picture[3]) == 200);                                     // the colors the terrain's.
+    // A few rows at a time: only those, cut to the picture.
+    uint32_t rows[2 * 3] = {0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u};
+    terrainPaintRows(&t, rows, 2, 3, 1, 2, 1.0f);
+    CHECK(rows[0] == 0x80000000u && rows[4] == 0x80000000u && rows[2] != 0x80000000u && rows[2] >> 24 == 0x80);
+    terrainPaintRows(&t, rows, 2, 3, -4, 99, 1.0f);
+    CHECK(rows[0] != 0x80000000u && rows[5] != 0x80000000u);
 }
 
 // The color at a place (degrees) on the map.

@@ -1,5 +1,6 @@
 #include "ui_map.h"
 
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,8 +33,8 @@
 #define CORE_R 2.6f
 #define CARD_W 330  // Over the Pacific, clear of South America.
 #define CARD_H 78
-#define GLOBE_LAND_W 1024      // The land wrapped on the globe: about its own pixels across.
-#define GLOBE_LAND_H 395       // (MAP_NORTH - MAP_SOUTH) / 360 of that.
+#define NIGHT_W 1024           // The night's grid: about the size of its own soft edge.
+#define NIGHT_H 395            // (MAP_NORTH - MAP_SOUTH) / 360 of that.
 #define GLOBE_TILT_STEP 0.25f  // The globe's table is made again when its tilt moves this much.
 #define COLOR_OCEAN GFX_RGB(0x14, 0x22, 0x38)
 #define COLOR_GLOBE_LAND GFX_RGB(0x46, 0x52, 0x66)
@@ -55,13 +56,20 @@
 #define FLAT_FADE 48           // and the zoomed flat map at its box's edges.
 #define PANEL_VEIL 225         // How opaque the panel's backing is over a globe zoomed under it,
 #define VEIL_FADE 150          // and how far past the panel it fades out.
-#define TABLE_SLACK 48        // Pixels made around the part that shows, so a small zoom or move needn't make it again.
+#define TABLE_SLACK 48        // Pixels made around the part that shows (at GLOBE_IMAGE), so a small zoom or move needn't make it again.
+#define TURN_BUDGET 300000L   // The turning globe's pixels in the box: zoomed, about the whole globe's cost.
+#define SHARP_BUDGET 2000000L // The still globe's: about the box at 1080p.
+#define SHARP_STEP 300000L    // Its work each frame, in pixels painted: about the turning globe's.
+#define TABLE_COST 2          // A pixel of the table costs about this many painted.
+#define STILL_FRAMES 6        // Frames the globe stays still before its sharp picture is made.
+#define FINE_SIZE 1024        // A picture this big or more paints from the land at its full detail (less: it'd flicker).
 #define NIGHT_COLOR GFX_RGB(0x02, 0x04, 0x0E)  // The night over the flat map,
 #define FLAT_NIGHT_ALPHA 150   // at its darkest: the land and the lights still read through it;
 #define DAY_COLOR GFX_RGB(0xC8, 0xD6, 0xEC)    // and the day over it, a little light,
 #define FLAT_DAY_ALPHA 20      // this much.
 #define FLAT_TERRAIN 0.8f      // The flat map's land: its terrain this bright (the globe's light adds to it).
 #define NIGHT_EVERY_S 60       // The night is worked out again each minute.
+#define FULL_ROWS 64           // The land at its full detail is made this many rows a frame.
 
 
 static uint8_t *g_land;           // MAP_IMAGE_W x MAP_IMAGE_H coverage, from the PNG.
@@ -71,8 +79,10 @@ static uint32_t *g_map;           // The land for this screen: g_map_w x g_map_h
 static int g_map_w, g_map_h;
 static uint8_t *g_glows[GLOW_MAX + 1];  // A soft round light of each radius, made when first needed.
 static int64_t g_clock;           // uiMapSetClock's moment, or 0 for the console's clock.
-static uint8_t *g_night;          // The night now over the globe's land grid (GLOBE_LAND_W x GLOBE_LAND_H),
-static uint32_t *g_night_image;   // and as a picture over the flat map.
+static uint8_t *g_night;          // The night now over the globe's land grid (NIGHT_W x NIGHT_H),
+static uint32_t *g_night_image;   // and as a picture over the flat map,
+static int64_t g_night_minute;    // made for this minute.
+static bool g_full_failed;        // No memory for the land at its full detail.
 
 void uiMapSetClock(int64_t utc)
 {
@@ -84,8 +94,8 @@ static bool updateNight(void)
 {
     static int64_t made = -1;
     if (!g_night) {
-        g_night = malloc(GLOBE_LAND_W * GLOBE_LAND_H);
-        g_night_image = g_night ? malloc(GLOBE_LAND_W * GLOBE_LAND_H * sizeof(uint32_t)) : NULL;
+        g_night = malloc(NIGHT_W * NIGHT_H);
+        g_night_image = g_night ? malloc(NIGHT_W * NIGHT_H * sizeof(uint32_t)) : NULL;
         if (!g_night_image) {
             free(g_night);
             g_night = NULL;
@@ -96,9 +106,10 @@ static bool updateNight(void)
     if (minute == made)
         return true;
     made = minute;
-    sunNightGrid(sunOverhead(utc), GLOBE_LAND_W, GLOBE_LAND_H, MAP_NORTH, MAP_SOUTH, g_night);
+    g_night_minute = minute;
+    sunNightGrid(sunOverhead(utc), NIGHT_W, NIGHT_H, MAP_NORTH, MAP_SOUTH, g_night);
     gfxImageChanged(g_night_image);
-    for (int i = 0; i < GLOBE_LAND_W * GLOBE_LAND_H; i++) {
+    for (int i = 0; i < NIGHT_W * NIGHT_H; i++) {
         // Light by day, dark by night: in the twilight, each by its own share
         // of the cover (mixing the colors alone would make it a bright band).
         unsigned n = g_night[i], day = FLAT_DAY_ALPHA * (255 - n) / 255, night = FLAT_NIGHT_ALPHA * n / 255;
@@ -178,20 +189,30 @@ static const uint32_t *mapImage(int *w, int *h)
     return g_map;
 }
 
-// The land at its full detail, for the zoomed flat map: the PNG's coverage as alpha.
+// The land at its full detail, for the zoomed flat map and the still globe:
+// the PNG's coverage as alpha. It's big: made FULL_ROWS rows a call, NULL
+// until it's all made (or if there's no memory for it: g_full_failed).
 static const uint32_t *mapImageFull(void)
 {
     static uint32_t *full;
-    static bool failed;  // No memory for it: the screen's map, zoomed, and not asked again.
-    if (full || failed || !mapImage(&(int){0}, &(int){0}))  // mapImage reads the PNG.
+    static int made;  // Rows made so far.
+    if (made == MAP_IMAGE_H)
         return full;
-    full = malloc((size_t)MAP_IMAGE_W * MAP_IMAGE_H * sizeof(uint32_t));
-    failed = !full;
-    for (size_t i = 0; full && i < (size_t)MAP_IMAGE_W * MAP_IMAGE_H; i++)
+    if (g_full_failed || !mapImage(&(int){0}, &(int){0}))  // mapImage reads the PNG.
+        return NULL;
+    if (!full) {
+        full = malloc((size_t)MAP_IMAGE_W * MAP_IMAGE_H * sizeof(uint32_t));
+        g_full_failed = !full;  // The screen's map, zoomed, and not asked again.
+        if (!full)
+            return NULL;
+    }
+    int end = made + FULL_ROWS > MAP_IMAGE_H ? MAP_IMAGE_H : made + FULL_ROWS;
+    for (size_t i = (size_t)made * MAP_IMAGE_W; i < (size_t)end * MAP_IMAGE_W; i++)
         full[i] = (COLOR_LAND & 0x00FFFFFFu) | (uint32_t)g_land[i] << 24;
-    if (full && g_terrain.rgb)
-        terrainPaint(&g_terrain, full, MAP_IMAGE_W, MAP_IMAGE_H, FLAT_TERRAIN);
-    return full;
+    if (g_terrain.rgb)
+        terrainPaintRows(&g_terrain, full, MAP_IMAGE_W, MAP_IMAGE_H, made, end, FLAT_TERRAIN);
+    made = end;
+    return made == MAP_IMAGE_H ? full : NULL;
 }
 
 // The flat map, zoomed: drawn as big as the zoom makes it, cut to its box.
@@ -202,8 +223,9 @@ static void drawFlatMap(const App *app)
     if (!map)
         return;
     const MapZoom *z = &app->map_zoom;
-    if (z->zoom > SHARP_ZOOM && mapImageFull()) {
-        map = mapImageFull();
+    const uint32_t *full = z->zoom > SHARP_ZOOM ? mapImageFull() : NULL;  // The screen's until it's made.
+    if (full) {
+        map = full;
         w = MAP_IMAGE_W;
         h = MAP_IMAGE_H;
     }
@@ -212,8 +234,8 @@ static void drawFlatMap(const App *app)
     gfxSetClip(MAP_X, MAP_Y, MAP_W, MAP_H);
     gfxDrawImageScaledFb(x0 * GFX_SCALE, y0 * GFX_SCALE, MAP_FB_W * z->zoom, MAP_FB_H * z->zoom, w, h, map);
     if (updateNight())  // Where it's night now, darker: the countries' lights go over it.
-        gfxDrawImageScaledFb(x0 * GFX_SCALE, y0 * GFX_SCALE, MAP_FB_W * z->zoom, MAP_FB_H * z->zoom, GLOBE_LAND_W,
-                             GLOBE_LAND_H, g_night_image);
+        gfxDrawImageScaledFb(x0 * GFX_SCALE, y0 * GFX_SCALE, MAP_FB_W * z->zoom, MAP_FB_H * z->zoom, NIGHT_W,
+                             NIGHT_H, g_night_image);
     gfxResetClip();
 }
 
@@ -295,52 +317,202 @@ static void drawCountry(const App *app, const MapCountry *c, int stations, uint6
     drawDot(x, y, CORE_R, gfxMix(COLOR_BG, COLOR_CORE, (unsigned)(fade * 255)));
 }
 
+// The land the globe is painted from: the flat map's own pictures of it.
+typedef struct {
+    const uint32_t *pixels;  // Coverage as alpha, the terrain's colors (at FLAT_TERRAIN).
+    int w, h;
+} GlobeLand;
+
+// The land at the flat map's 1080p detail (MAP_FB_W across, as handheld it
+// already is), or (fine) at its full detail. False if the PNG can't be read,
+// or the full detail is still being made (without memory for it: the other).
+static bool globeLand(bool fine, GlobeLand *out)
+{
+    static uint32_t *mid;  // Made only when the screen's map is another size (a 1440p or 4K TV).
+    int w, h;
+    const uint32_t *map = mapImage(&w, &h);
+    if (!map)
+        return false;
+    const uint32_t *full = fine ? mapImageFull() : NULL;
+    if (full) {
+        *out = (GlobeLand){full, MAP_IMAGE_W, MAP_IMAGE_H};
+        return true;
+    }
+    if (fine && !g_full_failed)
+        return false;
+    if (w != MAP_FB_W && !mid) {
+        mid = landAt(MAP_FB_W, MAP_FB_H);
+        if (mid && g_terrain.rgb)
+            terrainPaint(&g_terrain, mid, MAP_FB_W, MAP_FB_H, FLAT_TERRAIN);
+    }
+    *out = w == MAP_FB_W || !mid ? (GlobeLand){map, w, h} : (GlobeLand){mid, MAP_FB_W, MAP_FB_H};
+    return true;
+}
+
+// The globe's colors over that land: the terrain's, made as bright as the
+// globe's light wants; where it's night (when night is), darker.
+static GlobeColors globeColors(bool night)
+{
+    return (GlobeColors){COLOR_OCEAN,     COLOR_GLOBE_LAND, COLOR_ICE,   COLOR_AIR,           night ? g_night : NULL,
+                         g_terrain.rgb != NULL, NIGHT_W,    NIGHT_H, 1.0f / FLAT_TERRAIN};
+}
+
+// A picture of the globe: the part of it in the World view's box, at some
+// size, for one view. Made at once while the globe turns, or a few rows a
+// frame for the sharp one that shows when it stops.
+typedef struct {
+    GlobeTable table;
+    uint32_t *picture;
+    size_t cap;                  // Pixels the picture holds.
+    int size, x0, y0, x1, y1;    // The part painted, of a size x size picture,
+    GlobeView view;              // for this view,
+    float tilt;
+    int64_t night;               // this night (its minute, -1 none),
+    const uint32_t *land;        // and this land.
+    int painted;                 // Its rows painted so far.
+    bool shown;                  // Painted all for this view and size (the night may have moved since).
+} GlobeLayer;
+
+// The part of a size x size picture over the globe at view that shows in
+// the box, and where (left, top) and how big (per_px layout pixels a pixel).
+typedef struct {
+    int size, x0, y0, x1, y1;
+    float left, top, per_px;
+} GlobePart;
+
+static GlobePart globePart(GlobeView view, int size)
+{
+    float half = globeRadius(view) / GLOBE_DISC;  // The picture's half-width, glow included, layout pixels.
+    GlobePart p = {size, 0, 0, 0, 0, GLOBE_CX - half, GLOBE_CY - half, 2 * half / size};
+    p.x0 = (int)floorf((GLOBE_BOX_X - p.left) / p.per_px);
+    p.y0 = (int)floorf((GLOBE_BOX_Y - p.top) / p.per_px);
+    p.x1 = (int)ceilf((GLOBE_BOX_X + GLOBE_BOX_W - p.left) / p.per_px) + 1;
+    p.y1 = (int)ceilf((GLOBE_BOX_Y + GLOBE_BOX_H - p.top) / p.per_px) + 1;
+    p.x0 = p.x0 < 0 ? 0 : p.x0;
+    p.y0 = p.y0 < 0 ? 0 : p.y0;
+    p.x1 = p.x1 > size ? size : p.x1;
+    p.y1 = p.y1 > size ? size : p.y1;
+    return p;
+}
+
+// The globe's picture's size for at most budget pixels in the box, and no
+// more than the screen's own (detail: at most this many per framebuffer pixel).
+static int globeSize(GlobeView view, float detail, long budget)
+{
+    float half = globeRadius(view) / GLOBE_DISC;
+    float w = fminf(GLOBE_CX + half, GLOBE_BOX_X + GLOBE_BOX_W) - fmaxf(GLOBE_CX - half, GLOBE_BOX_X);
+    float h = fminf(GLOBE_CY + half, GLOBE_BOX_Y + GLOBE_BOX_H) - fmaxf(GLOBE_CY - half, GLOBE_BOX_Y);
+    float want = GFX_SCALE * detail, scale = globeImageScale(want, w * h, (float)budget);
+    return globeImageSize(scale, 2 * half, scale >= want);  // Within the budget, or at least the screen's.
+}
+
+// Paints layer for view, part and land, about budget pixels of work this frame
+// (a row at least). True when it's all painted.
+static bool layerPaint(GlobeLayer *l, GlobeView view, float tilt, GlobePart p, int slack, const GlobeLand *land,
+                       const GlobeColors *colors, int64_t night, long budget)
+{
+    bool same_view = l->view.lon == view.lon && l->view.lat == view.lat && l->view.zoom == view.zoom &&
+                     l->tilt == tilt && l->size == p.size && l->x0 == p.x0 && l->y0 == p.y0 && l->x1 == p.x1 &&
+                     l->y1 == p.y1 && l->land == land->pixels;
+    if (!same_view || l->night != night) {
+        size_t n = (size_t)(p.x1 - p.x0) * (size_t)(p.y1 - p.y0);
+        if (n > l->cap) {
+            gfxImageChanged(l->picture);
+            free(l->picture);
+            l->picture = malloc(n * sizeof(uint32_t));
+            l->cap = l->picture ? n : 0;
+            if (!l->picture)
+                return false;
+        }
+        l->shown = l->shown && same_view;  // The night moved: what's painted still shows until it's all painted again.
+        l->view = view;
+        l->tilt = tilt;
+        l->size = p.size;
+        l->x0 = p.x0;
+        l->y0 = p.y0;
+        l->x1 = p.x1;
+        l->y1 = p.y1;
+        l->night = night;
+        l->land = land->pixels;
+        l->painted = 0;
+    }
+    int rows = p.y1 - p.y0, w = p.x1 - p.x0;
+    if (l->painted == rows)
+        return true;
+    GlobeTable *t = &l->table;
+    if (t->size != p.size || t->tilt != tilt || t->land_h != land->h || t->x0 > p.x0 || t->y0 > p.y0 ||
+        t->x1 < p.x1 || t->y1 < p.y1) {
+        if (!globeTableStart(t, p.size, tilt, land->h, p.x0 - slack, p.y0 - slack, p.x1 + slack, p.y1 + slack))
+            return false;
+    }
+    if (t->made < t->y1 - t->y0) {  // The table first: a pixel of it is worth TABLE_COST painted.
+        long before = t->made;
+        if (!globeTableMake(t, budget / TABLE_COST))
+            return false;
+        budget -= (t->made - before) * (long)(t->x1 - t->x0) * TABLE_COST;
+        if (budget <= 0)
+            return false;
+    }
+    long most = budget / (w > 0 ? w : 1);
+    int count = most < 1 ? 1 : most > rows - l->painted ? rows - l->painted : (int)most;
+    int y = p.y0 + l->painted;
+    globeRenderPart(t, view.lon, land->pixels, land->w, colors, l->picture + (size_t)l->painted * w, w, p.x0, y, p.x1,
+                    y + count);
+    l->painted += count;
+    if (l->painted < rows)
+        return false;
+    gfxImageChanged(l->picture);
+    l->shown = true;
+    return true;
+}
+
+static void layerDraw(const GlobeLayer *l, GlobePart p)
+{
+    gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);
+    gfxDrawImageScaledFb((p.left + p.x0 * p.per_px) * GFX_SCALE, (p.top + p.y0 * p.per_px) * GFX_SCALE,
+                         (p.x1 - p.x0) * p.per_px * GFX_SCALE, (p.y1 - p.y0) * p.per_px * GFX_SCALE, p.x1 - p.x0,
+                         p.y1 - p.y0, l->picture);
+    gfxResetClip();
+}
+
 // The globe: the land on a sphere facing app->globe_view, lit from the upper
-// left, with its air glowing around it.
+// left, with its air glowing around it. While it turns or zooms, a picture
+// made each frame at about the whole globe's cost; when it stops, a sharp one
+// at the screen's own detail, made over a few frames, takes its place.
 static void drawGlobe(const App *app)
 {
-    static GlobeTable table;
-    static uint32_t *terrain, *picture;  // The land's colors on the globe's grid (kept), and the picture.
-    static uint8_t *land;
-    if (!mapImage(&(int){0}, &(int){0}))
-        return;  // The land's PNG can't be read.
-    if (!land) {
-        terrain = landAt(GLOBE_LAND_W, GLOBE_LAND_H);
-        land = terrain ? malloc(GLOBE_LAND_W * GLOBE_LAND_H) : NULL;
-        for (int i = 0; land && i < GLOBE_LAND_W * GLOBE_LAND_H; i++)
-            land[i] = (uint8_t)(terrain[i] >> 24);
-        if (land && g_terrain.rgb) {
-            terrainPaint(&g_terrain, terrain, GLOBE_LAND_W, GLOBE_LAND_H, 1.0f);
-        } else {
-            free(terrain);
-            terrain = NULL;
-        }
-        picture = land ? malloc((size_t)GLOBE_IMAGE * GLOBE_IMAGE * sizeof(uint32_t)) : NULL;
-        if (!picture)
+    static GlobeLayer turning, still;
+    static GlobeView last;
+    static int still_frames;
+    GlobeView view = app->globe_view;
+    bool same = view.lon == last.lon && view.lat == last.lat && view.zoom == last.zoom;
+    still_frames = same ? still_frames + 1 : 0;
+    last = view;
+    int64_t night = updateNight() ? g_night_minute : -1;
+
+    float detail = gfxDetail();
+    int sharp_size = globeSize(view, detail, SHARP_BUDGET), size = globeSize(view, detail, TURN_BUDGET);
+    size = size < GLOBE_IMAGE ? GLOBE_IMAGE : size;  // Never less than the whole globe's, as it was.
+    GlobeColors colors = globeColors(night >= 0);
+    GlobeLand land;
+    // When it's stopped, and the sharp picture is sharper (not when the turning one is about as sharp).
+    if (still_frames >= STILL_FRAMES && sharp_size * 4 > size * 5 && globeLand(sharp_size >= FINE_SIZE, &land)) {
+        GlobePart part = globePart(view, sharp_size);
+        layerPaint(&still, view, view.lat, part, 0, &land, &colors, night, SHARP_STEP);
+        if (still.shown && still.view.lon == view.lon && still.view.lat == view.lat && still.view.zoom == view.zoom &&
+            still.size == sharp_size) {
+            layerDraw(&still, part);
             return;
+        }
     }
-    // The same picture size zoomed: the land it's painted from has no more detail than
-    // that (1024 pixels round the world), and a bigger one cost the frame rate.
-    int size = GLOBE_IMAGE;
-    float tilt = roundf(app->globe_view.lat / GLOBE_TILT_STEP) * GLOBE_TILT_STEP;
-    float half = globeRadius(app->globe_view) / GLOBE_DISC;  // The picture's half-width, glow included, layout pixels.
-    float left = GLOBE_CX - half, top = GLOBE_CY - half, per_px = 2 * half / size;
-    // Only the part in the box is made and painted: zoomed, most of the picture is out of it.
-    int x0 = (int)floorf((GLOBE_BOX_X - left) / per_px), y0 = (int)floorf((GLOBE_BOX_Y - top) / per_px);
-    int x1 = (int)ceilf((GLOBE_BOX_X + GLOBE_BOX_W - left) / per_px) + 1;
-    int y1 = (int)ceilf((GLOBE_BOX_Y + GLOBE_BOX_H - top) / per_px) + 1;
-    if (!globeTableCovers(&table, size, tilt, x0, y0, x1, y1) &&
-        !globeTableBuildPart(&table, size, tilt, GLOBE_LAND_H, x0 - TABLE_SLACK, y0 - TABLE_SLACK, x1 + TABLE_SLACK,
-                             y1 + TABLE_SLACK))
+    if (!globeLand(size >= FINE_SIZE, &land))
         return;
-    // The land colored by its terrain; where it's night now, darker.
-    GlobeColors colors = {COLOR_OCEAN, COLOR_GLOBE_LAND, COLOR_ICE, COLOR_AIR, updateNight() ? g_night : NULL, terrain};
-    globeRenderPart(&table, app->globe_view.lon, land, GLOBE_LAND_W, &colors, picture, x0, y0, x1, y1);
-    gfxImageChanged(picture);
-    gfxSetClip(GLOBE_BOX_X, GLOBE_BOX_Y, GLOBE_BOX_W, GLOBE_BOX_H);
-    gfxDrawImageScaledFb(left * GFX_SCALE, top * GFX_SCALE, 2 * half * GFX_SCALE, 2 * half * GFX_SCALE, size, size,
-                         picture);
-    gfxResetClip();
+    float tilt = roundf(view.lat / GLOBE_TILT_STEP) * GLOBE_TILT_STEP;
+    GlobePart part = globePart(view, size);
+    // Rows and columns made around the part that shows, so a small zoom or move needn't make the table again.
+    int slack = (int)lroundf(TABLE_SLACK * size / (float)GLOBE_IMAGE);
+    if (layerPaint(&turning, view, tilt, part, slack, &land, &colors, night, LONG_MAX))
+        layerDraw(&turning, part);
 }
 
 // The picked country's light: a ring around it, pulsing.
