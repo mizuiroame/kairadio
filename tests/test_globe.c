@@ -55,7 +55,7 @@ static void testPaint(void)
     for (int i = 0; i < LAND_W * LAND_H; i++)
         land[i] = (i % LAND_W) < LAND_W / 2 ? 255 : 0;  // Land in the west, sea in the east.
     uint32_t *out = malloc(SIZE * SIZE * sizeof(uint32_t));
-    GlobeColors colors = {GFX_RGB(0, 0, 200), GFX_RGB(0, 200, 0), GFX_RGB(200, 200, 200), GFX_RGB(100, 150, 250)};
+    GlobeColors colors = {GFX_RGB(0, 0, 200), GFX_RGB(0, 200, 0), GFX_RGB(200, 200, 200), GFX_RGB(100, 150, 250), NULL};
     globeRender(&t, 0.0f, land, LAND_W, LAND_H, &colors, out);
     CHECK(out[0] >> 24 == 0);                            // A corner: nothing.
     uint32_t west = out[SIZE / 2 * SIZE + SIZE / 2 - 12], east = out[SIZE / 2 * SIZE + SIZE / 2 + 12];

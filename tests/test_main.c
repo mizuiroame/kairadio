@@ -239,6 +239,7 @@ int main(void)
     testKinetic();
     testGlobe();
     testSunlight();
+    testPassport();
     testWeather();
     testLang();
     testUpdate();
